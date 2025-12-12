@@ -1,5 +1,0 @@
-user = {MAIL_PSQL_USER}
-password = {MAIL_PSQL_PWD}
-hosts = {MAIL_PSQL_HOST}:{MAIL_PSQL_PORT}
-dbname = {MAIL_PSQL_DB}
-query = SELECT concat('lmtp:', mda."LmtpIp", ':', mda."LmtpPort") transport FROM public."MailUsers" u LEFT JOIN public."Domains" d ON u."DomainId" = d."Id" LEFT JOIN public."MdaServers" mda ON u."MdaServerFallbackId" = mda."Id" WHERE u."Email" = '%u' AND d."Name" = '%d' AND u."DisableSmtp" = False AND u."MdaServerFallbackId" IS NOT NULL;

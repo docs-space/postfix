@@ -1,12 +1,12 @@
 Template: r7mtaserver/fqdn-name
 Type: string
 Default: mx.demo.s7-office.site
-Description: Domain name:
+Description: FQDN name:
 
 Template: r7mtaserver/filter-host
 Type: string
 Default: 127.0.0.1:2525
-Description: MailFilter service for mail filtration::
+Description: MailFilter service for mail filtration:
 
 Template: r7mtaserver/sasl-host
 Type: string

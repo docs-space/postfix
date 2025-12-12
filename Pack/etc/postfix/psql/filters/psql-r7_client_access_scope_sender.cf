@@ -1,5 +1,0 @@
-user = {MAIL_PSQL_USER}
-password = {MAIL_PSQL_PWD}
-hosts = {MAIL_PSQL_HOST}:{MAIL_PSQL_PORT}
-dbname = {MAIL_PSQL_DB}
-query = select check_clienthelo_access(1::int2,'%s'::text,'MAIL_FROM'::text);
