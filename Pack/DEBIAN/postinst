@@ -4,8 +4,8 @@
 
 MTA_SOURCE_CONF_DIR=/opt/r7-mailserver/mtaserver/etc/postfix
 MTA_CONF_DIR=/etc/postfix
-MTA_CONF_MAIN=$MTA_CONF_DIR/main.conf
-MTA_CONF_MASTER=$MTA_CONF_DIR/master.conf
+MTA_CONF_MAIN=$MTA_CONF_DIR/main.cf
+MTA_CONF_MASTER=$MTA_CONF_DIR/master.cf
 MTA_CONF_DB_DIR=$MTA_CONF_DIR/psql
 
 read_params_debconf()
