@@ -80,8 +80,8 @@ conf_cert()
     else
         echo "Keys or certificate is not found."
 		echo "Generate self-signed certificate..."
-        MTA_KEY_FILENAME=$MDA_CONF_DIR/ssl/temp-cert.pem
-        MTA_CERT_FILENAME=$MDA_CONF_DIR/ssl/temp-key.pem
+        MTA_KEY_FILENAME=$MTA_CONF_DIR/ssl/temp-cert.pem
+        MTA_CERT_FILENAME=$MTA_CONF_DIR/ssl/temp-key.pem
 		echo "Generate RSA key"
         openssl genrsa -out "$MTA_KEY_FILENAME" 2048
 		echo "Generate PEM certificate"
