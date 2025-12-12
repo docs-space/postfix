@@ -1,0 +1,5 @@
+user = {MAIL_PSQL_USER}
+password = {MAIL_PSQL_PWD}
+hosts = {MAIL_PSQL_HOST}:{MAIL_PSQL_PORT}
+dbname = {MAIL_PSQL_DB}
+query = select CONCAT_WS(' ', mf."Action",  mf."Optional") from public."MailFilterSenderRecipient" mf where mf."Email" = '%s' and mf."Type" = 1 and mf."Scope" = 'RCPT_TO' and mf."Active" is True;

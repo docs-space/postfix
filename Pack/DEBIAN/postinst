@@ -1,0 +1,128 @@
+#!/bin/sh -e
+
+. /usr/share/debconf/confmodule
+
+MTA_CONF_DIR=/etc/postfix
+MTA_CONF_MAIN=$MTA_CONF_DIR/main.conf
+MTA_CONF_MASTER=$MTA_CONF_DIR/master.conf
+MTA_CONF_DB_DIR=$MTA_CONF_DIR/psql
+
+read_params_debconf()
+{
+    db_get r7mtaserver/fqdn-name || true
+    MTA_FQDN="${RET:-mx.demo.s7-office.site}"
+    [[ "$MTA_FQDN" != *"."* ]]; then
+        MTA_FQDN=mx.$MTA_FQDN
+    fi
+    MTA_DOMAIN="${MTA_FQDN#*.}"
+    db_get r7mtaserver/mta-ssl-cert || true
+    MTA_CERT_FILENAME="$(realpath -m "$RET" 2>/dev/null)"
+    db_get r7mtaserver/mta-ssl-key || true
+    MTA_KEY_FILENAME="$(realpath -m "$RET" 2>/dev/null)"
+    db_get r7mtaserver/db-host || true
+    MTA_DB_HOST="${RET:-localhost}"
+    db_get r7mtaserver/db-port || true
+    MTA_DB_PORT="${RET:-5432}"
+	db_get r7mtaserver/db-name || true
+    MTA_DB_NAME="${RET:-r7mailserver}"
+    db_get r7mtaserver/db-user || true
+    MTA_DB_USER="${RET:-r7mailuser}"
+    db_get r7mtaserver/db-pwd || true
+    MTA_DB_PWD="${RET:-saSA123$}"
+    db_get r7mtaserver/filter-host || true
+    MTA_FILTER_HOST="${RET:-127.0.0.1:2525}"
+    db_get r7mtaserver/sasl-host || true
+    MTA_SASL_HOST="${RET:-saSA123$}"
+#    db_get r7mailserver/upgrade
+#    UPGRADE="$RET"
+	echo "Current parameters:"
+    echo "MTA_FQDN: $MTA_FQDN"
+    echo "MTA_DOMAIN: $MTA_DOMAIN"
+    echo "MTA_CERT_FILENAME: $MTA_CERT_FILENAME"
+    echo "MTA_KEY_FILENAME: $MTA_KEY_FILENAME"
+    echo "MTA_DB_HOST: $MTA_DB_HOST"
+    echo "MTA_DB_PORT: $MTA_DB_PORT"
+    echo "MTA_DB_NAME: $MTA_DB_NAME"
+    echo "MTA_DB_USER: $MTA_DB_USER"
+    echo "MTA_DB_PWD: $MTA_DB_PWD"
+    echo "MTA_FILTER_HOST: $MTA_FILTER_HOST"
+    echo "MTA_SASL_HOST: $MTA_SASL_HOST"
+}
+
+conf_general()
+{
+    sed -i "s/myhostname = .*/myhostname = ${MTA_FQDN}/" $MTA_CONF_MAIN
+    sed -i "s/mydomain = .*/mydomain = ${MTA_DOMAIN}/" $MTA_CONF_MAIN
+}
+
+conf_sasl()
+{
+    sed -i "s/smtpd_sasl_path = .*/smtpd_sasl_path = inet:${MTA_SASL_HOST}/" $MTA_CONF_MAIN
+}
+
+conf_filter()
+{
+    sed -i "s/{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }}/${MTA_FILTER_HOST}/g" $MTA_CONF_MAIN
+}
+
+conf_cert()
+{
+#	MDA_CONF_SSL=$MDA_CONF_DIR/conf.d/10-ssl.conf
+	echo "Checking for a certificate and keys..."
+	# Check Wildcard
+	if [ -f "$MTA_CERT_FILENAME" ] && [ -f "$MTA_KEY_FILENAME" ]; then
+		echo "Keys and certificate is found."
+        cp "$MTA_CERT_FILENAME" "$MTA_CONF_DIR/ssl/$(basename "$MTA_CERT_FILENAME")"
+        cp "$MTA_KEY_FILENAME" "$MTA_CONF_DIR/ssl/$(basename "$MTA_KEY_FILENAME")"
+        MTA_KEY_FILENAME=$MTA_CONF_DIR/ssl/$(basename "$MTA_CERT_FILENAME")
+        MTA_CERT_FILENAME=$MTA_CONF_DIR/ssl/$(basename "$MTA_KEY_FILENAME")
+    else
+        echo "Keys or certificate is not found."
+		echo "Generate self-signed certificate..."
+        MTA_KEY_FILENAME=$MDA_CONF_DIR/ssl/temp-cert.pem
+        MTA_CERT_FILENAME=$MDA_CONF_DIR/ssl/temp-key.pem
+		echo "Generate RSA key"
+        openssl genrsa -out "$MTA_KEY_FILENAME" 2048
+		echo "Generate PEM certificate"
+        openssl req -new -x509 -key "$MTA_KEY_FILENAME" -out "$MTA_CERT_FILENAME" -days 365 -subj "/C=RU/ST=Moscow/L=Moscow/O=Company/CN=localhost"
+		
+    fi
+
+    chmod 644 "$MTA_CERT_FILENAME"
+    chmod 600 "$MTA_KEY_FILENAME"
+
+	echo "Configuring Postfix SSL Settings"
+    sed -i "s/smtpd_tls_cert_file = .*/smtpd_tls_cert_file = ${MTA_CERT_FILENAME}/" $MTA_CONF_MAIN
+    sed -i "s/smtpd_tls_key_file = .*/smtpd_tls_key_file = ${MTA_KEY_FILENAME}/" $MTA_CONF_MAIN
+    sed -i "s/smtpd_tls_cert_file = .*/smtpd_tls_cert_file = ${MTA_CERT_FILENAME}/" $MTA_CONF_MAIN
+    sed -i "s/smtp_tls_cert_file = .*/smtp_tls_cert_file = ${MTA_KEY_FILENAME}/" $MTA_CONF_MAIN
+    sed -i "s/lmtp_tls_cert_file = .*/lmtp_tls_cert_file = ${MTA_CERT_FILENAME}/" $MTA_CONF_MAIN
+    sed -i "s/lmtp_tls_cert_file = .*/lmtp_tls_cert_file = ${MTA_KEY_FILENAME}/" $MTA_CONF_MAIN
+}
+
+conf_db()
+{
+    for CONFFILE in $MTA_CONF_DB_DIR/*/*.cf
+    do
+        echo "Configuring Postfix Settings in $CONFFILE"
+        sed -i "s/hosts = .*/hosts = ${MTA_DB_HOST}/" $CONFFILE
+        sed -i "s/dbname = .*/dbname = ${MTA_DB_NAME}/" $CONFFILE
+        sed -i "s/user = .*/user = ${MTA_DB_USER}/" $CONFFILE
+        sed -i "s/password = .*/password = ${MTA_DB_PWD}/" $CONFFILE
+    done
+}
+
+if [ "$1" = "configure" ]; then
+    read_params_debconf
+    conf_general
+    conf_sasl
+    conf_filter
+    conf_cert
+    conf_db
+
+    echo "Restart postfix"
+    deb-systemd-invoke enable 'postfix.service' >/dev/null || true
+    deb-systemd-invoke restart 'postfix.service' >/dev/null || true
+fi
+
+exit 0

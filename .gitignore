@@ -225,3 +225,12 @@ Makefile
 /postfix/src/util/vstring
 /postfix/src/util/vstring_vstream
 /postfix/src/util/watchdog
+
+
+#MtaServer directory for builder
+Pack/opt/r7-mailserver/mtaserver/*
+!Pack/opt/r7-mailserver/mtaserver/.keep
+
+#MtaServer directory for release
+Packages/*
+!Packages/.keep

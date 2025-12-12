@@ -1,0 +1,54 @@
+Template: r7mtaserver/fqdn-name
+Type: string
+Default: mx.demo.s7-office.site
+Description: Domain name:
+
+Template: r7mtaserver/filter-host
+Type: string
+Default: 127.0.0.1:2525
+Description: MailFilter service for mail filtration::
+
+Template: r7mtaserver/sasl-host
+Type: string
+Default: 127.0.0.1:12345
+Description: SASL service from MDA server for authenticate:
+
+Template: r7mtaserver/mta-ssl-cert
+Type: string
+Default: fullchain1.pem
+Description: Certificate filename for MTA:
+
+Template: r7mtaserver/mta-ssl-key
+Type: string
+Default: privkey1.pem
+Description: Key filename for API:
+
+Template: r7mtaserver/upgrade
+Type: boolean
+Default: false
+Description: upgrade
+
+Template: r7mtaserver/db-host
+Type: string
+Default: localhost
+Description: Database host:
+
+Template: r7mtaserver/db-port
+Type: string
+Default:5432
+Description: Database port:
+
+Template: r7mtaserver/db-name
+Type: string
+Default: r7mailserver
+Description: Database name:
+
+Template: r7mtaserver/db-user
+Type: string
+Default: r7mailuser
+Description: Database user:
+
+Template: r7mtaserver/db-pwd
+Type: password
+Default: saSA123$
+Description: Database password:

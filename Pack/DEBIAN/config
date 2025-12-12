@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -e
+
+. /usr/share/debconf/confmodule
+
+case "$1" in
+    configure|reconfigure)
+        # Задаем вопросы
+        db_input critical r7mtaserver/fqdn-name || true
+        db_input critical r7mtaserver/mta-ssl-cert || true
+        db_input critical r7mtaserver/mta-ssl-key || true
+        db_input critical r7mtaserver/db-host || true
+        db_input critical r7mtaserver/db-port || true
+        db_input critical r7mtaserver/db-name || true
+        db_input critical r7mtaserver/db-user || true
+        db_input critical r7mtaserver/db-pwd || true
+        db_input critical r7mtaserver/filter-host || true
+        db_input critical r7mtaserver/sasl-host || true
+        db_go
+        ;;
+esac
+
+exit 0

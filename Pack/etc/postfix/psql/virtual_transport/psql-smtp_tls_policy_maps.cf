@@ -1,0 +1,24 @@
+user = {MAIL_PSQL_USER}
+password = {MAIL_PSQL_PWD}
+hosts = {MAIL_PSQL_HOST}:{MAIL_PSQL_PORT}
+dbname = {MAIL_PSQL_DB}
+query = SELECT 
+    CASE 
+        WHEN "MdaServerId" is not null THEN 
+            CONCAT('lmtp:', (
+                SELECT CONCAT(mda."LmtpIp", ':', mda."LmtpPort") 
+                FROM public."MdaServers" mda
+                WHERE mda."Id" = r."MdaServerId"
+            ))
+        WHEN "MtaServerId" is not null THEN 
+            CONCAT('smtp:', (
+                SELECT CONCAT(mta."SmtpIp", ':', mta."SmtpPort") 
+                FROM public."MtaServers" mta
+                WHERE mta."Id" = r."MtaServerId"
+            ))
+    END
+    FROM "RoutingTable" r
+    WHERE r."Domain" = '%d' 
+    AND (r."User" = '%u' OR r."User" is null) 
+    AND r."IsActive" = true 
+    ORDER BY r."User";

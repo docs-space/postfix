@@ -1,0 +1,25 @@
+#!/bin/sh -e
+set -e
+
+case "$1" in
+    failed-upgrade|abort-install|abort-upgrade|disappear|upgrade)
+    ;;
+    remove|purge)
+        if [ -z "${DPKG_ROOT:-}" ] && [ "$1" = remove ] && [ -d /run/systemd/system ] ; then
+	        deb-systemd-invoke stop 'postfix.service' >/dev/null || true
+            deb-systemd-invoke disable 'postfix.service' >/dev/null || true
+        fi
+        if [ -d /etc/postfix ]; then
+            rm -rf /etc/postfix/*
+        fi
+        if [ -d /opt/r7-mailserver/mtaserver ]; then
+            rm -rf /opt/r7-mailserver/mtaserver
+        fi
+    ;;
+    *)
+        echo "prerm called with unknown argument \`$1'" >&2
+        exit 1
+esac
+
+exit 0
+
