@@ -12,7 +12,7 @@ read_params_debconf()
 {
     db_get r7mtaserver/fqdn-name || true
     MTA_FQDN="${RET:-mx.demo.s7-office.site}"
-    [[ "$MTA_FQDN" != *"."* ]]; then
+    if [[ "$MTA_FQDN" != *"."* ]]; then
         MTA_FQDN=mx.$MTA_FQDN
     fi
     MTA_DOMAIN="${MTA_FQDN#*.}"
