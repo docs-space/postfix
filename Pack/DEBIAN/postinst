@@ -2,6 +2,7 @@
 
 . /usr/share/debconf/confmodule
 
+MTA_SOURCE_CONF_DIR=/opt/r7-mailserver/mtaserver/etc/postfix
 MTA_CONF_DIR=/etc/postfix
 MTA_CONF_MAIN=$MTA_CONF_DIR/main.conf
 MTA_CONF_MASTER=$MTA_CONF_DIR/master.conf
@@ -114,6 +115,7 @@ conf_db()
 
 if [ "$1" = "configure" ]; then
     read_params_debconf
+    cp -r $MTA_SOURCE_CONF_DIR/* $MTA_CONF_DIR
     conf_general
     conf_sasl
     conf_filter

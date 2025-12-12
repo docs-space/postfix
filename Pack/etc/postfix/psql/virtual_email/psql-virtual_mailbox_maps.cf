@@ -1,5 +1,0 @@
-user = {MAIL_PSQL_USER}
-password = {MAIL_PSQL_PWD}
-hosts = {MAIL_PSQL_HOST}:{MAIL_PSQL_PORT}
-dbname = {MAIL_PSQL_DB}
-query = select * from get_virtual_mailbox_maps('%u','%d');

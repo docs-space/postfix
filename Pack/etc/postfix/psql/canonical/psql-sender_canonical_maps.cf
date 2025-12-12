@@ -1,6 +1,0 @@
-user = {MAIL_PSQL_USER}
-password = {MAIL_PSQL_PWD}
-hosts = {MAIL_PSQL_HOST}:{MAIL_PSQL_PORT}
-dbname = {MAIL_PSQL_DB}
-query = select c."RewriteTo" from public."CanonicalNames" c where (c."Type" = 1 or c."Type" = 0) and c."OriginalEmail" = '%s';
-
