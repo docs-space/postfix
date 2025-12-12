@@ -66,7 +66,7 @@ conf_sasl()
 conf_filter()
 {
     echo "Configuring Postfix Filter Settings"
-    sed -i "s#{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }}#${MTA_FILTER_HOST}#g" $MTA_CONF_MAIN
+    sed -i "s/{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }}/${MTA_FILTER_HOST}/g" $MTA_CONF_MAIN
 }
 
 conf_cert()
@@ -96,12 +96,14 @@ conf_cert()
     chmod 600 "$MTA_KEY_FILENAME"
 
 	echo "Configuring Postfix SSL Settings"
-    sed -i "s/smtpd_tls_cert_file = .*/smtpd_tls_cert_file = ${MTA_CERT_FILENAME}/" $MTA_CONF_MAIN
-    sed -i "s/smtpd_tls_key_file = .*/smtpd_tls_key_file = ${MTA_KEY_FILENAME}/" $MTA_CONF_MAIN
-    sed -i "s/smtpd_tls_cert_file = .*/smtpd_tls_cert_file = ${MTA_CERT_FILENAME}/" $MTA_CONF_MAIN
-    sed -i "s/smtp_tls_cert_file = .*/smtp_tls_cert_file = ${MTA_KEY_FILENAME}/" $MTA_CONF_MAIN
-    sed -i "s/lmtp_tls_cert_file = .*/lmtp_tls_cert_file = ${MTA_CERT_FILENAME}/" $MTA_CONF_MAIN
-    sed -i "s/lmtp_tls_cert_file = .*/lmtp_tls_cert_file = ${MTA_KEY_FILENAME}/" $MTA_CONF_MAIN
+    sed -i "s#{{ MAIL_MTA_CERT_CRT_FILE }}#${MTA_CERT_FILENAME}#g" $MTA_CONF_MAIN
+    sed -i "s#{{ MAIL_MTA_CERT_KEY_FILE }}#${MTA_KEY_FILENAME}#g" $MTA_CONF_MAIN
+#    sed -i "s#smtpd_tls_cert_file = .*#smtpd_tls_cert_file = ${MTA_CERT_FILENAME}#" $MTA_CONF_MAIN
+#    sed -i "s#smtpd_tls_key_file = .*#smtpd_tls_key_file = ${MTA_KEY_FILENAME}#" $MTA_CONF_MAIN
+#    sed -i "s#smtp_tls_cert_file = .*#smtp_tls_cert_file = ${MTA_CERT_FILENAME}#" $MTA_CONF_MAIN
+#    sed -i "s#smtp_tls_key_file = .*#smtp_tls_key_file = ${MTA_KEY_FILENAME}/" $MTA_CONF_MAIN
+#    sed -i "s#lmtp_tls_cert_file = .*#lmtp_tls_cert_file = ${MTA_CERT_FILENAME}#" $MTA_CONF_MAIN
+#    sed -i "s#lmtp_tls_key_file = .*#lmtp_tls_key_file = ${MTA_KEY_FILENAME}#" $MTA_CONF_MAIN
 }
 
 conf_db()
