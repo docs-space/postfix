@@ -52,7 +52,18 @@ sudo apt-get install -y \
     gcc make libssl-dev libsasl2-dev libpcre3-dev libdb-dev
 
 
-sudo mkdir -p $BUILD_DIRECTORY
+sudo mkdir -p ${BUILD_DIRECTORY}/usr/sbin \
+    ${BUILD_DIRECTORY}/etc/postfix \
+    ${BUILD_DIRECTORY}/usr/libexec/postfix \
+    ${BUILD_DIRECTORY}/var/lib/postfix \
+    ${BUILD_DIRECTORY}/usr/bin \
+    ${BUILD_DIRECTORY}/usr/share/doc/postfix/html \
+    ${BUILD_DIRECTORY}/usr/share/man \
+    ${BUILD_DIRECTORY}/var/spool/postfix \
+    ${BUILD_DIRECTORY}/usr/share/doc/postfix \
+    ${BUILD_DIRECTORY}/etc/postfix/samples
+sudo touch $BUILD_DIRECTORY/etc/postfix/master.cf
+sudo touch $BUILD_DIRECTORY/etc/postfix/main.cf
 sudo make makefiles \
     shared=yes \
     dynamicmaps=yes \
