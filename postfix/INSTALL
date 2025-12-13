@@ -187,7 +187,7 @@ dynamically-linked libraries and database plugins implement a Postfix-internal
 API that changes without maintaining compatibility.
 
 4.4.1 Turning on Postfix dynamically-linked library support
-
+d
 Postfix can be built with Postfix dynamically-linked libraries (files typically
 named libpostfix-*.so). Postfix dynamically-linked libraries add minor run-time
 overhead and result in significantly-smaller Postfix executable files.
