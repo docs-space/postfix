@@ -64,6 +64,11 @@ sudo mkdir -p ${BUILD_DIRECTORY}/usr/sbin \
     ${BUILD_DIRECTORY}/etc/postfix/samples
 sudo touch $BUILD_DIRECTORY/etc/postfix/master.cf
 sudo touch $BUILD_DIRECTORY/etc/postfix/main.cf
+
+sudo adduser --system --group --home /opt/r7-mailserver/mtaserver --gecos "Postfix mail server" \
+        --no-create-home --disabled-password --quiet postfix || true
+sudo addgroup --quiet postdrop || true
+
 sudo make makefiles \
     shared=yes \
     dynamicmaps=yes \
