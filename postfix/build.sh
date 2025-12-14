@@ -1,7 +1,7 @@
 #!/bin/sh
 VERSION=$1
 BUILD_DIRECTORY=/opt/r7-mailserver/mtaserver
-PACK_DIRECTORY=$2/Pack/opt/r7-mailserver/
+PACK_DIRECTORY=$2/Pack/opt/r7-mailserver
 
 sudo apt-get update
 sudo apt-get install -y \
@@ -65,7 +65,7 @@ sudo mkdir -p ${BUILD_DIRECTORY}/usr/sbin \
 sudo touch $BUILD_DIRECTORY/etc/postfix/master.cf
 sudo touch $BUILD_DIRECTORY/etc/postfix/main.cf
 
-sudo adduser --system --group --home /opt/r7-mailserver/mtaserver --gecos "Postfix mail server" \
+sudo adduser --system --group --home $BUILD_DIRECTORY --gecos "Postfix mail server" \
         --no-create-home --disabled-password --quiet postfix || true
 sudo addgroup --quiet postdrop || true
 
@@ -110,3 +110,7 @@ sudo make makefiles \
 
 sudo make
 sudo make install POSTFIX_INSTALL_OPTS="-non-interactive"
+
+sudo cp -r $BUILD_DIRECTORY $PACK_DIRECTORY/
+sudo rm -rf $BUILD_DIRECTORY
+sudo cp -r config/* $PACK_DIRECTORY/mtaserver/etc/postfix

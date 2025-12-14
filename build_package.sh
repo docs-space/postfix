@@ -5,7 +5,7 @@ DIR_FILES=$2
 
 #Prepare
 sed -i "s/Version:.*/Version: ${VERSION}/" $DIR_FILES/Pack/DEBIAN/control
-chmod -R 755 $DIR_FILES/Pack/DEBIAN
+sudo chmod -R 755 $DIR_FILES/Pack/DEBIAN
 
 #Build
 dpkg-deb -b $DIR_FILES/Pack $DIR_FILES/Packages/r7mtaserver_${VERSION}.deb
