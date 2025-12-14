@@ -4,10 +4,6 @@ DIR_FILES=$2
 
 
 #Prepare
-sudo cp -r /opt/r7-mailserver/mtaserver/* $DIR_FILES/Pack/opt/r7-mailserver/mtaserver
-sudo rm -rf /opt/r7-mailserver/mtaserver
-
-sudo cp -r config/* $DIR_FILES/Pack/opt/r7-mailserver/mtaserver/etc/postfix
 sed -i "s/Version:.*/Version: ${VERSION}/" $DIR_FILES/Pack/DEBIAN/control
 sudo chmod -R 755 $DIR_FILES/Pack/DEBIAN
 
