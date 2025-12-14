@@ -113,4 +113,4 @@ sudo make install POSTFIX_INSTALL_OPTS="-non-interactive"
 
 sudo cp -r $BUILD_DIRECTORY $PACK_DIRECTORY/
 sudo rm -rf $BUILD_DIRECTORY
-sudo cp -r config/* $PACK_DIRECTORY/mtaserver/etc/postfix
+sudo cp -r $2/config/* $PACK_DIRECTORY/mtaserver/etc/postfix
