@@ -51,7 +51,7 @@ sudo apt-get install -y \
 sudo apt-get install -y \
     gcc make libssl-dev libsasl2-dev libpcre3-dev libdb-dev
 
-
+sudo rm -rf ${BUILD_DIRECTORY}
 sudo mkdir -p ${BUILD_DIRECTORY}/usr/sbin \
     ${BUILD_DIRECTORY}/etc/postfix \
     ${BUILD_DIRECTORY}/usr/libexec/postfix \
