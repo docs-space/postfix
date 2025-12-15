@@ -230,7 +230,6 @@ Makefile
 #MtaServer directory for builder
 Pack/opt/r7-mailserver/mtaserver/*
 !Pack/opt/r7-mailserver/mtaserver/.keep
-!Pack/opt/r7-mailserver/mtaserver/etc
 
 #MtaServer directory for release
 Packages/*
