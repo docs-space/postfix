@@ -53,14 +53,14 @@ read_params_debconf()
 conf_general()
 {
     echo "Configuring Postfix General Settings"
-    sed -i "s/myhostname = .*/myhostname = ${MTA_FQDN}/" $MTA_CONF_MAIN
-    sed -i "s/mydomain = .*/mydomain = ${MTA_DOMAIN}/" $MTA_CONF_MAIN
+    sed -i "s/^myhostname = .*/myhostname = ${MTA_FQDN}/" $MTA_CONF_MAIN
+    sed -i "s/^mydomain = .*/mydomain = ${MTA_DOMAIN}/" $MTA_CONF_MAIN
 }
 
 conf_sasl()
 {
     echo "Configuring Postfix SASL Settings"
-    sed -i "s/smtpd_sasl_path = .*/smtpd_sasl_path = inet:${MTA_SASL_HOST}/" $MTA_CONF_MAIN
+    sed -i "s/^smtpd_sasl_path = .*/smtpd_sasl_path = inet:${MTA_SASL_HOST}/" $MTA_CONF_MAIN
 }
 
 conf_filter()
@@ -111,10 +111,10 @@ conf_db()
     for CONFFILE in $MTA_CONF_DB_DIR/*/*.cf
     do
         echo "Configuring Postfix DB Settings in $CONFFILE"
-        sed -i "s/hosts = .*/hosts = ${MTA_DB_HOST}/" $CONFFILE
-        sed -i "s/dbname = .*/dbname = ${MTA_DB_NAME}/" $CONFFILE
-        sed -i "s/user = .*/user = ${MTA_DB_USER}/" $CONFFILE
-        sed -i "s/password = .*/password = ${MTA_DB_PWD}/" $CONFFILE
+        sed -i "s/^hosts = .*/hosts = ${MTA_DB_HOST}/" $CONFFILE
+        sed -i "s/^dbname = .*/dbname = ${MTA_DB_NAME}/" $CONFFILE
+        sed -i "s/^user = .*/user = ${MTA_DB_USER}/" $CONFFILE
+        sed -i "s/^password = .*/password = ${MTA_DB_PWD}/" $CONFFILE
     done
 }
 

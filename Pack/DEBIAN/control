@@ -3,7 +3,7 @@ Version: 2025.1.0.000
 Architecture: amd64
 Maintainer: АО "Р7" <support@r7-office.ru>
 Installed-Size: 557
-Depends: postfix, openssl
+Depends: postfix, openssl, debconf, postfix-pgsql
 Section: mail
 Priority: optional
 Homepage: https://r7-office.ru/
