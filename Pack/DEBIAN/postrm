@@ -2,7 +2,7 @@
 set -e
 
 case "$1" in
-    purge|remove|abort-install|abort-upgrade|disappear|upgrade|failed-upgrade)
+    purge|abort-install|disappear)
         if [ -f /usr/share/debconf/confmodule ]; then
             . /usr/share/debconf/confmodule
             db_purge
