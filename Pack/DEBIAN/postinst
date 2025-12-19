@@ -121,6 +121,7 @@ conf_db()
 if [ "$1" = "configure" ]; then
     read_params_debconf
     cp -r $MTA_SOURCE_CONF_DIR/* $MTA_CONF_DIR
+    mkdir -p /var/log/r7-office/mtaserver
     conf_general
     conf_sasl
     conf_filter
