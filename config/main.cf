@@ -94,6 +94,11 @@ recipient_canonical_maps = proxy:pgsql:/etc/postfix/psql/canonical/psql-recipien
 virtual_alias_maps = proxy:pgsql:/etc/postfix/psql/aliases/psql-virtual_alias_maps.cf
 
 ###
+#Relocated
+###
+relocated_maps = proxy:pgsql:/etc/postfix/psql/notify/psql-relocated_maps.cf
+
+###
 #smtp relay
 ###
 relayhost = 
@@ -258,7 +263,7 @@ recipient_delimiter = +
 #Logging
 syslog_name = postfix
 maillog_file_prefixes = /
-maillog_file = /var/log/postfix.log
+maillog_file = /var/log/r7-office/mtaserver/postfix.log
 maillog_file_compressor = gzip
 maillog_file_rotate_suffix = %H:%M:%S-%d.%m.%Y
 debug_peer_level = 5
