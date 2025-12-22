@@ -15,13 +15,13 @@ Description: SASL service from MDA server for authenticate:
 
 Template: r7mtaserver/mta-ssl-cert
 Type: string
-Default: fullchain1.pem
-Description: Certificate filename for MTA:
+Default: ./sslcert/fullchain1.pem
+Description: Fullpath to certificate for MTA:
 
 Template: r7mtaserver/mta-ssl-key
 Type: string
-Default: privkey1.pem
-Description: Key filename for API:
+Default: ./sslcert/privkey1.pem
+Description: Fullpath to keyfile for MTA:
 
 Template: r7mtaserver/upgrade
 Type: boolean
