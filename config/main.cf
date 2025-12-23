@@ -140,7 +140,8 @@ proxy_read_maps =
     proxy:pgsql:/etc/postfix/psql/filters/psql-r7_helo_access_scope_recipient.cf,
     proxy:pgsql:/etc/postfix/psql/filters/psql-r7_sender_access_scope_sender.cf,
     proxy:pgsql:/etc/postfix/psql/filters/psql-r7_sender_access_scope_recipient.cf,
-    proxy:pgsql:/etc/postfix/psql/filters/psql-r7_recipient_access_scope_recipient.cf
+    proxy:pgsql:/etc/postfix/psql/filters/psql-r7_recipient_access_scope_recipient.cf,
+    proxy:pgsql:/etc/postfix/psql/notify/psql-relocated_maps.cf
 
 
 ###
