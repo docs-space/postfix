@@ -60,7 +60,7 @@ smtp_tls_key_file = {{ MAIL_MTA_CERT_KEY_FILE }}
 lmtp_tls_security_level = may
 lmtp_tls_session_cache_database = btree:${data_directory}/lmtp_scache
 lmtp_tls_session_cache_timeout = 3600s
-lmtp_tls_loglevel = 5
+lmtp_tls_loglevel = 4
 #Клиентский сертификат для MDA
 lmtp_tls_cert_file = {{ MAIL_MTA_CERT_CRT_FILE }}
 lmtp_tls_key_file = {{ MAIL_MTA_CERT_KEY_FILE }}
