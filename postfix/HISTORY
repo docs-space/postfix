@@ -29185,6 +29185,8 @@ Apologies for any names omitted.
 	after processing the key_format feature. This prevents a
 	database access error when keys may exceed the memcache
 	server's key length limit (usually, 250 bytes). Files:
+	global/dict_memcache.c, proto/memcache_table, util/ossl_digest.c,
+	ossl_digest.h, ossl_digest_test.c.
 
 20250523
 
@@ -30179,3 +30181,160 @@ Apologies for any names omitted.
 	bounce/bounce_warn_service.c.
 
 	TODO: unit test coverage.
+
+20251218
+
+	Feature: the postqueue command now also lists recipients
+	in bounce logfiles (in JSON output, this uses a new object
+	member 'bounce_reason' instead of the existing 'delay_reason').
+	Such recipients have already been deleted from the message
+	queue file, but they are still pending the creation of a
+	non-delivery status notification message that will be
+	returned to the sender. Files: showq/showq.c,
+	postqueue/showq_compat.c, postqueue/showq_json.c.
+
+	Wordsmithing: after a queue manager request failure to
+	generate a verp-style delivery status notification, log
+	"verp-bounce failed" instead of "verp failed". File:
+	global/abounce.c.
+
+20251219
+
+	Documentation: added multi_instance_directories to the list
+	of parameters that can authorize a non-default configuration
+	directory name, and made the descriptions consistent with
+	each other. Files: global/mail_conf.c, postdrop/postdrop.c,
+	postlog/postlog.c, postqueue/postqueue.c.
+
+	Bugfix (defect introduced: 20251218): showq/postqueue
+	protocol mismatch, caused by a missing update for a code
+	path in the showq daemon. Problem reported by Florian
+	Piekert, diagnosed by John Fawcett. File: showq/showq.c.
+
+20241221
+
+	Cleanup: re-indented postfix source code to make it easier
+	to maintain. No change in compiler output. Files:
+	discard/discard.c, global/ascii_header_text.c,
+	global/ascii_header_text.h, global/dict_proxy.c,
+	global/dict_sqlite_test.c, global/haproxy_srvr.c,
+	global/haproxy_srvr.h, global/pol_stats.h, global/rfc2047_code.c,
+	global/rfc2047_code.h, global/sendopts.c, milter/milter8.c,
+	milter/test-milter.c, postconf/postconf_edit.c, smtp/smtp.c,
+	smtp/smtp_reqtls_policy_test.c, smtpd/smtpd.c, smtpd/smtpd_chat.c,
+	smtpd/smtpd_peer_test.c, tls/tls_client.c, tls/tls_dh.c,
+	util/dict_open.c, util/myaddrinfo.c, util/myaddrinfo.h,
+	util/normalize_v4mapped_addr.c,
+	util/normalize_v4mapped_addr_test.c, util/normalize_ws.c,
+	util/ossl_digest.c, util/sys_defs.h, global/ascii_header_text.c,
+	global/ascii_header_text.h, global/dict_proxy.c,
+	global/dict_sqlite_test.c, global/haproxy_srvr.c,
+	global/haproxy_srvr.h, global/pol_stats.h, global/rfc2047_code.c,
+	global/rfc2047_code.h, global/sendopts.c, milter/milter8.c,
+	milter/test-milter.c, postconf/postconf_edit.c, smtp/smtp.c,
+	smtp/smtp_reqtls_policy_test.c, smtpd/smtpd.c, smtpd/smtpd_chat.c,
+	smtpd/smtpd_peer_test.c, tls/tls_client.c, tls/tls_dh.c,
+	util/dict_open.c, util/myaddrinfo.c, util/myaddrinfo.h,
+	util/normalize_v4mapped_addr.c,
+	util/normalize_v4mapped_addr_test.c, util/normalize_ws.c,
+	util/ossl_digest.c, util/sys_defs.h.
+
+	Documentation: update the transport(5) manpage text for the
+	case that transport maps specify no transport or no nexthop.
+	In the presentation of address classes, identify the relative
+	precedence of transport_maps on next-hop destination
+	selection. File: proto/transport.
+
+	Cleanup: change a non_smtpd_milters 'shutdown' response
+	from a hard error ('message content rejected') into a soft
+	error ('queue file write error') for consistency with
+	smtpd_milters. File: cleanup/cleanup_milter.c.
+
+	Documentation: regenerated manpages, and propagated parameter
+	changes from postconf(5) to on-line parameter summaries in
+	program manpages. Files: cleanup/cleanup.c, smtpd/smtpd.c.
+
+20251222
+
+	Revert the 20250623 change to the default value for
+	lmtp_tls_security_level, back to its Postfix 3.10 empty
+	value. There is no default TLS security level that makes
+	sense for connections over UNIX-domain, loopback TCP, and
+	non-loopback TCP sockets. Files: global/mail_params.[hc],
+	smtp/smtp.c.
+
+	Documentation: added RELEASE_NOTES_3.11, added example to
+	relocated(5) manpage; updated examples for opportunistic
+	TLS status logging in postconf(5).
+
+	Opened the postfix-3.12-yyyymmdd development series.
+
+20251223
+
+	Converted tests to support the C23 built-in bool type, and
+	fixed a few portability problems. Some tests in (util, dns,
+	smtpd) still need to be made hermetic. Files:
+	cleanup/cleanup_message_test.c, smtp/smtp_tls_policy_test.c,
+	smtpd/smtpd_check.c, util/Makefile.in, util/ossl_digest_test.c,
+	util/unescape.ref.
+
+	Documentation: minor edits of Postfix 3.11.0 RELEASE_NOTES.
+
+20251226
+
+	Tooling to reduce hard-coded database types in main.cf.
+	This introduces default_cache_db_type as the default database
+	for address_verify_map and postscreen_cache_map. It defaults
+	to 'lmdb' if default_database_type is 'lmdb', otherwise it
+	assumes the historical value 'btree'. With instructions for
+	overriding default_cache_db_type and default_database_type
+	in Postfix 3.11.0 RELEASE_NOTES. Files: makedefs,
+	mantools/postlink, proto/INSTALL.html, proto/postconf.proto,
+	README_FILES/INSTALL, RELEASE_NOTES-3.11, global/mail_params.c,
+	global/mail_params.h.
+
+	Documentation: updated REQUIRETLS_README.
+
+20251231
+
+	Cleanup: eliminated implicit dependency of default_cache_db_type
+	on $default_database_type. Files: global/mail_params.h,
+	proto/postconf.proto, RELEASE_NOTES-3.11, util/sys_defs.h.
+
+	Documentation: fixed wrong default in INSTALL and postconf(5).
+	Files: proto/INSTALL.html, proto/postconf.proto.
+
+20260105
+
+	Cleanup: added missing entries to the proxy_read_maps default
+	value for more complete coverage. File: global/mail_params.h.
+
+20260106
+
+	Cleanup: added more missing entries to the proxy_read_maps
+	default value, based on documentation that parameters support
+	type:table inputs. Files: mantools/check-proxy-type-table,
+	global/mail_params.h
+
+20260107
+
+	Cleanup: added missing initialization for parameters with
+	a non-empty default value that specifies a lookup table.
+	File: proxymap/proxymap.c.
+
+	Cleanup: the proxymap service now detects table references
+	in /file/name and in restriction_classes. File: proxymap/proxymap.c
+
+	Feature: export the proxymap authorization tables, for
+	testing, and for potential use by other tools. File:
+	proxymap/proxymap.c
+
+	Cleanup: re-run 'make depend'. File: cleanup/Makefile.in.
+
+20260111
+
+	Cleanup: proxymap provenance in error and debug logging.
+	File: proxymap/proxymap.c.
+
+	Cleanup: unbroke Valgrind tests. Files: postmulti/Makefile.in,
+	proxymap/Makefile.in.

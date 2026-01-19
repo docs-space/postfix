@@ -202,7 +202,7 @@ verification probes.
 This feature is available in Postfix 2.1 and later.
 </p>
 
-%PARAM address_verify_map see "postconf -d" output
+%PARAM address_verify_map Postfix &ge; 3.11: $default_cache_db_type:$data_directory/verify_cache; Postfix &lt; 3.11: btree:$data_directory/verify_cache
 
 <p>
 Lookup table for persistent address verification status
@@ -235,8 +235,9 @@ Examples:
 </p>
 
 <pre>
-address_verify_map = hash:/var/lib/postfix/verify
-address_verify_map = btree:/var/lib/postfix/verify
+address_verify_map = $default_cache_db_type:$data_directory/verify_cache
+address_verify_map = hash:/var/lib/postfix/verify_cache
+address_verify_map = btree:/var/lib/postfix/verify_cache
 </pre>
 
 <p>
@@ -10082,10 +10083,11 @@ generally be left empty.  TLS session tickets require an OpenSSL
 library (at least version 0.9.8h) that provides full support for
 this TLS extension.  See also smtpd_tls_session_cache_timeout. </p>
 
-<p> Example: </p>
+<p> Examples: </p>
 
 <pre>
 smtpd_tls_session_cache_database = btree:/var/lib/postfix/smtpd_scache
+smtpd_tls_session_cache_database = lmdb:/var/lib/postfix/smtpd_scache
 </pre>
 
 <p> This feature is available in Postfix 2.2 and later.  </p>
@@ -10460,6 +10462,7 @@ data_directory, and a warning is logged. </p>
 
 <pre>
 smtp_tls_session_cache_database = btree:/var/lib/postfix/smtp_scache
+smtp_tls_session_cache_database = lmdb:/var/lib/postfix/smtp_scache
 </pre>
 
 <p> This feature is available in Postfix 2.2 and later.  </p>
@@ -12358,8 +12361,9 @@ with a permanent status code.</dd>
 <dt>tempfail</dt> <dd>Reject all further commands in this session
 with a temporary status code. </dd>
 
-<dt>shutdown</dt> <dd>Close the SMTP connection after sending a 421 
-SMTP reply. Available in Postfix 3.11 and later. </dd>
+<dt>shutdown</dt> <dd>With smtpd_milters, close the SMTP connection
+after sending a 421 SMTP reply; with non_smtpd_milters, report a
+queue file write error. Available in Postfix 3.11 and later. </dd>
 
 <dt>quarantine</dt> <dd>Like "accept", but freeze the message in
 the "hold" queue. Available with Postfix 2.6 and later. </dd>
@@ -14284,10 +14288,11 @@ the directory specified with the data_directory parameter. </p>
 passwords, and requires that Postfix is compiled with TLS support.
 </p>
 
-<p> Example: </p>
+<p> Examples: </p>
 
 <pre>
 smtp_sasl_auth_cache_name = proxy:btree:/var/lib/postfix/sasl_auth_cache
+smtp_sasl_auth_cache_name = proxy:lmdb:/var/lib/postfix/sasl_auth_cache
 </pre>
 
 <p> This feature is available in Postfix 2.5 and later. </p>
@@ -14666,12 +14671,13 @@ inspection for DKIM-signed mail from known friendly domains. </p>
 <p> This feature is available in Postfix 2.7, and as an optional
 patch for Postfix 2.6. </p>
 
-%PARAM postscreen_cache_map btree:$data_directory/postscreen_cache
+%PARAM postscreen_cache_map Postfix &ge; 3.11: $default_cache_db_type:$data_directory/postscreen_cache; Postfix &lt; 3.11: btree:$data_directory/postscreen_cache
 
 <p> Persistent storage for the postscreen(8) server decisions. </p>
 
 <p> To share a postscreen(8) cache between multiple postscreen(8)
-instances, use "postscreen_cache_map = proxy:btree:/path/to/file".
+instances, use "postscreen_cache_map = proxy:btree:/path/to/file"
+or "proxy:lmdb:/path/to/file".
 This requires Postfix version 2.9 or later; earlier proxymap(8)
 implementations don't support cache cleanup. For an alternative
 approach see the memcache_table(5) manpage. </p>
@@ -20029,7 +20035,7 @@ connection or an incorrect configuration. </p>
 
 <dl>
 
-<dt> tls=none </dt> <dd> A connection that did not use TLS. </dd>
+<dt> tls=none </dt> <dd> A connection with TLS disabled. </dd>
 
 <dt> tls=may </dt> <dd> Opportunistic TLS. The connection was used
 after a successful TLS handshake. </dd>
@@ -20037,9 +20043,10 @@ after a successful TLS handshake. </dd>
 <dt> tls=may? </dt> <dd> Opportunistic TLS. The status was undecided
 because no connection was made, or no server could be reached. </dd>
 
-<dt> tls=may:none </dt> <dd> The client was willing to use TLS, but
-the remote server did not support STARTTLS, and the connection was
-used in plaintext as permitted by the opportunistic TLS policy. </dd>
+<dt> tls=may:none </dt> <dd> Opportunistic TLS. The client was
+willing to use TLS, but the remote server did not support STARTTLS,
+and the connection was used in plaintext as permitted by the
+opportunistic TLS policy. </dd>
 
 <dt> tls=dane </dt> <dd> DANE policy compliant, no downgrade. </dd>
 
@@ -20148,7 +20155,7 @@ header has one of the following forms: </p>
 Received: by mail.example.com (Postfix) id postfix-queue-id
         for &lt;user@example.com&gt;; Day, dd Mon yyyy hh:mm:ss tz-offset (zone)
 <br>
-Received: by mail.example.com (Postfix) id postfix-queue-id
+Received: by mail.example.com (Postfix) id postfix-queue-id;
         Day, dd Mon yyyy hh:mm:ss tz-offset (zone)
 </pre>
 </blockquote>
@@ -20284,5 +20291,13 @@ to=&lt;<i>recipient</i>&gt;
 </dd>
 
 <dl>
+
+<p> This feature is available in Postfix &ge; 3.11. </p>
+
+%PARAM default_cache_db_type see 'postconf -d default_cache_db_type' output
+
+<p> The default database type for address_verify_map and
+postscreen_cache_map. Before Postfix 3.11 those caches used btree
+by default. </p>
 
 <p> This feature is available in Postfix &ge; 3.11. </p>

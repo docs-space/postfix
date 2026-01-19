@@ -225,7 +225,7 @@ This feature is available in Postfix 2.1 and later.
 </DD>
 
 <DT><b><a name="address_verify_map">address_verify_map</a>
-(default: see "postconf -d" output)</b></DT><DD>
+(default: Postfix &ge; 3.11: $<a href="postconf.5.html#default_cache_db_type">default_cache_db_type</a>:$<a href="postconf.5.html#data_directory">data_directory</a>/verify_cache; Postfix &lt; 3.11: <a href="DATABASE_README.html#types">btree</a>:$<a href="postconf.5.html#data_directory">data_directory</a>/verify_cache)</b></DT><DD>
 
 <p>
 Lookup table for persistent address verification status
@@ -258,8 +258,9 @@ Examples:
 </p>
 
 <pre>
-<a href="postconf.5.html#address_verify_map">address_verify_map</a> = <a href="DATABASE_README.html#types">hash</a>:/var/lib/postfix/verify
-<a href="postconf.5.html#address_verify_map">address_verify_map</a> = <a href="DATABASE_README.html#types">btree</a>:/var/lib/postfix/verify
+<a href="postconf.5.html#address_verify_map">address_verify_map</a> = $<a href="postconf.5.html#default_cache_db_type">default_cache_db_type</a>:$<a href="postconf.5.html#data_directory">data_directory</a>/verify_cache
+<a href="postconf.5.html#address_verify_map">address_verify_map</a> = <a href="DATABASE_README.html#types">hash</a>:/var/lib/postfix/verify_cache
+<a href="postconf.5.html#address_verify_map">address_verify_map</a> = <a href="DATABASE_README.html#types">btree</a>:/var/lib/postfix/verify_cache
 </pre>
 
 <p>
@@ -2016,6 +2017,18 @@ Example:
     PATH=/usr/bin:/usr/X11R6/bin
     ddd $<a href="postconf.5.html#daemon_directory">daemon_directory</a>/$<a href="postconf.5.html#process_name">process_name</a> $<a href="postconf.5.html#process_id">process_id</a> &amp; sleep 5
 </pre>
+
+
+</DD>
+
+<DT><b><a name="default_cache_db_type">default_cache_db_type</a>
+(default: see 'postconf -d <a href="postconf.5.html#default_cache_db_type">default_cache_db_type</a>' output)</b></DT><DD>
+
+<p> The default database type for <a href="postconf.5.html#address_verify_map">address_verify_map</a> and
+<a href="postconf.5.html#postscreen_cache_map">postscreen_cache_map</a>. Before Postfix 3.11 those caches used btree
+by default. </p>
+
+<p> This feature is available in Postfix &ge; 3.11. </p>
 
 
 </DD>
@@ -7473,8 +7486,9 @@ with a permanent status code.</dd>
 <dt>tempfail</dt> <dd>Reject all further commands in this session
 with a temporary status code. </dd>
 
-<dt>shutdown</dt> <dd>Close the SMTP connection after sending a 421
-SMTP reply. Available in Postfix 3.11 and later. </dd>
+<dt>shutdown</dt> <dd>With <a href="postconf.5.html#smtpd_milters">smtpd_milters</a>, close the SMTP connection
+after sending a 421 SMTP reply; with <a href="postconf.5.html#non_smtpd_milters">non_smtpd_milters</a>, report a
+queue file write error. Available in Postfix 3.11 and later. </dd>
 
 <dt>quarantine</dt> <dd>Like "accept", but freeze the message in
 the "<a href="QSHAPE_README.html#hold_queue">hold" queue</a>. Available with Postfix 2.6 and later. </dd>
@@ -8714,12 +8728,13 @@ The default time unit is h (hours).  </p>
 </DD>
 
 <DT><b><a name="postscreen_cache_map">postscreen_cache_map</a>
-(default: <a href="DATABASE_README.html#types">btree</a>:$<a href="postconf.5.html#data_directory">data_directory</a>/postscreen_cache)</b></DT><DD>
+(default: Postfix &ge; 3.11: $<a href="postconf.5.html#default_cache_db_type">default_cache_db_type</a>:$<a href="postconf.5.html#data_directory">data_directory</a>/postscreen_cache; Postfix &lt; 3.11: <a href="DATABASE_README.html#types">btree</a>:$<a href="postconf.5.html#data_directory">data_directory</a>/postscreen_cache)</b></DT><DD>
 
 <p> Persistent storage for the <a href="postscreen.8.html">postscreen(8)</a> server decisions. </p>
 
 <p> To share a <a href="postscreen.8.html">postscreen(8)</a> cache between multiple <a href="postscreen.8.html">postscreen(8)</a>
-instances, use "<a href="postconf.5.html#postscreen_cache_map">postscreen_cache_map</a> = <a href="proxymap.8.html">proxy</a>:<a href="DATABASE_README.html#types">btree</a>:/path/to/file".
+instances, use "<a href="postconf.5.html#postscreen_cache_map">postscreen_cache_map</a> = <a href="proxymap.8.html">proxy</a>:<a href="DATABASE_README.html#types">btree</a>:/path/to/file"
+or "<a href="proxymap.8.html">proxy</a>:<a href="lmdb_table.5.html">lmdb</a>:/path/to/file".
 This requires Postfix version 2.9 or later; earlier <a href="proxymap.8.html">proxymap(8)</a>
 implementations don't support cache cleanup. For an alternative
 approach see the <a href="memcache_table.5.html">memcache_table(5)</a> manpage. </p>
@@ -12395,7 +12410,7 @@ connection or an incorrect configuration. </p>
 
 <dl>
 
-<dt> tls=none </dt> <dd> A connection that did not use TLS. </dd>
+<dt> tls=none </dt> <dd> A connection with TLS disabled. </dd>
 
 <dt> tls=may </dt> <dd> Opportunistic TLS. The connection was used
 after a successful TLS handshake. </dd>
@@ -12403,9 +12418,10 @@ after a successful TLS handshake. </dd>
 <dt> tls=may? </dt> <dd> Opportunistic TLS. The status was undecided
 because no connection was made, or no server could be reached. </dd>
 
-<dt> tls=may:none </dt> <dd> The client was willing to use TLS, but
-the remote server did not support STARTTLS, and the connection was
-used in plaintext as permitted by the opportunistic TLS policy. </dd>
+<dt> tls=may:none </dt> <dd> Opportunistic TLS. The client was
+willing to use TLS, but the remote server did not support STARTTLS,
+and the connection was used in plaintext as permitted by the
+opportunistic TLS policy. </dd>
 
 <dt> tls=dane </dt> <dd> DANE policy compliant, no downgrade. </dd>
 
@@ -13155,10 +13171,11 @@ the directory specified with the <a href="postconf.5.html#data_directory">data_d
 passwords, and requires that Postfix is compiled with TLS support.
 </p>
 
-<p> Example: </p>
+<p> Examples: </p>
 
 <pre>
 <a href="postconf.5.html#smtp_sasl_auth_cache_name">smtp_sasl_auth_cache_name</a> = <a href="proxymap.8.html">proxy</a>:<a href="DATABASE_README.html#types">btree</a>:/var/lib/postfix/sasl_auth_cache
+<a href="postconf.5.html#smtp_sasl_auth_cache_name">smtp_sasl_auth_cache_name</a> = <a href="proxymap.8.html">proxy</a>:<a href="lmdb_table.5.html">lmdb</a>:/var/lib/postfix/sasl_auth_cache
 </pre>
 
 <p> This feature is available in Postfix 2.5 and later. </p>
@@ -15303,6 +15320,7 @@ under a non-Postfix directory is redirected to the Postfix-owned
 
 <pre>
 <a href="postconf.5.html#smtp_tls_session_cache_database">smtp_tls_session_cache_database</a> = <a href="DATABASE_README.html#types">btree</a>:/var/lib/postfix/smtp_scache
+<a href="postconf.5.html#smtp_tls_session_cache_database">smtp_tls_session_cache_database</a> = <a href="lmdb_table.5.html">lmdb</a>:/var/lib/postfix/smtp_scache
 </pre>
 
 <p> This feature is available in Postfix 2.2 and later.  </p>
@@ -17268,7 +17286,7 @@ header has one of the following forms: </p>
 Received: by mail.example.com (Postfix) id postfix-queue-id
         for &lt;user@example.com&gt;; Day, dd Mon yyyy hh:mm:ss tz-offset (zone)
 <br>
-Received: by mail.example.com (Postfix) id postfix-queue-id
+Received: by mail.example.com (Postfix) id postfix-queue-id;
         Day, dd Mon yyyy hh:mm:ss tz-offset (zone)
 </pre>
 </blockquote>
@@ -20222,10 +20240,11 @@ generally be left empty.  TLS session tickets require an OpenSSL
 library (at least version 0.9.8h) that provides full support for
 this TLS extension.  See also <a href="postconf.5.html#smtpd_tls_session_cache_timeout">smtpd_tls_session_cache_timeout</a>. </p>
 
-<p> Example: </p>
+<p> Examples: </p>
 
 <pre>
 <a href="postconf.5.html#smtpd_tls_session_cache_database">smtpd_tls_session_cache_database</a> = <a href="DATABASE_README.html#types">btree</a>:/var/lib/postfix/smtpd_scache
+<a href="postconf.5.html#smtpd_tls_session_cache_database">smtpd_tls_session_cache_database</a> = <a href="lmdb_table.5.html">lmdb</a>:/var/lib/postfix/smtpd_scache
 </pre>
 
 <p> This feature is available in Postfix 2.2 and later.  </p>

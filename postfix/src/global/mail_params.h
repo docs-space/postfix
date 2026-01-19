@@ -82,7 +82,6 @@ extern int warn_compat_respectful_logging;
 
 extern int warn_compat_break_smtp_tlsrpt_skip_reused_hs;
 extern int warn_compat_break_smtp_tls_level;
-extern int warn_compat_break_lmtp_tls_level;
 extern int warn_compat_break_tlsp_clnt_level;
 
 extern long compat_level;
@@ -377,6 +376,13 @@ extern char *var_config_dirs;
   */
 #define VAR_DB_TYPE		"default_database_type"
 extern char *var_db_type;
+
+ /*
+  * Preferred type of cache database files. The DEF_CACHE_DB_TYPE macro value
+  * is system dependent. It is defined in <sys_defs.h>.
+  */
+#define VAR_CACHE_DB_TYPE	"default_cache_db_type"
+extern char *var_cache_db_type;
 
  /*
   * What syslog facility to use. Unfortunately, something may have to be
@@ -1491,8 +1497,7 @@ extern bool var_smtp_tls_wrappermode;
 #ifdef USE_TLS
 #define DEF_SMTP_TLS_LEVEL	"${{$compatibility_level} <level {3.11} ?" \
 				" {} : {may}}"
-#define DEF_LMTP_TLS_LEVEL	"${{$compatibility_level} <level {3.11} ?" \
-				" {} : {may}}"
+#define DEF_LMTP_TLS_LEVEL	""
 #else
 #define DEF_SMTP_TLS_LEVEL	""
 #define DEF_LMTP_TLS_LEVEL	""
@@ -2581,7 +2586,32 @@ extern int var_local_rcpt_code;
 				" $" VAR_SMTP_HEAD_CHKS \
 				" $" VAR_SMTP_MIME_CHKS \
 				" $" VAR_SMTP_NEST_CHKS \
-				" $" VAR_SMTPD_REJECT_FILTER_MAPS
+				" $" VAR_SMTPD_REJECT_FILTER_MAPS \
+				" $" VAR_DEBUG_PEER_LIST \
+				" $" VAR_ETRN_CHECKS \
+				" $" VAR_FFLUSH_DOMAINS \
+				" $" VAR_FLUSH_ACL \
+				" $" VAR_LMTP_CACHE_DEST \
+				" $" VAR_LOC_RWR_CLIENTS \
+				" $" VAR_MASQ_EXCEPTIONS \
+				" $" VAR_PSC_ACL \
+				" $" VAR_PSC_ALLIST_IF \
+				" $" VAR_PSC_FORBID_CMDS \
+				" $" VAR_QMQPD_CLIENTS \
+				" $" VAR_SHOWQ_ACL \
+				" $" VAR_SMTP_CACHE_DEST \
+				" $" VAR_SMTPD_ACL_PERM_LOG \
+				" $" VAR_SMTPD_FORBID_CMDS \
+				" $" VAR_SMTPD_HOGGERS \
+				" $" VAR_SMTPD_SASL_EXCEPTIONS_NETWORKS \
+				" $" VAR_SMTPD_SASL_MECH_FILTER \
+				" $" VAR_SMTP_REQTLS_POLICY \
+				" $" VAR_SMTP_SASL_MECHS \
+				" $" VAR_SUBMIT_ACL \
+				" $" VAR_VERP_CLIENTS \
+				" $" VAR_XCLIENT_HOSTS \
+				" $" VAR_XFORWARD_HOSTS \
+
 extern char *var_proxy_read_maps;
 
 #define VAR_PROXY_WRITE_MAPS	"proxy_write_maps"
@@ -2966,7 +2996,7 @@ extern int var_vrfy_pend_limit;
 extern char *var_verify_service;
 
 #define VAR_VERIFY_MAP			"address_verify_map"
-#define DEF_VERIFY_MAP			"btree:$data_directory/verify_cache"
+#define DEF_VERIFY_MAP			"$" VAR_CACHE_DB_TYPE ":$data_directory/verify_cache"
 extern char *var_verify_map;
 
 #define VAR_VERIFY_POS_EXP		"address_verify_positive_expire_time"
@@ -3790,7 +3820,7 @@ extern char *var_multi_cntrl_cmds;
   * postscreen(8)
   */
 #define VAR_PSC_CACHE_MAP	"postscreen_cache_map"
-#define DEF_PSC_CACHE_MAP	"btree:$data_directory/postscreen_cache"
+#define DEF_PSC_CACHE_MAP	"$" VAR_CACHE_DB_TYPE ":$data_directory/postscreen_cache"
 extern char *var_psc_cache_map;
 
 #define VAR_SMTPD_SERVICE	"smtpd_service_name"

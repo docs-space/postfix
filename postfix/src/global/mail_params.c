@@ -54,6 +54,7 @@
 /*	int	var_ipc_idle_limit;
 /*	int	var_ipc_ttl_limit;
 /*	char	*var_db_type;
+/*	char	*var_cache_db_type;
 /*	char	*var_hash_queue_names;
 /*	int	var_hash_queue_depth;
 /*	int	var_trigger_timeout;
@@ -299,6 +300,7 @@ char   *var_mail_version;
 int     var_ipc_idle_limit;
 int     var_ipc_ttl_limit;
 char   *var_db_type;
+char   *var_cache_db_type;
 char   *var_hash_queue_names;
 int     var_hash_queue_depth;
 int     var_trigger_timeout;
@@ -401,7 +403,6 @@ const char null_format_string[1] = "";
   */
 int     warn_compat_break_smtp_tlsrpt_skip_reused_hs;
 int     warn_compat_break_smtp_tls_level;
-int     warn_compat_break_lmtp_tls_level;
 int     warn_compat_break_tlsp_clnt_level;
 
  /*
@@ -698,8 +699,6 @@ static void check_legacy_defaults(void)
 	    warn_compat_break_smtp_tlsrpt_skip_reused_hs = 1;
 	if (mail_conf_lookup(VAR_SMTP_TLS_LEVEL) == 0)
 	    warn_compat_break_smtp_tls_level = 1;
-	if (mail_conf_lookup(VAR_LMTP_TLS_LEVEL) == 0)
-	    warn_compat_break_lmtp_tls_level = 1;
 	if (mail_conf_lookup(VAR_TLSP_CLNT_LEVEL) == 0)
 	    warn_compat_break_tlsp_clnt_level = 1;
 #endif
@@ -831,6 +830,7 @@ void    mail_params_init()
 	VAR_ALIAS_DB_MAP, DEF_ALIAS_DB_MAP, &var_alias_db_map, 0, 0,
 	VAR_MAIL_RELEASE, DEF_MAIL_RELEASE, &var_mail_release, 1, 0,
 	VAR_DB_TYPE, DEF_DB_TYPE, &var_db_type, 1, 0,
+	VAR_CACHE_DB_TYPE, DEF_CACHE_DB_TYPE, &var_cache_db_type, 1, 0,
 	VAR_HASH_QUEUE_NAMES, DEF_HASH_QUEUE_NAMES, &var_hash_queue_names, 1, 0,
 	VAR_RCPT_DELIM, DEF_RCPT_DELIM, &var_rcpt_delim, 0, 0,
 	VAR_RELAY_DOMAINS, DEF_RELAY_DOMAINS, &var_relay_domains, 0, 0,

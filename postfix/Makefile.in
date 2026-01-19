@@ -136,6 +136,7 @@ postconf-unimplemented-check:
 
 missing-proxy-read-maps-check:
 	$(SHLIB_ENV) mantools/missing-proxy-read-maps | diff /dev/null -
+	$(SHLIB_ENV) mantools/check-proxy-type-table | diff /dev/null -
 
 typo-check: spell-cc spell-install-proto-text spell-proto-html \
 	check-spell-history
