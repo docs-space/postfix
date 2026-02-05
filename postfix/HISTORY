@@ -30338,3 +30338,43 @@ Apologies for any names omitted.
 
 	Cleanup: unbroke Valgrind tests. Files: postmulti/Makefile.in,
 	proxymap/Makefile.in.
+
+	Cleanup: missing "4.7.1" enhanced status code in Milter
+	"shutdown" response. File: milter/milter8.c.
+
+20260119
+
+	Cleanup: change the domain name length limit from 1024 to
+	MAXDNAME (defined in <arpa/nameser.h>) which is 1025. File:
+	src/dns/dns.h.
+
+20260126
+
+	Cleanup: postconf logged errors when a 'raw parameter' $name
+	(such as $smtpd_expansion_filter) appeared in the value of
+	a non-raw parameter. The solution was to selectively disable
+	mac_expand() recursion for 'raw' parameters. Files:
+	util/mac_expand.[hc], postconf/postconf_lookup.c
+
+20260127
+
+	Usability: when building on a Linux system that has no
+	Berkeley DB header file installed, "make makefiles" will
+	now suggest building with -DNO_DB instead. File: makedefs.
+
+	Usability: when building with -DNO_DB, makedefs will now
+	remind the user to override the default_database_type and
+	default_cache_db_type with names other than 'hash' or
+	'btree'. File: makedefs.
+
+	Added notes about MariaDB support, suggested by Otto
+	Kekäläinen. Files: proto/MYSQL_README.html proto/mysql_table.
+
+	Feature: "postconf -PP service/type/parameter" will list
+	parameters that are not set in master.cf. This is useful
+	because the value of such a parameter may depend on some
+	other parameter setting in master.cf. The initial use case
+	is to support tools that scan Postfix configurations for
+	deprecated lookup tables. A typical example is "postconf
+	-PPx '*/*/proxy_read_maps". Files: postconf/postconf.[hc],
+	postconf/postconf_master.c, postconf/Makefile.in.

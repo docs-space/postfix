@@ -404,3 +404,4 @@ nocertmatch
 noencryption
 nomatch
 nostarttls
+mariadb
