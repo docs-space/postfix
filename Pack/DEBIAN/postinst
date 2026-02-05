@@ -50,6 +50,13 @@ read_params_debconf()
     echo "MTA_SASL_HOST: $MTA_SASL_HOST"
 }
 
+save_params_debconf()
+{
+    echo "Saving debconf parameters..."
+    db_set r7mtaserver/mta-ssl-cert "$MTA_CERT_FILENAME"
+    db_set r7mtaserver/mta-ssl-key "$MTA_KEY_FILENAME"
+}
+
 conf_general()
 {
     echo "Configuring Postfix General Settings"
@@ -127,6 +134,7 @@ if [ "$1" = "configure" ]; then
     conf_filter
     conf_cert
     conf_db
+    save_params_debconf
 
     echo "Restart postfix"
     deb-systemd-invoke enable 'postfix.service' >/dev/null || true
