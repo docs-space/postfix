@@ -2,7 +2,7 @@
 # NAME
 #	mysql_table 5
 # SUMMARY
-#	Postfix MySQL client configuration
+#	Postfix MySQL/MariaDB client configuration
 # SYNOPSIS
 #	\fBpostmap -q "\fIstring\fB" mysql:/etc/postfix/\fIfilename\fR
 #
@@ -22,6 +22,11 @@
 #	The file /etc/postfix/mysql-aliases.cf has the same format as
 #	the Postfix main.cf file, and can specify the parameters
 #	described below.
+#
+#	Even though the component name is 'mysql' in Postfix,
+#	MariaDB/MySQL client and servers can be used interchangeably as
+#	the functionality Postfix relies on is available in both. However,
+#	their code bases may still diverge in the future.
 # LIST MEMBERSHIP
 # .ad
 # .fi

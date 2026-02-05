@@ -218,3 +218,6 @@ proto  proto socketmap_table qmqpd qmqpd c tls tls_misc c
  default value with a lookup table File proxymap proxymap c 
  in file name and in restriction_classes File proxymap proxymap c
  proxymap proxymap c
+ src dns dns h 
+ postconf postconf hc postconf postconf_master c 
+ PPx proxy_read_maps Files postconf postconf hc 
