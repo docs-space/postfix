@@ -83,8 +83,8 @@ conf_cert()
 	# Check Wildcard
 	if [ -f "$MTA_CERT_FILENAME" ] && [ -f "$MTA_KEY_FILENAME" ]; then
 		echo "Keys and certificate is found."
-        cp "$MTA_CERT_FILENAME" "$MTA_CONF_DIR/ssl/$(basename "$MTA_CERT_FILENAME")"
-        cp "$MTA_KEY_FILENAME" "$MTA_CONF_DIR/ssl/$(basename "$MTA_KEY_FILENAME")"
+        cp -rf "$MTA_CERT_FILENAME" "$MTA_CONF_DIR/ssl/$(basename "$MTA_CERT_FILENAME")"
+        cp -rf "$MTA_KEY_FILENAME" "$MTA_CONF_DIR/ssl/$(basename "$MTA_KEY_FILENAME")"
         MTA_CERT_FILENAME=$MTA_CONF_DIR/ssl/$(basename "$MTA_CERT_FILENAME")
         MTA_KEY_FILENAME=$MTA_CONF_DIR/ssl/$(basename "$MTA_KEY_FILENAME")
     else
@@ -127,7 +127,7 @@ conf_db()
 
 if [ "$1" = "configure" ]; then
     read_params_debconf
-    cp -r $MTA_SOURCE_CONF_DIR/* $MTA_CONF_DIR
+    cp -rf $MTA_SOURCE_CONF_DIR/* $MTA_CONF_DIR
     mkdir -p /var/log/r7-office/mtaserver
     conf_general
     conf_sasl
