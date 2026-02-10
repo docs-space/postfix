@@ -83,8 +83,12 @@ conf_cert()
 	# Check Wildcard
 	if [ -f "$MTA_CERT_FILENAME" ] && [ -f "$MTA_KEY_FILENAME" ]; then
 		echo "Keys and certificate is found."
-        cp -rf "$MTA_CERT_FILENAME" "$MTA_CONF_DIR/ssl/$(basename "$MTA_CERT_FILENAME")"
-        cp -rf "$MTA_KEY_FILENAME" "$MTA_CONF_DIR/ssl/$(basename "$MTA_KEY_FILENAME")"
+		if [ "$MTA_CERT_FILENAME" != "$MTA_CONF_DIR/ssl/$(basename "$MTA_CERT_FILENAME")" ]; then
+    		cp -rf "$MTA_CERT_FILENAME" "$MTA_CONF_DIR/ssl/$(basename "$MTA_CERT_FILENAME")"
+		fi
+		if [ "$MTA_KEY_FILENAME" != "$MTA_CONF_DIR/ssl/$(basename "$MTA_KEY_FILENAME")" ]; then
+    		cp -rf "$MTA_KEY_FILENAME" "$MTA_CONF_DIR/ssl/$(basename "$MTA_KEY_FILENAME")"
+		fi
         MTA_CERT_FILENAME=$MTA_CONF_DIR/ssl/$(basename "$MTA_CERT_FILENAME")
         MTA_KEY_FILENAME=$MTA_CONF_DIR/ssl/$(basename "$MTA_KEY_FILENAME")
     else
