@@ -176,50 +176,35 @@ smtpd_restriction_classes =
 
 ### Описание Р7-Классов проверок
 r7_client_access_scope_client =
-    check_client_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_client_access_scope_client.cf,
-    check_policy_service inet:{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }}
+    check_client_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_client_access_scope_client.cf
 r7_client_access_scope_helo =
-    check_client_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_client_access_scope_helo.cf,
-    check_policy_service inet:{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }}
+    check_client_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_client_access_scope_helo.cf
 r7_client_access_scope_sender =
-    check_client_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_client_access_scope_sender.cf,
-    check_policy_service inet:{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }}
+    check_client_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_client_access_scope_sender.cf
 r7_client_access_scope_recipient =
-    check_client_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_client_access_scope_recipient.cf,
-    check_policy_service inet:{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }}
+    check_client_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_client_access_scope_recipient.cf
 
 r7_helo_access_scope_helo =
-    check_helo_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_helo_access_scope_helo.cf,
-    check_policy_service inet:{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }}
+    check_helo_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_helo_access_scope_helo.cf
 r7_helo_access_scope_sender =
-    check_helo_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_helo_access_scope_sender.cf,
-    check_policy_service inet:{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }}
+    check_helo_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_helo_access_scope_sender.cf
 r7_helo_access_scope_recipient =
-    check_helo_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_helo_access_scope_recipient.cf,
-    check_policy_service inet:{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }}
+    check_helo_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_helo_access_scope_recipient.cf
 
-r7_etrn_access =
-    check_policy_service inet:{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }},
-    permit
+r7_etrn_access = permit
 
 r7_sender_access_scope_sender = 
-    check_sender_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_sender_access_scope_sender.cf,
-    check_policy_service inet:{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }}
+    check_sender_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_sender_access_scope_sender.cf
 r7_sender_access_scope_recipient = 
-    check_sender_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_sender_access_scope_recipient.cf,
-    check_policy_service inet:{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }}
+    check_sender_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_sender_access_scope_recipient.cf
 
 r7_recipient_access_scope_recipient = 
     check_recipient_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_recipient_access_scope_recipient.cf,
     check_policy_service inet:{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }}
 
-r7_data_access =
-    check_policy_service inet:{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }},
-    permit
+r7_data_access = permit
 
-r7_end_of_data_access =
-    check_policy_service inet:{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }},
-    permit
+r7_end_of_data_access = permit
 
 ### Рестрикшены
 smtpd_client_restrictions = 
