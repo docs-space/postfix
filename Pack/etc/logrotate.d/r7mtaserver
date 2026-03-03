@@ -1,0 +1,9 @@
+/var/log/r7-office/mtaserver/postfix.log {
+        daily
+        missingok
+        rotate 10
+        compress
+        delaycompress
+        notifempty
+        nocreate
+}

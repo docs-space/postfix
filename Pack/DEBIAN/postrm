@@ -3,6 +3,8 @@ set -e
 
 case "$1" in
     purge|abort-install|disappear)
+        deb-systemd-invoke restart 'logrotate.service' >/dev/null || true
+
         if [ -f /usr/share/debconf/confmodule ]; then
             . /usr/share/debconf/confmodule
             db_purge
