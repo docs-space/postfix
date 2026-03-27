@@ -51,7 +51,7 @@
 #define DEF_MAILBOX_LOCK "flock, dotlock"
 #define HAS_SUN_LEN
 #define HAS_FSYNC
-#define HAS_DB
+#define HAS_DB		1
 #define HAS_SA_LEN
 #define NATIVE_DB_TYPE	"hash"
 #if (defined(__NetBSD_Version__) && __NetBSD_Version__ >= 104250000)
@@ -232,7 +232,7 @@
 #define DEF_MAILBOX_LOCK "flock, dotlock"
 #define HAS_SUN_LEN
 #define HAS_FSYNC
-#define HAS_DB
+#define HAS_DB		1
 #define HAS_SA_LEN
 #define NATIVE_DB_TYPE	"hash"
 #define ALIAS_DB_MAP	"$default_database_type:/etc/aliases"
@@ -774,7 +774,7 @@ extern int initgroups(const char *, int);
 #define INTERNAL_LOCK	MYFLOCK_STYLE_FLOCK
 #define DEF_MAILBOX_LOCK "fcntl, dotlock"	/* RedHat >= 4.x */
 #define HAS_FSYNC
-#define HAS_DB
+#define HAS_DB		1
 #define NATIVE_DB_TYPE	"hash"
 #define ALIAS_DB_MAP	"$default_database_type:/etc/aliases"
 #ifndef NO_NIS
@@ -850,7 +850,7 @@ extern int initgroups(const char *, int);
 #define INTERNAL_LOCK	MYFLOCK_STYLE_FLOCK
 #define DEF_MAILBOX_LOCK "dotlock"	/* verified RedHat 3.03 */
 #define HAS_FSYNC
-#define HAS_DB
+#define HAS_DB		1
 #define NATIVE_DB_TYPE	"hash"
 #define ALIAS_DB_MAP	"$default_database_type:/etc/aliases"
 #ifndef NO_NIS
@@ -883,7 +883,7 @@ extern int initgroups(const char *, int);
 #define INTERNAL_LOCK	MYFLOCK_STYLE_FCNTL
 #define DEF_MAILBOX_LOCK "fcntl, dotlock"	/* RedHat >= 4.x */
 #define HAS_FSYNC
-#define HAS_DB
+#define HAS_DB		1
 #define NATIVE_DB_TYPE	"hash"
 #define ALIAS_DB_MAP	"$default_database_type:/etc/aliases"
 #ifndef NO_NIS
@@ -1708,13 +1708,15 @@ typedef int pid_t;
 
  /*
   * Bit banging!! There is no official constant that defines the INT_MAX
-  * equivalent for off_t, ssize_t, etc. Wietse came up with the following
-  * macro that works as long as off_t, ssize_t, etc. use one's or two's
-  * complement logic (that is, the maximum value is binary 01...1). Don't use
-  * right-shift for signed types: the result is implementation-defined.
+  * equivalent for off_t, ssize_t, etc. Decades ago, Wietse came up with a
+  * macro that worked on one's or two's complement logic (that is, the
+  * maximum value is binary 01...1). As Kamil Frankowicz pointed out, that
+  * code relied on shifting into the sign bit, which is not defined in the
+  * language standard. The current version still works on one's and two's
+  * complement logic, but avoids the undefined behavior.
   */
 #include <limits.h>
-#define __MAXINT__(T) ((T) ~(((T) 1) << ((sizeof(T) * CHAR_BIT) - 1)))
+#define __MAXINT__(T) ((((T) 1 << (sizeof(T) * CHAR_BIT - 2)) - 1) * 2 + 1)
 #ifndef OFF_T_MAX
 #define OFF_T_MAX __MAXINT__(off_t)
 #endif
