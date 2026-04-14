@@ -165,6 +165,16 @@ static const char *dict_pgsql_lookup(DICT *, const char *);
 DICT   *dict_pgsql_open(const char *, int, int);
 static void dict_pgsql_close(DICT *);
 static HOST *host_init(const char *);
+static int pgsql_encoding_is_utf8(const char *);
+
+/* pgsql_encoding_is_utf8 - compare UTF-8 aliases case-insensitively */
+
+static int pgsql_encoding_is_utf8(const char *encoding)
+{
+    return (encoding != 0
+	    && (strcasecmp(encoding, "UTF8") == 0
+		|| strcasecmp(encoding, "UTF-8") == 0));
+}
 
 /* dict_pgsql_quote - escape SQL metacharacters in input string */
 
@@ -566,6 +576,8 @@ static PGSQL_RES *plpgsql_query(DICT_PGSQL *dict_pgsql,
  */
 static void plpgsql_connect_single(DICT_PGSQL *dict_pgsql, HOST *host)
 {
+    const char *actual_encoding;
+
     if (host->type == TYPECONNSTR) {
 	host->db = PQconnectdb(host->name);
     } else {
@@ -585,6 +597,23 @@ static void plpgsql_connect_single(DICT_PGSQL *dict_pgsql, HOST *host)
 	plpgsql_down_host(host, dict_pgsql->retry_interval);
 	return;
     }
+    actual_encoding = PQparameterStatus(host->db, "client_encoding");
+    if (actual_encoding == 0) {
+	msg_warn("dict_pgsql: host %s did not report client_encoding after setting %s",
+		 host->hostname, dict_pgsql->encoding);
+	plpgsql_down_host(host, dict_pgsql->retry_interval);
+	return;
+    }
+    if (pgsql_encoding_is_utf8(dict_pgsql->encoding)
+	&& !pgsql_encoding_is_utf8(actual_encoding)) {
+	msg_warn("dict_pgsql: host %s returned client_encoding=%s after requesting %s; skipping host",
+		 host->hostname, actual_encoding, dict_pgsql->encoding);
+	plpgsql_down_host(host, dict_pgsql->retry_interval);
+	return;
+    }
+    if (msg_verbose > 1)
+	msg_info("dict_pgsql: host %s client_encoding=%s",
+		 host->hostname, actual_encoding);
     if (msg_verbose)
 	msg_info("dict_pgsql: successful connection to host %s",
 		 host->hostname);

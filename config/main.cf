@@ -96,6 +96,7 @@ virtual_alias_maps = proxy:pgsql:/etc/postfix/psql/aliases/psql-virtual_alias_ma
 ###
 #Relocated
 ###
+relocated_prefix_enable = no
 relocated_maps = proxy:pgsql:/etc/postfix/psql/notify/psql-relocated_maps.cf
 
 ###
