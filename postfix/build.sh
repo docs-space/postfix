@@ -3,8 +3,8 @@ VERSION=$1
 BUILD_DIRECTORY=/opt/r7-mailserver/mtaserver
 PACK_DIRECTORY=$2/Pack/opt/r7-mailserver
 
-sudo apt-get update
-sudo apt-get install -y \
+apt-get update
+apt-get install -y \
     build-essential \
     gcc \
     g++ \
@@ -21,7 +21,7 @@ sudo apt-get install -y \
     xz-utils
 
 # Общие зависимости Postfix
-sudo apt-get install -y \
+apt-get install -y \
     libssl-dev \
     libsasl2-dev \
     libpcre3-dev \
@@ -48,11 +48,11 @@ sudo apt-get install -y \
     libgssrpc4
 
 # Альтернативно для минимальной сборки
-sudo apt-get install -y \
+apt-get install -y \
     gcc make libssl-dev libsasl2-dev libpcre3-dev libdb-dev
 
-sudo rm -rf ${BUILD_DIRECTORY}
-sudo mkdir -p ${BUILD_DIRECTORY}/usr/sbin \
+rm -rf ${BUILD_DIRECTORY}
+mkdir -p ${BUILD_DIRECTORY}/usr/sbin \
     ${BUILD_DIRECTORY}/etc/postfix \
     ${BUILD_DIRECTORY}/usr/libexec/postfix \
     ${BUILD_DIRECTORY}/var/lib/postfix \
@@ -62,14 +62,14 @@ sudo mkdir -p ${BUILD_DIRECTORY}/usr/sbin \
     ${BUILD_DIRECTORY}/var/spool/postfix \
     ${BUILD_DIRECTORY}/usr/share/doc/postfix \
     ${BUILD_DIRECTORY}/etc/postfix/samples
-sudo touch $BUILD_DIRECTORY/etc/postfix/master.cf
-sudo touch $BUILD_DIRECTORY/etc/postfix/main.cf
+touch $BUILD_DIRECTORY/etc/postfix/master.cf
+touch $BUILD_DIRECTORY/etc/postfix/main.cf
 
-sudo adduser --system --group --home $BUILD_DIRECTORY --gecos "Postfix mail server" \
+adduser --system --group --home $BUILD_DIRECTORY --gecos "Postfix mail server" \
         --no-create-home --disabled-password --quiet postfix || true
-sudo addgroup --quiet postdrop || true
+addgroup --quiet postdrop || true
 
-sudo make makefiles \
+make makefiles \
     shared=yes \
     dynamicmaps=yes \
     shlib_directory=${BUILD_DIRECTORY}/lib \
@@ -108,9 +108,9 @@ sudo make makefiles \
              -lz -llz4 -lzstd -lbz2 -llzma"
 
 
-sudo make
-sudo make install POSTFIX_INSTALL_OPTS="-non-interactive"
+make
+make install POSTFIX_INSTALL_OPTS="-non-interactive"
 
-sudo cp -r $BUILD_DIRECTORY $PACK_DIRECTORY/
-sudo rm -rf $BUILD_DIRECTORY
-sudo cp -r $2/config/* $PACK_DIRECTORY/mtaserver/etc/postfix
+cp -r $BUILD_DIRECTORY $PACK_DIRECTORY/
+rm -rf $BUILD_DIRECTORY
+cp -r $2/config/* $PACK_DIRECTORY/mtaserver/etc/postfix
