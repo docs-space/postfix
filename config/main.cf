@@ -23,13 +23,13 @@ mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
 ###
 biff = no
 append_dot_mydomain = no
-readme_directory = /usr/share/doc/postfix
-compatibility_level = 3.6
+readme_directory = /opt/r7-mailserver/mtaserver/usr/share/doc/postfix
+compatibility_level = 3.11
 
 ###
 # SSL/TLS Параметры входящей почты
 ###
-smtpd_use_tls = yes
+#smtpd_use_tls = yes
 smtpd_tls_cert_file = {{ MAIL_MTA_CERT_CRT_FILE }}
 smtpd_tls_key_file = {{ MAIL_MTA_CERT_KEY_FILE }}
 #smtpd_tls_security_level = may
@@ -42,7 +42,7 @@ smtpd_tls_loglevel = 1
 ###
 # SSL/TLS Параметры исходящей почты
 ###
-#smtp_tls_policy_maps = proxy:pgsql:/etc/postfix/psql/virtual_transport/psql-smtp_tls_policy_maps.cf
+#smtp_tls_policy_maps = proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/virtual_transport/psql-smtp_tls_policy_maps.cf
 smtp_tls_CApath=/etc/ssl/certs
 smtp_tls_security_level=may
 #smtp_tls_security_level = encrypt
@@ -56,7 +56,7 @@ smtp_tls_key_file = {{ MAIL_MTA_CERT_KEY_FILE }}
 ###
 # SSL/TLS Параметры локальной доставки
 ###
-#lmtp_tls_policy_maps = proxy:pgsql:/etc/postfix/psql/virtual_transport/psql-lmtp_tls_policy_maps.cf
+#lmtp_tls_policy_maps = proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/virtual_transport/psql-lmtp_tls_policy_maps.cf
 lmtp_tls_security_level = may
 lmtp_tls_session_cache_database = btree:${data_directory}/lmtp_scache
 lmtp_tls_session_cache_timeout = 3600s
@@ -67,13 +67,13 @@ lmtp_tls_key_file = {{ MAIL_MTA_CERT_KEY_FILE }}
 
 
 # SMTP-AUTH (исходящая)
-#smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+#smtp_sasl_password_maps = hash:/opt/r7-mailserver/mtaserver/etc/postfix/sasl_passwd
 #smtp_sasl_auth_enable = yes
 
 # SMTPD-AUTH (входящая): настройки SASL-авторизации в Dovecot по TCP
 smtpd_sasl_type = dovecot
 smtpd_sasl_path = inet:{{ MAIL_MTA_SASL_HOST }}:{{ MAIL_MTA_SASL_PORT }}
-#smtpd_sasl_path = pgsql:/etc/postfix/psql/psql-smtpd_sasl_path.cf
+#smtpd_sasl_path = pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/psql-smtpd_sasl_path.cf
 smtpd_sasl_auth_enable = yes
 #smtpd_sasl_auth_enable = no
 smtpd_sasl_security_options = noanonymous
@@ -85,18 +85,19 @@ broken_sasl_auth_clients = no
 #Canonical Name
 ###
 remote_header_rewrite_domain = domain.invalid
-sender_canonical_maps = proxy:pgsql:/etc/postfix/psql/canonical/psql-sender_canonical_maps.cf
-recipient_canonical_maps = proxy:pgsql:/etc/postfix/psql/canonical/psql-recipient_canonical_maps.cf
+sender_canonical_maps = proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/canonical/psql-sender_canonical_maps.cf
+recipient_canonical_maps = proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/canonical/psql-recipient_canonical_maps.cf
 
 ###
 #Aliases
 ###
-virtual_alias_maps = proxy:pgsql:/etc/postfix/psql/aliases/psql-virtual_alias_maps.cf
+virtual_alias_maps = proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/aliases/psql-virtual_alias_maps.cf
 
 ###
 #Relocated
 ###
-relocated_maps = proxy:pgsql:/etc/postfix/psql/notify/psql-relocated_maps.cf
+relocated_prefix_enable = no
+relocated_maps = proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/notify/psql-relocated_maps.cf
 
 ###
 #smtp relay
@@ -123,38 +124,38 @@ virtual_mailbox_base =
 #Proxy_map
 ###
 proxy_read_maps =
-    proxy:pgsql:/etc/postfix/psql/virtual_email/psql-virtual_mailbox_domains.cf,
-    proxy:pgsql:/etc/postfix/psql/virtual_email/psql-virtual_mailbox_maps.cf,
-    proxy:pgsql:/etc/postfix/psql/virtual_transport/psql-virtual_transport.cf,
-    proxy:pgsql:/etc/postfix/psql/virtual_transport/psql-smtp_tls_policy_maps.cf,
-    proxy:pgsql:/etc/postfix/psql/virtual_transport/psql-lmtp_tls_policy_maps.cf,
-    proxy:pgsql:/etc/postfix/psql/canonical/psql-sender_canonical_maps.cf,
-    proxy:pgsql:/etc/postfix/psql/canonical/psql-recipient_canonical_maps.cf,
-    proxy:pgsql:/etc/postfix/psql/aliases/psql-virtual_alias_maps.cf,
-    proxy:pgsql:/etc/postfix/psql/filters/psql-r7_client_access_scope_client.cf,
-    proxy:pgsql:/etc/postfix/psql/filters/psql-r7_client_access_scope_helo.cf,
-    proxy:pgsql:/etc/postfix/psql/filters/psql-r7_client_access_scope_sender.cf,
-    proxy:pgsql:/etc/postfix/psql/filters/psql-r7_client_access_scope_recipient.cf,
-    proxy:pgsql:/etc/postfix/psql/filters/psql-r7_helo_access_scope_helo.cf,
-    proxy:pgsql:/etc/postfix/psql/filters/psql-r7_helo_access_scope_sender.cf,
-    proxy:pgsql:/etc/postfix/psql/filters/psql-r7_helo_access_scope_recipient.cf,
-    proxy:pgsql:/etc/postfix/psql/filters/psql-r7_sender_access_scope_sender.cf,
-    proxy:pgsql:/etc/postfix/psql/filters/psql-r7_sender_access_scope_recipient.cf,
-    proxy:pgsql:/etc/postfix/psql/filters/psql-r7_recipient_access_scope_recipient.cf,
-    proxy:pgsql:/etc/postfix/psql/notify/psql-relocated_maps.cf
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/virtual_email/psql-virtual_mailbox_domains.cf,
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/virtual_email/psql-virtual_mailbox_maps.cf,
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/virtual_transport/psql-virtual_transport.cf,
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/virtual_transport/psql-smtp_tls_policy_maps.cf,
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/virtual_transport/psql-lmtp_tls_policy_maps.cf,
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/canonical/psql-sender_canonical_maps.cf,
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/canonical/psql-recipient_canonical_maps.cf,
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/aliases/psql-virtual_alias_maps.cf,
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_client.cf,
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_helo.cf,
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_sender.cf,
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_recipient.cf,
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_helo_access_scope_helo.cf,
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_helo_access_scope_sender.cf,
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_helo_access_scope_recipient.cf,
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_sender_access_scope_sender.cf,
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_sender_access_scope_recipient.cf,
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_recipient_access_scope_recipient.cf,
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/notify/psql-relocated_maps.cf
 
 
 ###
 #Транспортные настройки
 ###
 default_transport = smtp:
-virtual_mailbox_domains = proxy:pgsql:/etc/postfix/psql/virtual_email/psql-virtual_mailbox_domains.cf
-virtual_mailbox_maps = proxy:pgsql:/etc/postfix/psql/virtual_email/psql-virtual_mailbox_maps.cf
-transport_maps = proxy:pgsql:/etc/postfix/psql/virtual_transport/psql-virtual_transport.cf
+virtual_mailbox_domains = proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/virtual_email/psql-virtual_mailbox_domains.cf
+virtual_mailbox_maps = proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/virtual_email/psql-virtual_mailbox_maps.cf
+transport_maps = proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/virtual_transport/psql-virtual_transport.cf
 
 #virtual_transport = lmtp:127.0.0.1:24
-#virtual_transport_maps = pgsql:/etc/postfix/psql/psql-virtual_transport.cf
-#fallback_transport = pgsql:/etc/postfix/psql/psql-fallback_transport.cf
+#virtual_transport_maps = pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/psql-virtual_transport.cf
+#fallback_transport = pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/psql-fallback_transport.cf
 
 ###
 #Правила фильтрации
@@ -176,30 +177,30 @@ smtpd_restriction_classes =
 
 ### Описание Р7-Классов проверок
 r7_client_access_scope_client =
-    check_client_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_client_access_scope_client.cf
+    check_client_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_client.cf
 r7_client_access_scope_helo =
-    check_client_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_client_access_scope_helo.cf
+    check_client_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_helo.cf
 r7_client_access_scope_sender =
-    check_client_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_client_access_scope_sender.cf
+    check_client_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_sender.cf
 r7_client_access_scope_recipient =
-    check_client_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_client_access_scope_recipient.cf
+    check_client_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_recipient.cf
 
 r7_helo_access_scope_helo =
-    check_helo_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_helo_access_scope_helo.cf
+    check_helo_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_helo_access_scope_helo.cf
 r7_helo_access_scope_sender =
-    check_helo_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_helo_access_scope_sender.cf
+    check_helo_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_helo_access_scope_sender.cf
 r7_helo_access_scope_recipient =
-    check_helo_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_helo_access_scope_recipient.cf
+    check_helo_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_helo_access_scope_recipient.cf
 
 r7_etrn_access = permit
 
 r7_sender_access_scope_sender = 
-    check_sender_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_sender_access_scope_sender.cf
+    check_sender_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_sender_access_scope_sender.cf
 r7_sender_access_scope_recipient = 
-    check_sender_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_sender_access_scope_recipient.cf
+    check_sender_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_sender_access_scope_recipient.cf
 
 r7_recipient_access_scope_recipient = 
-    check_recipient_access proxy:pgsql:/etc/postfix/psql/filters/psql-r7_recipient_access_scope_recipient.cf,
+    check_recipient_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_recipient_access_scope_recipient.cf,
     check_policy_service inet:{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }}
 
 r7_data_access = permit
@@ -287,8 +288,8 @@ hopcount_limit=10
 ###
 #BOUNCED
 ###
-bounce_template_file = /etc/postfix/bounce_template
-html_directory = /usr/share/doc/postfix/html
+bounce_template_file = /opt/r7-mailserver/mtaserver/etc/postfix/bounce_template
+html_directory = /opt/r7-mailserver/mtaserver/usr/share/doc/postfix/html
 smtpd_client_message_rate_limit = 1000
 mailbox_size_limit = 52428800
 smtpd_client_recipient_rate_limit = 500

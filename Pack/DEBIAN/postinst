@@ -2,8 +2,10 @@
 
 . /usr/share/debconf/confmodule
 
+MTA_HOME_DIR=/opt/r7-mailserver/mtaserver
 MTA_SOURCE_CONF_DIR=/opt/r7-mailserver/mtaserver/etc/postfix
-MTA_CONF_DIR=/etc/postfix
+#MTA_CONF_DIR=/etc/postfix
+MTA_CONF_DIR=/opt/r7-mailserver/mtaserver/etc/postfix
 MTA_CONF_MAIN=$MTA_CONF_DIR/main.cf
 MTA_CONF_MASTER=$MTA_CONF_DIR/master.cf
 MTA_CONF_DB_DIR=$MTA_CONF_DIR/psql
@@ -129,15 +131,40 @@ conf_db()
     done
 }
 
+conf_owner()
+{
+    echo "Add user postfix"
+  	adduser --system --group --home $MTA_HOME_DIR --gecos "Postfix mail server" \
+        --no-create-home --disabled-password --quiet postfix || true
+	echo "Add group postdrop"
+    addgroup --quiet postdrop || true
+
+    #Queue
+    chown -R postfix:root /opt/r7-mailserver/mtaserver/var/spool/postfix/{active,bounce,corrupt,defer,deferred,flush,hold,incoming,private,saved,trace}
+    chown -R postfix:postdrop /opt/r7-mailserver/mtaserver/var/spool/postfix/{maildrop,public}
+
+    #Exec
+    chown -R root:postdrop /opt/r7-mailserver/mtaserver/usr/sbin/{postdrop,postqueue}
+    chmod 2755 /opt/r7-mailserver/mtaserver/usr/sbin/{postdrop,postqueue}
+
+    #Lib
+    chown -R postfix:postfix /opt/r7-mailserver/mtaserver/var/lib/postfix
+
+	#Linking
+	ln -sf /opt/r7-mailserver/mtaserver/usr/bin/* /bin
+    ln -sf /opt/r7-mailserver/mtaserver/usr/sbin/* /sbin
+}
+
 if [ "$1" = "configure" ]; then
     read_params_debconf
-    cp -rf $MTA_SOURCE_CONF_DIR/* $MTA_CONF_DIR
+#    cp -rf $MTA_SOURCE_CONF_DIR/* $MTA_CONF_DIR
     mkdir -p /var/log/r7-office/mtaserver
     conf_general
     conf_sasl
     conf_filter
     conf_cert
     conf_db
+    conf_owner
     save_params_debconf
 
     echo "Restart postfix"
