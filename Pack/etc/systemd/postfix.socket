@@ -1,0 +1,17 @@
+[Unit]
+Description=Postfix SMTP/Submission email server activation socket
+
+[Socket]
+#postfix expects separate IPv4 and IPv6 sockets
+BindIPv6Only=ipv6-only
+ListenStream=0.0.0.0:25
+ListenStream=[::]:25
+ListenStream=0.0.0.0:485
+ListenStream=[::]:485
+ListenStream=0.0.0.0:587
+ListenStream=[::]:587
+KeepAlive=true
+
+[Install]
+WantedBy=sockets.target
+

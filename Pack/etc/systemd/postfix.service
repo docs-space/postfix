@@ -1,0 +1,19 @@
+[Unit]
+Description=Postfix Mail Transport Agent
+Documentation=man:postfix(1)
+Conflicts=sendmail.service exim4.service
+ConditionPathExists=/opt/r7-mailserver/mtaserver/etc/postfix/main.cf
+After=network-online.target nss-lookup.target
+Wants=network-online.target
+
+
+[Service]
+Type=forking
+GuessMainPID=no
+ExecStart=/opt/r7-mailserver/mtaserver/usr/sbin/postfix start
+ExecReload=/opt/r7-mailserver/mtaserver/usr/sbin/postfix reload
+ExecStop=/opt/r7-mailserver/mtaserver/usr/sbin/postfix stop
+WorkingDirectory=/opt/r7-mailserver/mtaserver
+
+[Install]
+WantedBy=multi-user.target

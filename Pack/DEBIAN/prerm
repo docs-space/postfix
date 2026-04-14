@@ -1,6 +1,17 @@
 #!/bin/sh -e
 set -e
 
+clean_binary_symlink() {
+    if [ -L "$$1" ]; then
+        target=$(readlink "$$1")
+        case "$target" in
+            /opt/r7-mailserver/mtaserver/usr/bin/*|/opt/r7-mailserver/mtaserver/usr/sbin/*)
+                rm -f "$$1"
+        ;;
+        esac
+    fi
+}
+
 case "$1" in
     failed-upgrade|abort-install|abort-upgrade|disappear|upgrade)
     ;;
@@ -9,12 +20,18 @@ case "$1" in
 	        deb-systemd-invoke stop 'postfix.service' >/dev/null || true
             deb-systemd-invoke disable 'postfix.service' >/dev/null || true
         fi
+        #Remove links
+        for f in /bin/* /sbin/*; do
+            clean_binary_symlink "$f"
+        done
+        #Remove addition data
         if [ -d /etc/postfix ]; then
             rm -rf /etc/postfix/*
         fi
         if [ -d /opt/r7-mailserver/mtaserver ]; then
             rm -rf /opt/r7-mailserver/mtaserver
         fi
+
     ;;
     *)
         echo "prerm called with unknown argument \`$1'" >&2
