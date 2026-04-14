@@ -34,7 +34,8 @@ case "$1" in
         #Delete service in systemd
         if [ -d /run/systemd/system ]; then
 	        if [ -x "/usr/bin/deb-systemd-helper" ]; then
-		        deb-systemd-helper purge 'dovecot.service' >/dev/null || true
+		        deb-systemd-helper purge 'postfix.service' >/dev/null || true
+                deb-systemd-helper purge 'postfix.socket' >/dev/null || true
                 systemctl --system daemon-reload >/dev/null || true
 	        fi
         fi
