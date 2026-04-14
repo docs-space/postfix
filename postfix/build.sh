@@ -18,7 +18,8 @@ apt-get install -y \
     tar \
     gzip \
     bzip2 \
-    xz-utils
+    xz-utils \
+    ed
 
 # Общие зависимости Postfix
 apt-get install -y \
