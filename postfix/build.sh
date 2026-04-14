@@ -45,7 +45,8 @@ apt-get install -y \
     libwrap0-dev \
     libkrb5-dev \
     libgssapi-krb5-2 \
-    libgssrpc4
+    libgssrpc4 \
+    libunbound-dev
 
 # Альтернативно для минимальной сборки
 apt-get install -y \

@@ -3,7 +3,7 @@ Version: 2025.1.0.000
 Architecture: amd64
 Maintainer: АО "Р7" <support@r7-office.ru>
 Installed-Size: 557
-Depends: adduser, openssl, debconf, logrotate, libc6 (>= 2.34), libdb5.3, libicu72 (>= 72.1~rc-1~), libnsl2 (>= 1.0), libsasl2-2 (>= 2.1.28+dfsg), libssl3 (>= 3.0.0), libssl-dev, libsasl2-dev, libpcre3-dev, libdb-dev, libldap2-dev, libpq-dev, default-libmysqlclient-dev, libsqlite3-dev, libcdb-dev, liblzma-dev, libz-dev, libbz2-dev, liblz4-dev, libzstd-dev, libicu-dev, libxml2-dev, libpam0g-dev, libcap-dev, libaudit-dev, libselinux1-dev, libwrap0-dev, libkrb5-dev, libgssapi-krb5-2, libgssrpc4
+Depends: adduser, openssl, debconf, logrotate, libc6 (>= 2.34), libdb5.3, libicu72 (>= 72.1~rc-1~), libunbound8 (>= 1.17.1), libnsl2 (>= 1.0), libsasl2-2 (>= 2.1.28+dfsg), libssl3 (>= 3.0.0), libssl3 (>= 3.0.19), libsasl2-dev, libpcre3-dev, libdb-dev, libldap2-dev, libpq-dev, default-libmysqlclient-dev, libsqlite3-dev, libcdb-dev, liblzma-dev, libz-dev, libbz2-dev, liblz4-dev, libzstd-dev, libicu-dev, libxml2-dev, libpam0g-dev, libcap-dev, libaudit-dev, libselinux1-dev, libwrap0-dev, libkrb5-dev, libgssapi-krb5-2, libgssrpc4
 Section: mail
 Priority: optional
 Homepage: https://r7-office.ru/
