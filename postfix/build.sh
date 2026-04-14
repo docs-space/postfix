@@ -28,7 +28,7 @@ apt-get install -y \
     libdb-dev \
     libldap2-dev \
     libpq-dev \
-    libmysqlclient-dev \
+    default-libmysqlclient-dev \
     libsqlite3-dev \
     libcdb-dev \
     liblzma-dev \
