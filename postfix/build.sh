@@ -36,7 +36,7 @@ sudo apt-get install -y \
     libbz2-dev \
     liblz4-dev \
     libzstd-dev \
-    libicu-dev \
+    libicu72 \
     libxml2-dev \
     libpam0g-dev \
     libcap-dev \
