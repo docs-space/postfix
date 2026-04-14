@@ -139,6 +139,17 @@ conf_owner()
 	echo "Add group postdrop"
     addgroup --quiet postdrop || true
 
+    #Queue
+    chown -R postfix:root /opt/r7-mailserver/mtaserver/var/spool/postfix/{active,bounce,corrupt,defer,deferred,flush,hold,incoming,private,saved,trace}
+    chown -R postfix:postdrop /opt/r7-mailserver/mtaserver/var/spool/postfix/{maildrop,public}
+
+    #Exec
+    chown -R root:postdrop /opt/r7-mailserver/mtaserver/usr/sbin/{postdrop,postqueue}
+    chmod 2755 /opt/r7-mailserver/mtaserver/usr/sbin/{postdrop,postqueue}
+
+    #Lib
+    chown -R postfix:postfix /opt/r7-mailserver/mtaserver/var/lib/postfix
+
 	#Linking
 	ln -sf /opt/r7-mailserver/mtaserver/usr/bin/* /bin
     ln -sf /opt/r7-mailserver/mtaserver/usr/sbin/* /sbin
