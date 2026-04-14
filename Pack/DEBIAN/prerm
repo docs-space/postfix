@@ -28,9 +28,18 @@ case "$1" in
         if [ -d /etc/postfix ]; then
             rm -rf /etc/postfix/*
         fi
-        if [ -d /opt/r7-mailserver/mtaserver ]; then
-            rm -rf /opt/r7-mailserver/mtaserver
-        fi
+        
+        for file in /opt/r7-mailserver/mtaserver/etc/postfix/ssl/*; do
+            if [ -h "$file" ]; then
+                rm -f "$file"
+            else
+                echo "${file} is not a symbolic link, skipping removal." >&2
+            fi
+        done
+#        if [ -d /opt/r7-mailserver/mtaserver ]; then
+#            rm -rf /opt/r7-mailserver/mtaserver
+#        fi
+
         #Delete service in systemd
         if [ -d /run/systemd/system ]; then
 	        if [ -x "/usr/bin/deb-systemd-helper" ]; then
