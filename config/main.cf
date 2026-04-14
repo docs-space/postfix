@@ -24,12 +24,12 @@ mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
 biff = no
 append_dot_mydomain = no
 readme_directory = /opt/r7-mailserver/mtaserver/usr/share/doc/postfix
-compatibility_level = 3.6
+compatibility_level = 3.11
 
 ###
 # SSL/TLS Параметры входящей почты
 ###
-smtpd_use_tls = yes
+#smtpd_use_tls = yes
 smtpd_tls_cert_file = {{ MAIL_MTA_CERT_CRT_FILE }}
 smtpd_tls_key_file = {{ MAIL_MTA_CERT_KEY_FILE }}
 #smtpd_tls_security_level = may
