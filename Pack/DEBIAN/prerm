@@ -2,11 +2,11 @@
 set -e
 
 clean_binary_symlink() {
-    if [ -L "$$1" ]; then
-        target=$(readlink "$$1")
+    if [ -L "$1" ]; then
+        target=$(readlink "$1")
         case "$target" in
             /opt/r7-mailserver/mtaserver/usr/bin/*|/opt/r7-mailserver/mtaserver/usr/sbin/*)
-                rm -f "$$1"
+                rm -f "$1"
         ;;
         esac
     fi
