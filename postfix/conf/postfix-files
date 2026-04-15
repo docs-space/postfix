@@ -114,6 +114,7 @@ $daemon_directory/postfix-tls-script:f:root:-:755
 $daemon_directory/postfix-wrapper:f:root:-:755
 $daemon_directory/postmulti-script:f:root:-:755
 $daemon_directory/postlogd:f:root:-:755
+$daemon_directory/postapi:f:root:-:755
 $daemon_directory/postscreen:f:root:-:755
 $daemon_directory/proxymap:f:root:-:755
 $daemon_directory/qmgr:f:root:-:755
