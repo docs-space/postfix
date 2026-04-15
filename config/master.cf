@@ -27,6 +27,9 @@ submissions     inet  n       -       y       -       -       smtpd
         -o smtpd_tls_wrappermode=yes
 #        -o smtpd_tls_auth_only=yes
 
+#POSTAPI
+0.0.0.0:5025 inet    n    n    n    -     -    postapi
+        -o syslog_name=postfix/postapi
 
 ###
 # Исходящая почта
