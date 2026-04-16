@@ -26549,7 +26549,6 @@ Apologies for any names omitted.
 	Documentation: inet_interfaces and proxy_interfaces
 	descriptions. File: proto/postconf.proto.
 
-
 20220719
 
 	Cleanup: Postfix 3.5.0 introduced debug logging noise in
@@ -30672,3 +30671,286 @@ Apologies for any names omitted.
 	that parameter names in postconf output must match 1:1 with
 	parameter names in the postlink script. File: global/mail_params.c,
 	postconf/postconf_builtin.c.
+
+20260323
+
+	Feature: specify "tls_trust_server_ccerts = yes" to trust
+	client certificates whose extended key usage (EKU) lists
+	only serverAuth and not clientAuth as valid TLS client
+	certificates. This parameter is used only in the Postfix
+	SMTP server, when client certificates are requested via
+	smtpd_tls_ask_ccert or smtpd_tls_req_ccert. It is a workaround
+	for policy changes at the major WebPKI CAs that preclude
+	the issuance of certificates with a clientAuth EKU. Viktor
+	Dukhovni. Files: proto/postconf.proto, global/mail_params.h,
+	tls/tls_misc.c, tls/tls_server.c.
+
+20260324
+
+	Cleanup: added missing smtpd_data_restrictions and
+	smtpd_end_of_data_restrictions in the sample master.cf
+	file. Omission reported by Viktor Dukhovni. File: conf/master.cf.
+
+20260402
+
+	Feature: 'Ptest' infrastructure for unit tests, and 'Pmock'
+	infrastructure to make tests hermetic (i.e. independent of
+	host configuration, network configuration, DNS, or installed
+	Postfix files).
+
+	Ptest was inspired by Go test, while Pmock implements a few
+	ideas from Google gmock. The PTEST_README file has some
+	information about how Postfix unit tests work.
+
+	This changes the Postfix file footprint as follows:
+
+	1) This adds source files named 'foo_test.c', that test
+	code in 'foo.c' and 'foo.h'; and this adds source files
+	mock_foo.c and mock_foo.h with functions that produce
+	prepared outputs for expected inputs. For example,
+	mock_getaddrinfo.c implements getaddrinfo() and getnameinfo()
+	functions that return prepared outputs without doing host
+	or DNS lookups. More files will be added as tests are
+	converted to the Ptest/Pmock infrastructure.
+
+	2) This removes the test data files ('foo.in*', 'foo.ref*').
+
+	3) This renames some files whose names end in test.c: for
+	example, dict_test.c is renamed to dict_cli.c.
+
+	Reality check: the Postfix source tree contains 129 .c files
+	with legacy "#ifdef TEST" support for tests, 53 .c files
+	with a separate _test.c file, and 526 .c files that have
+	no test of their own. it is likely that all .c files with
+	have a _test.c file. The plan is therefore to attack the
+	problem from both ends, and to integrate support for
+	whole-program daemon tests that was used in 2025 to test a
+	new trivial-rewrite feature.
+
+	Care was taken to minimize the changes to non-test code,
+	by making make clear which code paths rare reachable only
+	from tests.
+
+	Changes to non-test code:
+
+	Cleanup: migrate biff_notify() from gethostbyname() and
+	getservbyname() to myaddrinfo. File: local/biff_notify.c.
+
+	Cleanup: new find_inet_service(3) module that returns an
+	error status; deprecate find_inet(3) where all errors are
+	fatal. File: util/find_inet_service.c.
+
+	Cleanup: migrate the MySQL client from find_inet(3) to
+	find_inet_service(3). Files: src/global/dict_mysql.c.
+
+	Feature: new NAME_MASK_NULL flag. When this flag is set,
+	the str_name_mask_opt() function will output a string "0"
+	when the input mask is empty. Otherwise, the result is an
+	empty string. Files: util/name_mask.[hc].
+
+	Cleanup: make dict_open() easier to test, with support
+	for graceful degradation after dictionary type or name
+	syntax errors. File: util/dict_open.c.
+
+	Cleanup: stricter parsing of TCP/UDP port numbers. File:
+	util/known_tcp_ports.c.
+
+	Bugfix: mystrndup() ignored the case that length==0, when
+	compiled without NO_SHARED_EMPTY_STRINGS (the default).
+	File: util/mymalloc.c.
+
+	Changes to make non-test code easier to test:
+
+	Testing: support to make msg_fatal() and msg_panic() calls
+	testable. Instead of terminating the process, these functions
+	may transfer control to a call-back function that calls
+	[sig]longjmp(). Files: util/msg.c.
+
+	Testing: support to make msg_xxx() calls testable. This
+	requires adding a context argument to msg_output() and to
+	msg_output() call-back functions, and making msg_output()
+	undoable. To that end, msg_output() is renamed to
+	msg_output_push(), and its companion function is called
+	msg_output_pop(). Files: util/msg_output.[hc].
+
+	Testing: support to make msg_xxx() calls testable. This
+	requires suspending output to VSTREAM_ERR while capturing
+	output for inspection. Files: util/msg_vstream.[hc].
+
+	Changes to test code:
+
+	Removed .ref* and .in* files as tests were converted to
+	_test.c style. Files: global/hfrom_format.ref,
+	global/hfrom_format_test.c, global/login_sender_match.ref,
+	global/login_sender_match_test.c, global/map_search.ref,
+	global/map_search_test.c, global/smtp_reply_footer.ref,
+	global/smtp_reply_footer_test.c, util/known_tcp_ports.ref,
+	util/known_tcp_ports_test.c, util/myaddrinfo.ref*,
+	util/myaddrinfo_test.c, util/mystrtok.ref, util/mystrtok_test.c,
+	util/unescape.in, util/unescape.ref, util/unescape_test.c.
+
+	Cleanup: renamed global/test_main.[hc] to
+	global/test_server_main.[hc]. Files: global/test_server_main.[hc],
+	bounce/bounce_tester.c, Makefiles.
+
+	Renamed dict_test.c to dict_cli.c, stream_test.c to
+	sunos5_stream_test.c.
+
+20260403
+
+	Testing: 'make test' supports builds with "dynamicmaps=yes".
+	Some tests may still be non-hermetic. That will be addressed
+	in the course of time. Files: makedefs, Makefile.in,
+	dns/Makefile.in, postalias/Makefile.in, postmap/Makefile.in,
+	smtpd/Makefile.in, smtpd/smtpd_check.c, util/dict_open.c,
+	util/dynamicmaps.c, util/Makefile.in.
+
+20260404
+
+	Refactored SNI support and eliminated some duplicate code
+	and data. Viktor Dukhovni. Files: tls/tls_client.c,
+	tls/tls.h, tls/tls_misc.c, tls/tls_server.c.
+
+20260405
+
+	Documentation: in TLS_README, step-by-step instructions to
+	test Postfix SMTP server SNI support, and how to avoid a
+	null pointer bug in unpatched OpenSSL versions 3.2..3.6;
+	this text is linked to from the postconf(5) manpage. Viktor
+	Dukhovni. Files: proto/postconf.proto, proto/TLS_README.html.
+
+	Testing: In the SQLite test, call ptest_skip() if Postfix
+	is built without SQLite (after converting the test to use
+	Ptest). Files: global/Makefile.in, global/dict_sqlite_test.c.
+
+	Testing: expect_ptest_error() should be expect_ptest_log_event().
+	File: global/hfrom_format_test.c.
+
+20260406
+
+	Documentation: some construction debris. Viktor Dukhovni.
+	File: proto/TLS_README.html.
+
+20260407
+
+	Code health: added 'bool' support to internal protocols.
+	util/attr.h, util/attr_print0.c, util/attr_print64.c,
+	util/attr_print_plain.c, util/attr_scan0.c, util/attr_scan0.ref,
+	util/attr_scan64.c, util/attr_scan64.ref, util/attr_scan_plain.c,
+	util/attr_scan_plain.ref. There is no code that uses this now,
+	but there are tests to make sure that it is works when needed.
+
+20260408
+
+	Testing: pass an output function argument to make_attr().
+	Files: testing/make_attr.[hc], testing/match_attr_test.c,
+	testing/mock_server_test.c.
+
+20260410
+
+	Code health: refactored tlsproxy PARAM, INIT and START send
+	and receive handlers to make the code easier to test, and
+	added some unit tests. This removes tls_proxy_client_misc.c,
+	tls_proxy_client_print.c, tls_proxy_client_scan.c,
+	tls_proxy_server_print.c, and tls_proxy_server_scan.c, after
+	redistributing their content to new files. Files:
+	postscreen/Makefile.in, smtpd/Makefile.in, smtp/Makefile.in,
+	tls/Makefile.in, tls_proxy.h, tls_proxy_attr.h,
+	tls_proxy_client_init_proto.c tls_proxy_client_init_proto.h,
+	tls_proxy_client_init_proto_test.c tls_proxy_client_param_proto.c,
+	tls_proxy_client_param_proto.h tls_proxy_client_param_proto_test.c,
+	tls_proxy_client_start_proto.c tls_proxy_client_start_proto.h,
+	tls_proxy_server_init_proto.c tls_proxy_server_init_proto.h,
+	tls_proxy_server_init_proto_test.c tls_proxy_server_param_proto.c,
+	tls_proxy_server_param_proto.h tls_proxy_server_param_proto_test.c,
+	tls_proxy_server_start_proto.c tls_proxy_server_start_proto.h.
+
+	Added missing tls_trust_server_ccerts parameter entry in
+	smtpd(8) manpage, missing tls_trust_server_ccerts parameter
+	support in postlink. Files: smtpd/smtpd.c, mantools/postlink.
+
+20260413
+
+	Viktor Dukhovni scanned Postfix source with Claude Opus
+	4.6. It found a minor bug in the proxymap server (requires
+	an invalid map name configured in main.cf) and in the RFC
+	2047 encoder (requires an absurdly long charset name
+	configured main.cf), two instances where Postfix internal
+	documentation was not consistent with Postfix implementation
+	(handling of "*" wildcards in domain names, handling of a
+	'truncated list' flag in the DNS client), two bugs in debug
+	logging (CIDR map, DNS client), one null pointer bug in the
+	PostgreSQL client (with libpq < 8.0), one resource leak
+	after fork() failure, ignored errors that may happen during
+	memory shortage, missing detection of integer overflows
+	that are unlikely because Postfix memory by design does not
+	contain large objects or large numbers of objects. The
+	number of false positives was remarkably low (about three).
+	Claude also suggested clarification in code comments that
+	will help to make Postfix maintainable by other people (and
+	to silence future code scanners). Files: dns/dns.h,
+	dns/dns_lookup.c, dns/dns_rr.c, dns/dns_rr_test.c,
+	global/dict_pgsql.c, global/haproxy_srvr.c, global/mime_state.c,
+	global/pipe_command.c, global/rfc2047_code.c, local/dotforward.c,
+	proxymap/proxymap.c, smtp/smtp_proto.c, smtpd/smtpd_expand.c,
+	testing/mock_dns_lookup.c, util/argv.c, util/dict_cdb.c,
+	util/dict_cidr.c, util/dict.h, util/dict_sockmap.c,
+	util/midna_domain.c, util/myaddrinfo.c, util/netstring.c,
+	util/slmdb.c, util/valid_hostname.c, util/valid_hostname.ref,
+	util/vbuf_print.c, util/vstream.c, util/vstring.c.
+
+	Code health: renamed identifiers to prepare for integration
+	of proxied tls_server_init() and tls_server_start() calls.
+	Files: tlsproxy/tlsproxy.c, tlsproxy/tlsproxy.h,
+	tlsproxy/tlsproxy_state.c.
+
+	Testing: updated postscreen tests for changes in make_attr()
+	API. File: src/postscreen/postscreen_dnsbl_test.c.
+
+20260415
+
+	Code health: verified zero functionality change. Factored
+	out tlsproxy code for client role management, in preparation
+	for overhaul of the code for server role management (which
+	will become very similar). Next up will be renaming identifiers
+	for consistency. Files: tlsproxy/tlsproxy.[hc],
+	tlsproxy/tlsproxy_client.[hc], tlsproxy/tlsproxy_diff.[hc].
+
+	Code health: renamed some identifiers for consistency.
+	Files: tlsproxy/tlsproxy_client.[hc].
+
+	Claude scan: the memcached server rejects control characters
+	in a text-protocol key, but it is better if Postfix rejects
+	such keys, because that produces a better-quality error
+	message. File: global/dict_memcache.c.
+
+	Claude scan: the MySQL client used an unsigned int for the
+	server port variable, but the find_inet_service() function
+	returns -1 after an error which is converted to unsigned,
+	resulting in no error message from Postfix, and a low-quality
+	error message from the MySQL client library. Changed the
+	port variable type to a signed int, so that Postfix will
+	log its better error message. File: global/dict_mysql.c.
+
+	Claude scan: the PostgreSQL client strategy to recover from
+	an error in PQescapeStringConn() needed clarification. File:
+	global/dict_pgsql.c.
+
+	Claude scan: remove %m (errno to string) from non-error logging.
+	File: tls/tls_prng_file.c.
+
+	Claude scan: the recent argv.c fix should count the number
+	of bytes per (char *) pointer. File: util/argv.c.
+
+	Claude scan: dict_walk() was broken (but never called). File:
+	util/dict.c.
+
+	Claude scan: handle a pcre2_match_data_create_from_pattern()
+	out-of-memory error, instead of letting the PCRE2 library
+	silently skip a rule. File: util/dict_pcre.c.
+
+TODO
+
+	Reorganize PTEST_LIB, PMOCK_LIB, TESTLIB, TESTLIBS, etc.
+
+	Document TLS parameters in tlsproxy(8) and postscreen(8).

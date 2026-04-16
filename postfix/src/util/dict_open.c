@@ -485,11 +485,14 @@ DICT   *dict_open(const char *dict_spec, int open_flags, int dict_flags)
     char   *dict_name;
     DICT   *dict;
 
-    if ((dict_name = split_at(saved_dict_spec, ':')) == 0)
-	msg_fatal("open dictionary: expecting \"type:name\" form instead of \"%s\"",
-		  dict_spec);
-
-    dict = dict_open3(saved_dict_spec, dict_name, open_flags, dict_flags);
+    if ((dict_name = split_at(saved_dict_spec, ':')) == 0 
+	|| *saved_dict_spec == 0 || *dict_name == 0) {
+	dict = dict_surrogate(dict_spec, "", open_flags, dict_flags,
+	  "open dictionary: expecting \"type:name\" form instead of \"%s\"",
+			      dict_spec);
+    } else {
+	dict = dict_open3(saved_dict_spec, dict_name, open_flags, dict_flags);
+    }
     myfree(saved_dict_spec);
     return (dict);
 }
@@ -671,12 +674,50 @@ void    dict_type_override(DICT *dict, const char *type)
 
 #ifdef TEST
 
+#ifdef USE_DYNAMIC_MAPS
+#include <dynamicmaps.h>
+
+ /*
+  * Get the meta_directory and shlib_directory settings from a test main.cf
+  * file, without using the mail_conf(3) or mail_params(3) infrastructure.
+  */
+#define TEST_CONF_PATH	"../../testing/main.cf"
+#define TEST_DICT	"test_dict"
+#define META_DIR_KEY	"meta_directory"
+#define SHLIB_DIR_KEY	"shlib_directory"
+
+static void init_dynamic_maps(void)
+{
+    const char *meta_dir;
+    const char *shlib_dir;
+    char   *path;
+
+    if (dict_load_file_xt(TEST_DICT, TEST_CONF_PATH) == 0)
+	msg_fatal("open %s: %m", TEST_CONF_PATH);
+    if ((meta_dir = dict_lookup(TEST_DICT, META_DIR_KEY)) == 0
+	 || (shlib_dir = dict_lookup(TEST_DICT, SHLIB_DIR_KEY)) == 0)
+	 msg_fatal("unusable file: %s", TEST_CONF_PATH);
+    path = concatenate(meta_dir, "/", "dynamicmaps.cf",
+#ifdef SHLIB_VERSION
+		       ".", SHLIB_VERSION,
+#endif
+		       (char *) 0);
+    dymap_init(path, shlib_dir);
+    myfree(path);
+    dict_unregister(TEST_DICT);
+}
+
+#endif
+
  /*
   * Proof-of-concept test program.
   */
 int     main(int argc, char **argv)
 {
-    dict_test(argc, argv);
+#ifdef USE_DYNAMIC_MAPS
+    init_dynamic_maps();
+#endif
+    dict_cli(argc, argv);
     return (0);
 }
 

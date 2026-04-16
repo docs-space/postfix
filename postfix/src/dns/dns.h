@@ -211,6 +211,7 @@ extern DNS_RR *dns_rr_create(const char *, const char *,
 			             unsigned, unsigned,
 			             const char *, size_t);
 extern void dns_rr_free(DNS_RR *);
+extern DNS_RR *dns_rr_full_copy(DNS_RR *);
 extern DNS_RR *dns_rr_copy(DNS_RR *);
 extern DNS_RR *dns_rr_append(DNS_RR *, DNS_RR *);
 extern DNS_RR *dns_rr_sort(DNS_RR *, int (*) (DNS_RR *, DNS_RR *));
@@ -265,8 +266,9 @@ extern int dns_lookup_x(const char *, unsigned, unsigned, DNS_RR **,
 extern int dns_lookup_rl(const char *, unsigned, DNS_RR **, VSTRING *,
 			         VSTRING *, int *, int,...);
 extern int dns_lookup_rv(const char *, unsigned, DNS_RR **, VSTRING *,
-			         VSTRING *, int *, int, unsigned *);
+			         VSTRING *, int *, int, const unsigned *);
 extern int dns_get_h_errno(void);
+extern void dns_set_h_errno(int);
 
 #define dns_lookup(name, type, rflags, list, fqdn, why) \
     dns_lookup_x((name), (type), (rflags), (list), (fqdn), (why), (int *) 0, \
