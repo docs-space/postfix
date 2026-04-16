@@ -23,6 +23,7 @@
 #include <msg.h>
 #include <vstream.h>
 #include <vstring.h>
+#include <vstring_vstream.h>
 
 #ifdef USE_TLS
 #include <tls.h>
