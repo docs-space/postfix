@@ -172,7 +172,6 @@ typedef enum {
 #define TLS_MGR_SCACHE_SMTPD	"smtpd"
 #define TLS_MGR_SCACHE_SMTP	"smtp"
 #define TLS_MGR_SCACHE_LMTP	"lmtp"
-#define TLS_MGR_SCACHE_POSTAPI	"postapi"
 
  /*
   * RFC 6698, 7671, 7672 DANE
