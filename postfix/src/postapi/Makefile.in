@@ -14,7 +14,7 @@ LIBS	= ../../lib/lib$(LIB_PREFIX)master$(LIB_SUFFIX) \
 	../../lib/lib$(LIB_PREFIX)global$(LIB_SUFFIX) \
 	../../lib/lib$(LIB_PREFIX)util$(LIB_SUFFIX)
 
-HTTP_EXTRA_LIBS ?= -lmicrohttpd -ljansson
+HTTP_EXTRA_LIBS ?= -lmicrohttpd -ljansson -lgnutls
 .c.o:;	$(CC) $(CFLAGS) -c $*.c
 
 $(PROG): $(OBJS) $(LIBS)

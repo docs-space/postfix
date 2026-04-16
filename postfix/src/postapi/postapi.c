@@ -39,18 +39,7 @@
 
 #ifdef USE_TLS
 #include <tls.h>
-#endif
-
-#ifndef MHD_USE_NO_LISTEN_SOCKET
-#error "libmicrohttpd with MHD_USE_NO_LISTEN_SOCKET is required (e.g. >= 0.9.70)"
-#endif
-
-#ifdef MHD_REQUEST_TERMINATED_CLIENT_ABORT
-typedef enum MHD_RequestTerminationCode postapi_mhd_term_t;
-#elif defined(MHD_CONNECTION_NOTIFY_CLOSED)
-typedef enum MHD_ConnectionNotificationCode postapi_mhd_term_t;
-#else
-typedef int postapi_mhd_term_t;
+#include <gnutls/gnutls.h>
 #endif
 
 #define POSTAPI_API_PREFIX	"/api/v1"
@@ -77,6 +66,11 @@ static char *var_postapi_access_token_maps;
 static int postapi_use_tls;
 static MAPS *postapi_token_maps;
 static struct MHD_Daemon *postapi_mhd;
+
+#ifdef USE_TLS
+static gnutls_datum_t postapi_tls_key_pem;
+static gnutls_datum_t postapi_tls_cert_pem;
+#endif
 
 static const CONFIG_STR_TABLE str_table[] = {
     postapi_tls_cert_file_param, "", &var_postapi_tls_cert_file, 0, 0,
@@ -120,7 +114,7 @@ static void postapi_req_free(void *ptr)
 static void
 postapi_mhd_notify(void *cls, struct MHD_Connection *connection,
 		   void **con_cls,
-		   postapi_mhd_term_t toe)
+		   enum MHD_ConnectionNotificationCode toe)
 {
     (void) cls;
     (void) connection;
@@ -134,14 +128,14 @@ postapi_mhd_notify(void *cls, struct MHD_Connection *connection,
 
  /* postapi_json_reply - queue JSON response, free json object */
 
-static int
+static enum MHD_Result
 postapi_json_reply(struct MHD_Connection *connection, unsigned int code,
 		   json_t *obj)
 {
     struct MHD_Response *resp;
     char   *dump;
     size_t  len;
-    int     q;
+    enum MHD_Result q;
 
     if (obj == 0)
 	return MHD_NO;
@@ -157,9 +151,9 @@ postapi_json_reply(struct MHD_Connection *connection, unsigned int code,
     }
     (void) MHD_add_response_header(resp, "Content-Type", "application/json; charset=utf-8");
     (void) MHD_add_response_header(resp, "Connection", "close");
-    q = MHD_queue_response(connection, (unsigned int) code, resp);
+    q = MHD_queue_response(connection, code, resp);
     MHD_destroy_response(resp);
-    return q == MHD_YES ? MHD_NO : MHD_NO;
+    return q;
 }
 
  /* postapi_bearer_token - parse Authorization: Bearer <token> */
@@ -200,7 +194,7 @@ static int postapi_auth_ok(const char *token)
 
  /* postapi_access_handler - libmicrohttpd callback */
 
-static int
+static enum MHD_Result
 postapi_access_handler(void *cls, struct MHD_Connection *connection,
 		       const char *url, const char *method,
 		       const char *version, const char *upload_data,
@@ -338,7 +332,7 @@ static void postapi_pre_accept(char *unused_name, char **unused_argv)
 
 static void postapi_post_init(char *unused_name, char **unused_argv)
 {
-    uint64_t mhd_flags = (uint64_t) (MHD_USE_INTERNAL_SELECT | MHD_USE_NO_LISTEN_SOCKET);
+    uint64_t mhd_flags = (uint64_t) MHD_USE_NO_LISTEN_SOCKET;
 
     (void) unused_name;
     (void) unused_argv;
@@ -383,14 +377,32 @@ static void postapi_post_init(char *unused_name, char **unused_argv)
 				     DICT_FLAG_LOCK | DICT_FLAG_FOLD_FIX);
 
     if (postapi_use_tls) {
+#ifdef USE_TLS
+	int     gerr;
+
+	if (gnutls_global_init() != 0)
+	    msg_fatal("gnutls_global_init failed");
+	gerr = gnutls_load_file(var_postapi_tls_key_file, &postapi_tls_key_pem);
+	if (gerr < 0)
+	    msg_fatal("gnutls_load_file(%s): %s", var_postapi_tls_key_file,
+		      gnutls_strerror(gerr));
+	gerr = gnutls_load_file(var_postapi_tls_cert_file, &postapi_tls_cert_pem);
+	if (gerr < 0)
+	    msg_fatal("gnutls_load_file(%s): %s", var_postapi_tls_cert_file,
+		      gnutls_strerror(gerr));
 	postapi_mhd = MHD_start_daemon(mhd_flags, 0,
 				       0, 0,
 				       &postapi_access_handler, 0,
-				       MHD_OPTION_HTTPS_KEY, var_postapi_tls_key_file,
-				       MHD_OPTION_HTTPS_CERT, var_postapi_tls_cert_file,
+				       MHD_OPTION_HTTPS_MEM_KEY,
+				       (const char *) postapi_tls_key_pem.data,
+				       MHD_OPTION_HTTPS_MEM_CERT,
+				       (const char *) postapi_tls_cert_pem.data,
 				       MHD_OPTION_NOTIFY_COMPLETED,
 				       postapi_mhd_notify, 0,
 				       MHD_OPTION_END);
+#else
+	msg_fatal("internal error: TLS enabled without USE_TLS");
+#endif
     } else {
 	postapi_mhd = MHD_start_daemon(mhd_flags, 0,
 				       0, 0,
@@ -410,7 +422,7 @@ static void postapi_service(VSTREAM *client_stream, char *service, char **argv)
     struct sockaddr_storage peer;
     socklen_t peer_len;
     time_t  deadline;
-    union MHD_DaemonInfo dinfo;
+    const union MHD_DaemonInfo *dinfo;
 
     (void) service;
 
@@ -444,7 +456,7 @@ static void postapi_service(VSTREAM *client_stream, char *service, char **argv)
 	(void) MHD_run(postapi_mhd);
 	dinfo = MHD_get_daemon_info(postapi_mhd,
 				    MHD_DAEMON_INFO_CURRENT_CONNECTIONS);
-	if (dinfo.num_connections == 0)
+	if (dinfo == 0 || dinfo->num_connections == 0)
 	    break;
 	if (time((time_t *) 0) > deadline) {
 	    msg_warn("postapi: MHD connection timed out, closing fd");
