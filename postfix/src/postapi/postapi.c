@@ -28,21 +28,13 @@
 #include <tls.h>
 #endif
 
-#define VAR_POSTAPI_TLS_CERT_FILE	"postapi_tls_cert_file"
-#define DEF_POSTAPI_TLS_CERT_FILE	""
-#define VAR_POSTAPI_TLS_KEY_FILE	"postapi_tls_key_file"
-#define DEF_POSTAPI_TLS_KEY_FILE	""
-#define VAR_POSTAPI_TLS_LEVEL		"postapi_tls_security_level"
-#define DEF_POSTAPI_TLS_LEVEL		"none"
-#define VAR_POSTAPI_TLS_LOGLEVEL	"postapi_tls_loglevel"
-#define DEF_POSTAPI_TLS_LOGLEVEL	"0"
-#define VAR_POSTAPI_TLS_SCACHE_DB	"postapi_tls_session_cache_database"
-#define DEF_POSTAPI_TLS_SCACHE_DB	"btree:${data_directory}/postapi_scache"
-#define MAX_POSTAPI_TLS_SCACHETIME	8640000
-#define VAR_POSTAPI_TLS_SCACHTIME	"postapi_tls_session_cache_timeout"
-#define DEF_POSTAPI_TLS_SCACHTIME	"3600s"
-#define VAR_POSTAPI_STARTTLS_TMOUT	"postapi_starttls_timeout"
-#define DEF_POSTAPI_STARTTLS_TMOUT	"300s"
+static const char postapi_tls_cert_file_param[] = "postapi_tls_cert_file";
+static const char postapi_tls_key_file_param[] = "postapi_tls_key_file";
+static const char postapi_tls_level_param[] = "postapi_tls_security_level";
+static const char postapi_tls_loglevel_param[] = "postapi_tls_loglevel";
+static const char postapi_tls_scache_db_param[] = "postapi_tls_session_cache_database";
+static const char postapi_tls_scache_timeout_param[] = "postapi_tls_session_cache_timeout";
+static const char postapi_starttls_timeout_param[] = "postapi_starttls_timeout";
 
 static char *var_postapi_tls_cert_file;
 static char *var_postapi_tls_key_file;
@@ -58,17 +50,17 @@ static TLS_APPL_STATE *postapi_tls_ctx;
 static int postapi_use_tls;
 
 static const CONFIG_STR_TABLE str_table[] = {
-    VAR_POSTAPI_TLS_CERT_FILE, DEF_POSTAPI_TLS_CERT_FILE, &var_postapi_tls_cert_file, 0, 0,
-    VAR_POSTAPI_TLS_KEY_FILE, DEF_POSTAPI_TLS_KEY_FILE, &var_postapi_tls_key_file, 0, 0,
-    VAR_POSTAPI_TLS_LEVEL, DEF_POSTAPI_TLS_LEVEL, &var_postapi_tls_level, 0, 0,
-    VAR_POSTAPI_TLS_LOGLEVEL, DEF_POSTAPI_TLS_LOGLEVEL, &var_postapi_tls_loglevel, 0, 0,
-    VAR_POSTAPI_TLS_SCACHE_DB, DEF_POSTAPI_TLS_SCACHE_DB, &var_postapi_tls_scache_db, 0, 0,
+    postapi_tls_cert_file_param, "", &var_postapi_tls_cert_file, 0, 0,
+    postapi_tls_key_file_param, "", &var_postapi_tls_key_file, 0, 0,
+    postapi_tls_level_param, "none", &var_postapi_tls_level, 0, 0,
+    postapi_tls_loglevel_param, "0", &var_postapi_tls_loglevel, 0, 0,
+    postapi_tls_scache_db_param, "btree:${data_directory}/postapi_scache", &var_postapi_tls_scache_db, 0, 0,
     0,
 };
 
 static const CONFIG_TIME_TABLE time_table[] = {
-    VAR_POSTAPI_STARTTLS_TMOUT, DEF_POSTAPI_STARTTLS_TMOUT, &var_postapi_starttls_tmout, 1, 0,
-    VAR_POSTAPI_TLS_SCACHTIME, DEF_POSTAPI_TLS_SCACHTIME, &var_postapi_tls_scache_timeout, 1, MAX_POSTAPI_TLS_SCACHETIME,
+    postapi_starttls_timeout_param, "300s", &var_postapi_starttls_tmout, 1, 0,
+    postapi_tls_scache_timeout_param, "3600s", &var_postapi_tls_scache_timeout, 1, 8640000,
     0,
 };
 
@@ -95,7 +87,7 @@ static void postapi_post_init(char *unused_name, char **unused_argv)
     tls_level = tls_level_lookup(var_postapi_tls_level);
     if (tls_level == TLS_LEV_INVALID || tls_level == TLS_LEV_NOTFOUND)
 	msg_fatal("invalid %s value: %s",
-		  VAR_POSTAPI_TLS_LEVEL, var_postapi_tls_level);
+		  postapi_tls_level_param, var_postapi_tls_level);
     postapi_use_tls = (tls_level != TLS_LEV_NONE);
 
     if (postapi_use_tls == 0)
@@ -103,16 +95,16 @@ static void postapi_post_init(char *unused_name, char **unused_argv)
 
     if (*var_postapi_tls_cert_file == 0)
 	msg_fatal("%s is empty while TLS is enabled",
-		  VAR_POSTAPI_TLS_CERT_FILE);
+		  postapi_tls_cert_file_param);
     if (*var_postapi_tls_key_file == 0)
 	msg_fatal("%s is empty while TLS is enabled",
-		  VAR_POSTAPI_TLS_KEY_FILE);
+		  postapi_tls_key_file_param);
 
     tls_pre_jail_init(TLS_ROLE_SERVER);
 
     postapi_tls_ctx =
 	TLS_SERVER_INIT(&props,
-			log_param = VAR_POSTAPI_TLS_LOGLEVEL,
+			log_param = postapi_tls_loglevel_param,
 			log_level = var_postapi_tls_loglevel,
 			verifydepth = 1,
 			cache_type = TLS_MGR_SCACHE_POSTAPI,
@@ -137,7 +129,7 @@ static void postapi_post_init(char *unused_name, char **unused_argv)
 #else
     if (strcasecmp(var_postapi_tls_level, "none") != 0)
 	msg_fatal("%s=%s but Postfix was built without TLS support",
-		  VAR_POSTAPI_TLS_LEVEL, var_postapi_tls_level);
+		  postapi_tls_level_param, var_postapi_tls_level);
     postapi_use_tls = 0;
 #endif
 }

@@ -1061,22 +1061,16 @@ MAIL_VERSION_STAMP_DECLARE;
 
 int     main(int argc, char **argv)
 {
-    #define VAR_POSTAPI_TLS_LOGLEVEL "postapi_tls_loglevel"
-    #define DEF_POSTAPI_TLS_LOGLEVEL "0"
-    #define VAR_POSTAPI_TLS_SCACHE_DB "postapi_tls_session_cache_database"
-    #define DEF_POSTAPI_TLS_SCACHE_DB "btree:${data_directory}/postapi_scache"
     #define MAX_POSTAPI_TLS_SCACHETIME 8640000
-    #define VAR_POSTAPI_TLS_SCACHTIME "postapi_tls_session_cache_timeout"
-    #define DEF_POSTAPI_TLS_SCACHTIME "3600s"
     static const CONFIG_STR_TABLE str_table[] = {
 	VAR_TLS_RAND_SOURCE, DEF_TLS_RAND_SOURCE, &var_tls_rand_source, 0, 0,
 	VAR_TLS_RAND_EXCH_NAME, DEF_TLS_RAND_EXCH_NAME, &var_tls_rand_exch_name, 0, 0,
 	VAR_SMTPD_TLS_SCACHE_DB, DEF_SMTPD_TLS_SCACHE_DB, &var_smtpd_tls_scache_db, 0, 0,
-	VAR_POSTAPI_TLS_SCACHE_DB, DEF_POSTAPI_TLS_SCACHE_DB, &var_postapi_tls_scache_db, 0, 0,
+	"postapi_tls_session_cache_database", "btree:${data_directory}/postapi_scache", &var_postapi_tls_scache_db, 0, 0,
 	VAR_SMTP_TLS_SCACHE_DB, DEF_SMTP_TLS_SCACHE_DB, &var_smtp_tls_scache_db, 0, 0,
 	VAR_LMTP_TLS_SCACHE_DB, DEF_LMTP_TLS_SCACHE_DB, &var_lmtp_tls_scache_db, 0, 0,
 	VAR_SMTPD_TLS_LOGLEVEL, DEF_SMTPD_TLS_LOGLEVEL, &var_smtpd_tls_loglevel, 0, 0,
-	VAR_POSTAPI_TLS_LOGLEVEL, DEF_POSTAPI_TLS_LOGLEVEL, &var_postapi_tls_loglevel, 0, 0,
+	"postapi_tls_loglevel", "0", &var_postapi_tls_loglevel, 0, 0,
 	VAR_SMTP_TLS_LOGLEVEL, DEF_SMTP_TLS_LOGLEVEL, &var_smtp_tls_loglevel, 0, 0,
 	VAR_LMTP_TLS_LOGLEVEL, DEF_LMTP_TLS_LOGLEVEL, &var_lmtp_tls_loglevel, 0, 0,
 	0,
@@ -1085,7 +1079,7 @@ int     main(int argc, char **argv)
 	VAR_TLS_RESEED_PERIOD, DEF_TLS_RESEED_PERIOD, &var_tls_reseed_period, 1, 0,
 	VAR_TLS_PRNG_UPD_PERIOD, DEF_TLS_PRNG_UPD_PERIOD, &var_tls_prng_exch_period, 1, 0,
 	VAR_SMTPD_TLS_SCACHTIME, DEF_SMTPD_TLS_SCACHTIME, &var_smtpd_tls_scache_timeout, 0, MAX_SMTPD_TLS_SCACHETIME,
-	VAR_POSTAPI_TLS_SCACHTIME, DEF_POSTAPI_TLS_SCACHTIME, &var_postapi_tls_scache_timeout, 0, MAX_POSTAPI_TLS_SCACHETIME,
+	"postapi_tls_session_cache_timeout", "3600s", &var_postapi_tls_scache_timeout, 0, MAX_POSTAPI_TLS_SCACHETIME,
 	VAR_SMTP_TLS_SCACHTIME, DEF_SMTP_TLS_SCACHTIME, &var_smtp_tls_scache_timeout, 0, MAX_SMTP_TLS_SCACHETIME,
 	VAR_LMTP_TLS_SCACHTIME, DEF_LMTP_TLS_SCACHTIME, &var_lmtp_tls_scache_timeout, 0, MAX_LMTP_TLS_SCACHETIME,
 	0,
