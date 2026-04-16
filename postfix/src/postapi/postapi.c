@@ -354,11 +354,7 @@ static void postapi_post_init(char *unused_name, char **unused_argv)
 	    if (*var_postapi_tls_key_file == 0)
 		msg_fatal("%s is empty while TLS is enabled",
 			  postapi_tls_key_file_param);
-#ifdef MHD_USE_TLS
 	    mhd_flags |= (uint64_t) MHD_USE_TLS;
-#else
-	    msg_fatal("libmicrohttpd lacks MHD_USE_TLS; rebuild microhttpd with HTTPS");
-#endif
 	}
     }
 #else
@@ -380,6 +376,9 @@ static void postapi_post_init(char *unused_name, char **unused_argv)
 #ifdef USE_TLS
 	int     gerr;
 
+	if (MHD_is_feature_supported(MHD_FEATURE_TLS) != MHD_YES)
+	    msg_fatal("libmicrohttpd was built without TLS; install an HTTPS-enabled build or set %s=none",
+		      postapi_tls_level_param);
 	if (gnutls_global_init() != 0)
 	    msg_fatal("gnutls_global_init failed");
 	gerr = gnutls_load_file(var_postapi_tls_key_file, &postapi_tls_key_pem);
