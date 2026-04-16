@@ -27,6 +27,17 @@ readme_directory = /opt/r7-mailserver/mtaserver/usr/share/doc/postfix
 compatibility_level = 3.11
 
 ###
+# SSL/TLS Параметры Postfix API
+###
+postapi_tls_cert_file = {{ MAIL_MTA_CERT_CRT_FILE }}
+postapi_tls_key_file = {{ MAIL_MTA_CERT_KEY_FILE }}
+postapi_tls_security_level = encrypt
+postapi_tls_session_cache_database = btree:${data_directory}/postapi_scache
+postapi_tls_session_cache_timeout = 3600s
+postapi_tls_loglevel = 1
+
+
+###
 # SSL/TLS Параметры входящей почты
 ###
 #smtpd_use_tls = yes
