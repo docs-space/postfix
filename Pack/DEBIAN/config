@@ -8,6 +8,7 @@ case "$1" in
     configure|reconfigure)
         # Задаем вопросы
         db_input critical r7mtaserver/fqdn-name || true
+        db_input critical r7mtaserver/mta-nodename || true
         db_input critical r7mtaserver/mta-ssl-cert || true
         db_input critical r7mtaserver/mta-ssl-key || true
         db_input critical r7mtaserver/db-host || true

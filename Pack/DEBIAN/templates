@@ -28,6 +28,10 @@ Type: boolean
 Default: false
 Description: upgrade
 
+Template: r7mtaserver/mta-nodename
+Type: string
+Description: Nodename MTA Service:
+
 Template: r7mtaserver/db-host
 Type: string
 Default: localhost

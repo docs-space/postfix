@@ -6,6 +6,7 @@ mail_name = R7-MailServer
 myhostname = {{ MAIL_FQDN_FULL_NAME }}
 myorigin = $myhostname
 mydomain = {{ MAIL_HOST_NAME }}
+multi_instance_name = {{ MTA_INSTANCE }}
 
 smtpd_banner = $myhostname ESMTP $mail_name (AO R7, r7-office.ru)
 
