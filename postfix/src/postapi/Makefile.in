@@ -9,8 +9,6 @@ TESTPROG=
 PROG	= postapi
 INC_DIR = ../../include
 LIBS	= ../../lib/lib$(LIB_PREFIX)master$(LIB_SUFFIX) \
-	../../lib/lib$(LIB_PREFIX)tls$(LIB_SUFFIX) \
-	../../lib/lib$(LIB_PREFIX)dns$(LIB_SUFFIX) \
 	../../lib/lib$(LIB_PREFIX)global$(LIB_SUFFIX) \
 	../../lib/lib$(LIB_PREFIX)util$(LIB_SUFFIX)
 
