@@ -254,10 +254,13 @@ smtpd_relay_restrictions =
     permit_sasl_authenticated,
     defer_unauth_destination
 
-#smtpd_milters = inet:localhost:11332
-#non_smtpd_milters = $smtpd_milters
-#milter_protocol = 6
-#milter_default_action = quarantine
+
+
+smtpd_milters = inet:{{ MAIL_MTA_SPAM_HOST }}
+non_smtpd_milters = $smtpd_milters
+milter_protocol = 6
+milter_default_action = quarantine
+milter_macro_daemon_name = $multi_instance_name
 
 recipient_delimiter = +
 

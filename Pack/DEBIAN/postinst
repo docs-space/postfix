@@ -36,8 +36,11 @@ read_params_debconf()
     MTA_DB_PWD="${RET:-saSA123$}"
     db_get r7mtaserver/filter-host || true
     MTA_FILTER_HOST="${RET:-127.0.0.1:2525}"
+    db_get r7mtaserver/spam-host || true
+    MTA_SPAM_HOST="${RET:-}"
     db_get r7mtaserver/sasl-host || true
     MTA_SASL_HOST="${RET:-saSA123$}"
+    
 #    db_get r7mailserver/upgrade
 #    UPGRADE="$RET"
 	echo "Current parameters:"
@@ -80,6 +83,17 @@ conf_filter()
 {
     echo "Configuring Postfix Filter Settings"
     sed -i "s/{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }}/${MTA_FILTER_HOST}/g" $MTA_CONF_MAIN
+}
+
+conf_spamprotect()
+{
+    echo "Configuring Postfix Filter Settings"
+    if [ -z "$MAIL_MTA_SPAM_HOST" ] ; then
+	    sed -i "s/^smtpd_milters = .*/smtpd_milters = /" $MTA_CONF_MAIN
+    else
+        sed -i "s/^smtpd_milters = .*/smtpd_milters = inet:${MAIL_MTA_SPAM_HOST}/" $MTA_CONF_MAIN
+    fi
+    
 }
 
 conf_cert()
@@ -166,6 +180,7 @@ if [ "$1" = "configure" ]; then
     conf_general
     conf_sasl
     conf_filter
+    conf_spamprotect
     conf_cert
     conf_db
     conf_owner
