@@ -2,4 +2,4 @@ user = {MAIL_PSQL_USER}
 password = {MAIL_PSQL_PWD}
 hosts = {MAIL_PSQL_HOST}:{MAIL_PSQL_PORT}
 dbname = {MAIL_PSQL_DB}
-query = select "HttpKey" from public."MtaServers" where "Node" == '%s';
+query = select "HttpKey" from public."MtaServers" where "Node" = '%s';

@@ -184,18 +184,27 @@ static const char *postapi_bearer_token(const char *auth)
     return (cp);
 }
 
- /* postapi_access_token_ok - expected token from maps(multi_instance_name) */
+ /* postapi_access_token_check - expected token from maps(multi_instance_name) */
 
-static int postapi_access_token_ok(const char *bearer_token)
+#define POSTAPI_AUTH_OK			0
+#define POSTAPI_AUTH_LOOKUP_ERR		1
+#define POSTAPI_AUTH_NO_ENTRY		2
+#define POSTAPI_AUTH_MISMATCH		3
+
+static int postapi_access_token_check(const char *bearer_token)
 {
     const char *expected;
 
     if (postapi_token_maps == 0)
-	return (0);
+	return (POSTAPI_AUTH_NO_ENTRY);
     expected = maps_find(postapi_token_maps, var_multi_instance_name, 0);
+    if (postapi_token_maps->error != 0)
+	return (POSTAPI_AUTH_LOOKUP_ERR);
     if (expected == 0)
-	return (0);
-    return (strcmp(bearer_token, expected) == 0);
+	return (POSTAPI_AUTH_NO_ENTRY);
+    if (strcmp(bearer_token, expected) != 0)
+	return (POSTAPI_AUTH_MISMATCH);
+    return (POSTAPI_AUTH_OK);
 }
 
  /* postapi_access_handler - libmicrohttpd callback */
@@ -259,18 +268,40 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
 					   "Authorization");
     token = postapi_bearer_token(auth_hdr);
     if (token == 0) {
+	msg_warn("postapi: authorization denied: missing or invalid Authorization header; %s %s",
+		 method, url);
 	return postapi_json_reply(connection, 401,
 				    json_pack("{s:s}", "error",
 					      "missing_or_invalid_authorization"));
     }
-    if (postapi_access_token_ok(token) == 0) {
-	if (postapi_token_maps && postapi_token_maps->error != 0)
-	    return postapi_json_reply(connection, 503,
-				      json_pack("{s:s}", "error",
-						"token_lookup_failed"));
+    switch (postapi_access_token_check(token)) {
+    case POSTAPI_AUTH_OK:
+	msg_info("postapi: authorization ok: instance=%s; %s %s",
+		 var_multi_instance_name, method, url);
+	break;
+    case POSTAPI_AUTH_LOOKUP_ERR:
+	msg_warn("postapi: authorization failed: access token map lookup error; instance=%s; %s %s",
+		 var_multi_instance_name, method, url);
+	return postapi_json_reply(connection, 503,
+				  json_pack("{s:s}", "error",
+					    "token_lookup_failed"));
+    case POSTAPI_AUTH_NO_ENTRY:
+	msg_warn("postapi: authorization denied: no map entry for instance=%s; %s %s",
+		 var_multi_instance_name, method, url);
 	return postapi_json_reply(connection, 401,
 				  json_pack("{s:s}", "error",
 					    "invalid_token"));
+    case POSTAPI_AUTH_MISMATCH:
+	msg_warn("postapi: authorization denied: bearer token does not match map; instance=%s; %s %s",
+		 var_multi_instance_name, method, url);
+	return postapi_json_reply(connection, 401,
+				  json_pack("{s:s}", "error",
+					    "invalid_token"));
+    default:
+	msg_warn("postapi: authorization internal error; %s %s", method, url);
+	return postapi_json_reply(connection, 500,
+				  json_pack("{s:s}", "error",
+					    "internal_server_error"));
     }
 
     /*
