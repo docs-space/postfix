@@ -64,6 +64,7 @@ save_params_debconf()
     echo "Saving debconf parameters..."
     db_set r7mtaserver/mta-ssl-cert "$MTA_CERT_FILENAME"
     db_set r7mtaserver/mta-ssl-key "$MTA_KEY_FILENAME"
+    db_set r7mtaserver/mta-nodename "$MTA_INSTANCE"
 }
 
 conf_general()
