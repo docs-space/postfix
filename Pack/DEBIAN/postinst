@@ -55,6 +55,7 @@ read_params_debconf()
     echo "MTA_DB_USER: $MTA_DB_USER"
     echo "MTA_DB_PWD: $MTA_DB_PWD"
     echo "MTA_FILTER_HOST: $MTA_FILTER_HOST"
+    echo "MTA_SPAM_HOST: $MTA_SPAM_HOST"
     echo "MTA_SASL_HOST: $MTA_SASL_HOST"
 }
 
@@ -88,10 +89,10 @@ conf_filter()
 conf_spamprotect()
 {
     echo "Configuring Postfix Filter Settings"
-    if [ -z "$MAIL_MTA_SPAM_HOST" ] ; then
+    if [ -z "$MTA_SPAM_HOST" ] ; then
 	    sed -i "s/^smtpd_milters = .*/smtpd_milters = /" $MTA_CONF_MAIN
     else
-        sed -i "s/^smtpd_milters = .*/smtpd_milters = inet:${MAIL_MTA_SPAM_HOST}/" $MTA_CONF_MAIN
+        sed -i "s/^smtpd_milters = .*/smtpd_milters = inet:${MTA_SPAM_HOST}/" $MTA_CONF_MAIN
     fi
     
 }
