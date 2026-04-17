@@ -18,6 +18,8 @@ read_params_debconf()
         MTA_FQDN=mx.$MTA_FQDN
     fi
     MTA_DOMAIN="${MTA_FQDN#*.}"
+    db_get r7mtaserver/mta-nodename || true
+    MTA_INSTANCE="${RET:-$(cat /proc/sys/kernel/random/uuid)}"
     db_get r7mtaserver/mta-ssl-cert || true
     MTA_CERT_FILENAME="$(realpath -m "$RET" 2>/dev/null)"
     db_get r7mtaserver/mta-ssl-key || true
@@ -34,11 +36,15 @@ read_params_debconf()
     MTA_DB_PWD="${RET:-saSA123$}"
     db_get r7mtaserver/filter-host || true
     MTA_FILTER_HOST="${RET:-127.0.0.1:2525}"
+    db_get r7mtaserver/spam-host || true
+    MTA_SPAM_HOST="${RET:-}"
     db_get r7mtaserver/sasl-host || true
     MTA_SASL_HOST="${RET:-saSA123$}"
+    
 #    db_get r7mailserver/upgrade
 #    UPGRADE="$RET"
 	echo "Current parameters:"
+    echo "MTA_INSTANCE: $MTA_INSTANCE"
     echo "MTA_FQDN: $MTA_FQDN"
     echo "MTA_DOMAIN: $MTA_DOMAIN"
     echo "MTA_CERT_FILENAME: $MTA_CERT_FILENAME"
@@ -64,6 +70,7 @@ conf_general()
     echo "Configuring Postfix General Settings"
     sed -i "s/^myhostname = .*/myhostname = ${MTA_FQDN}/" $MTA_CONF_MAIN
     sed -i "s/^mydomain = .*/mydomain = ${MTA_DOMAIN}/" $MTA_CONF_MAIN
+    sed -i "s/^multi_instance_name = .*/multi_instance_name = ${MTA_INSTANCE}/" $MTA_CONF_MAIN
 }
 
 conf_sasl()
@@ -76,6 +83,17 @@ conf_filter()
 {
     echo "Configuring Postfix Filter Settings"
     sed -i "s/{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }}/${MTA_FILTER_HOST}/g" $MTA_CONF_MAIN
+}
+
+conf_spamprotect()
+{
+    echo "Configuring Postfix Filter Settings"
+    if [ -z "$MAIL_MTA_SPAM_HOST" ] ; then
+	    sed -i "s/^smtpd_milters = .*/smtpd_milters = /" $MTA_CONF_MAIN
+    else
+        sed -i "s/^smtpd_milters = .*/smtpd_milters = inet:${MAIL_MTA_SPAM_HOST}/" $MTA_CONF_MAIN
+    fi
+    
 }
 
 conf_cert()
@@ -162,6 +180,7 @@ if [ "$1" = "configure" ]; then
     conf_general
     conf_sasl
     conf_filter
+    conf_spamprotect
     conf_cert
     conf_db
     conf_owner

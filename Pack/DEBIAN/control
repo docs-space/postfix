@@ -3,7 +3,7 @@ Version: 2025.1.0.000
 Architecture: amd64
 Maintainer: АО "Р7" <support@r7-office.ru>
 Installed-Size: 557
-Depends: adduser, openssl, debconf, logrotate, ed, libc6 (>= 2.34), libpq5, libdb5.3, libicu72 (>= 72.1~rc-1~), libunbound8 (>= 1.17.1), libnsl2 (>= 1.0), libsasl2-2 (>= 2.1.28+dfsg), libssl3 (>= 3.0.19), libsasl2-dev, libpcre3-dev, libdb-dev, libldap2-dev, default-libmysqlclient-dev, libsqlite3-dev, libcdb-dev, liblzma-dev, libz-dev, libbz2-dev, liblz4-dev, libzstd-dev, libicu-dev, libxml2-dev, libpam0g-dev, libcap-dev, libaudit1, libselinux1-dev, libwrap0-dev, libkrb5-dev, libgssapi-krb5-2, libgssrpc4
+Depends: adduser, openssl, debconf, logrotate, ed, libc6 (>= 2.34), libmicrohttpd12 (>= 0.9.70), libjansson4, libpq5, libdb5.3, libicu72 (>= 72.1~rc-1~), libunbound8 (>= 1.17.1), libnsl2 (>= 1.0), libsasl2-2 (>= 2.1.28+dfsg), libssl3 (>= 3.0.19), libsasl2-dev, libpcre3-dev, libdb-dev, libldap2-dev, default-libmysqlclient-dev, libsqlite3-dev, libcdb-dev, liblzma-dev, libz-dev, libbz2-dev, liblz4-dev, libzstd-dev, libicu-dev, libxml2-dev, libpam0g-dev, libcap-dev, libaudit1, libselinux1-dev, libwrap0-dev, libkrb5-dev, libgssapi-krb5-2, libgssrpc4
 Conflicts: mail-transport-agent, smail, exim4-base, exim4-daemon-heavy, exim4-daemon-light
 Replaces: mail-transport-agent, postfix
 Provides: mail-transport-agent

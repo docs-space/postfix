@@ -8,6 +8,11 @@ Type: string
 Default: 127.0.0.1:2525
 Description: MailFilter service for mail filtration:
 
+Template: r7mtaserver/spam-host
+Type: string
+Default: 127.0.0.1:10027
+Description: SpamProtect service for spam-filtration over milter protocol:
+
 Template: r7mtaserver/sasl-host
 Type: string
 Default: 127.0.0.1:12345
@@ -27,6 +32,10 @@ Template: r7mtaserver/upgrade
 Type: boolean
 Default: false
 Description: upgrade
+
+Template: r7mtaserver/mta-nodename
+Type: string
+Description: Nodename MTA Service:
 
 Template: r7mtaserver/db-host
 Type: string

@@ -47,7 +47,9 @@ apt-get install -y \
     libkrb5-dev \
     libgssapi-krb5-2 \
     libgssrpc4 \
-    libunbound-dev
+    libunbound-dev \
+    libmicrohttpd-dev \
+    libjansson-dev
 
 # Альтернативно для минимальной сборки
 apt-get install -y \
