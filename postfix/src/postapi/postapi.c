@@ -10,7 +10,8 @@
 /*	that serves JSON over HTTP or HTTPS using GNU libmicrohttpd,
 /*	validates \fBAuthorization: Bearer\fR tokens against Postfix
 /*	lookup tables (including \fBproxy:\fR dynamicmaps). The lookup key
-/*	is \fItoken\fR@\fImulti_instance_name\fR (see \fBmulti_instance_name\fR).
+/*	is \fBmulti_instance_name\fR; the map value is the expected token,
+/*	compared to the Bearer credential.
 /*	It exposes
 /*	\fB/api/v1\fR for GET, POST, PUT, PATCH and DELETE.
 /*--*/
@@ -183,16 +184,18 @@ static const char *postapi_bearer_token(const char *auth)
     return (cp);
 }
 
- /* postapi_token_maps_lookup - maps lookup by full composite key */
+ /* postapi_access_token_ok - expected token from maps(multi_instance_name) */
 
-static int postapi_token_maps_lookup(const char *map_key)
+static int postapi_access_token_ok(const char *bearer_token)
 {
-    const char *exp;
+    const char *expected;
 
     if (postapi_token_maps == 0)
 	return (0);
-    exp = maps_find(postapi_token_maps, map_key, 0);
-    return (exp != 0);
+    expected = maps_find(postapi_token_maps, var_multi_instance_name, 0);
+    if (expected == 0)
+	return (0);
+    return (strcmp(bearer_token, expected) == 0);
 }
 
  /* postapi_access_handler - libmicrohttpd callback */
@@ -260,29 +263,14 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
 				    json_pack("{s:s}", "error",
 					      "missing_or_invalid_authorization"));
     }
-    if (strchr(token, '@') != 0 || strchr(var_multi_instance_name, '@') != 0) {
-	msg_error("postapi: '@' in bearer token or %s is not allowed",
-		  multi_instance_name_param);
-	return postapi_json_reply(connection, 500,
-				  json_pack("{s:s}", "error",
-					    "internal_server_error"));
-    }
-    {
-	VSTRING *map_key;
-
-	map_key = vstring_alloc(strlen(token) + strlen(var_multi_instance_name) + 4);
-	vstring_sprintf(map_key, "%s@%s", token, var_multi_instance_name);
-	if (postapi_token_maps_lookup(vstring_str(map_key)) == 0) {
-	    vstring_free(map_key);
-	    if (postapi_token_maps && postapi_token_maps->error != 0)
-		return postapi_json_reply(connection, 503,
-					  json_pack("{s:s}", "error",
-						    "token_lookup_failed"));
-	    return postapi_json_reply(connection, 401,
+    if (postapi_access_token_ok(token) == 0) {
+	if (postapi_token_maps && postapi_token_maps->error != 0)
+	    return postapi_json_reply(connection, 503,
 				      json_pack("{s:s}", "error",
-						"invalid_token"));
-	}
-	vstring_free(map_key);
+						"token_lookup_failed"));
+	return postapi_json_reply(connection, 401,
+				  json_pack("{s:s}", "error",
+					    "invalid_token"));
     }
 
     /*
@@ -387,8 +375,8 @@ static void postapi_post_init(char *unused_name, char **unused_argv)
 	msg_fatal("%s must be set (example: proxy:pgsql:/etc/postfix/...)",
 		  postapi_access_token_maps_param);
     if (*var_multi_instance_name == 0)
-	msg_fatal("%s must be set (instance id for token@multi_instance_name maps key)",
-		  multi_instance_name_param);
+	msg_fatal("%s must be set (lookup key in %s for the expected Bearer token)",
+		  multi_instance_name_param, postapi_access_token_maps_param);
 
     postapi_token_maps = maps_create("postapi access token",
 				     var_postapi_access_token_maps,
