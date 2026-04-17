@@ -33,7 +33,6 @@ apt-get install -y \
     libsqlite3-dev \
     libcdb-dev \
     liblzma-dev \
-    libz-dev \
     libbz2-dev \
     liblz4-dev \
     libzstd-dev \
@@ -49,7 +48,8 @@ apt-get install -y \
     libgssrpc4 \
     libunbound-dev \
     libmicrohttpd-dev \
-    libjansson-dev
+    libjansson-dev \
+    zlib1g-dev
 
 # Альтернативно для минимальной сборки
 apt-get install -y \
