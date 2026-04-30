@@ -37,18 +37,18 @@ submissions     inet  n       -       y       -       -       smtpd
 ###
 
 #SMTP
-smtp      unix  -       -       y       -       -       smtp
+smtp      unix  -       -       n       -       -       smtp
         -o syslog_name=postfix/smtp_client[SMTP]
         -o smtp_tls_security_level=may
 
 #SMTPS
-smtps      unix  -       -       y       -       -       smtp
+smtps      unix  -       -       n       -       -       smtp
         -o syslog_name=postfix/smtp_client[SMTPS]
         -o smtp_tls_security_level=encrypt
         -o smtp_tls_wrappermode=yes
 
 #RELAY
-relay     unix  -       -       y       -       -       smtp
+relay     unix  -       -       n       -       -       smtp
         -o syslog_name=postfix/smtp_client[RELAY]
 
 
@@ -57,12 +57,12 @@ relay     unix  -       -       y       -       -       smtp
 ###
 
 #LMTP
-lmtp      unix  -       -       y       -       -       lmtp
+lmtp      unix  -       -       n       -       -       lmtp
         -o syslog_name=postfix/lmtp_client[LMTP]
         -o lmtp_tls_security_level=none
 
 #LMTPS
-lmtps      unix  -       -       y       -       -       lmtp
+lmtps      unix  -       -       n       -       -       lmtp
         -o syslog_name=postfix/lmtp_client[LMTPS]
         -o lmtp_tls_security_level=encrypt
         -o lmtp_tls_wrappermode=yes
