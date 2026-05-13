@@ -411,6 +411,7 @@ extern STRING_LIST *smtp_use_srv_lookup;/* services with SRV record lookup */
 extern TLS_APPL_STATE *smtp_tls_ctx;	/* client-side TLS engine */
 extern int smtp_tls_insecure_mx_policy;	/* DANE post insecure MX? */
 extern SMTP_REQTLS_POLICY *smtp_reqtls_policy;	/* parsed list */
+extern struct YANA_POLICY *smtp_tls_loglevel_maps;
 
 #endif
 

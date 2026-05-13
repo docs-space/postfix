@@ -591,6 +591,11 @@ yes" message header.
 Whether to trust client certificates whose extended key usage (EKU) lists
 only \fBserverAuth\fR and not \fBclientAuth\fR as valid TLS client
 certificates.
+.PP
+Available in Postfix version 3.12 and later:
+.IP "\fBsmtpd_tls_loglevel_maps (empty)\fR"
+Optional TLS loglevel override that depends on the remote peer
+host name or IP address.
 .SH "OBSOLETE TLS CONTROLS"
 .na
 .nf

@@ -75,7 +75,7 @@ static void test_hostname_to_sockaddr_failure(PTEST_CTX *t,
      * The missing expectation is intentional. Do not count this as an error.
      */
     expect_ptest_error(t, "unexpected call: "
-	    "hostname_to_sockaddr_pf(\"notexist\", 0, \"smtp\", 1, (ptr))");
+	    "hostname_to_sockaddr_pf(\"notexist\", 0, \"smtp\", ");
 
     /*
      * Invoke the mock and verify results.
@@ -145,8 +145,7 @@ static void test_hostaddr_to_sockaddr_failure(PTEST_CTX *t,
      * The missing expectation is intentional. Do not count this as an error.
      */
     expect_ptest_error(t, "unexpected call: "
-		       "hostaddr_to_sockaddr(\"127.0.0.1\", \"25\", "
-		       "1, (ptr))");
+		       "hostaddr_to_sockaddr(\"127.0.0.1\", \"25\", ");
 
     /*
      * Invoke the mock and verify results.

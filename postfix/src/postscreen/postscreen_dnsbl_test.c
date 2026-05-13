@@ -8,6 +8,7 @@
   */
 #include <sys_defs.h>
 #include <limits.h>
+#include <stdlib.h>
 
  /*
   * Utility library.

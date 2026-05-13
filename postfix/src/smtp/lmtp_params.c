@@ -31,6 +31,7 @@
 	VAR_LMTP_TLS_ECCERT_FILE, DEF_LMTP_TLS_ECCERT_FILE, &var_smtp_tls_eccert_file, 0, 0,
 	VAR_LMTP_TLS_ECKEY_FILE, DEF_LMTP_TLS_ECKEY_FILE, &var_smtp_tls_eckey_file, 0, 0,
 	VAR_LMTP_TLS_LOGLEVEL, DEF_LMTP_TLS_LOGLEVEL, &var_smtp_tls_loglevel, 0, 0,
+	VAR_LMTP_TLS_LOGLEVEL_MAPS, DEF_LMTP_TLS_LOGLEVEL_MAPS, &var_smtp_tls_loglevel_maps, 0, 0,
 	VAR_LMTP_TLS_SNI, DEF_LMTP_TLS_SNI, &var_smtp_tls_sni, 0, 0,
 #endif
 	VAR_LMTP_SASL_MECHS, DEF_LMTP_SASL_MECHS, &var_smtp_sasl_mechs, 0, 0,

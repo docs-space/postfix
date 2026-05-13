@@ -122,7 +122,7 @@ struct servent *wrap_getservbyport(int port, const char *proto)
 void    wrap_setservent(int stayopen)
 {
 #undef setservent
-    return (setservent(stayopen));
+    setservent(stayopen);
 }
 
 /* wrap_endservent - wrap endservent() with stable internal API */
@@ -130,7 +130,7 @@ void    wrap_setservent(int stayopen)
 void    wrap_endservent(void)
 {
 #undef endservent
-    return (endservent());
+    endservent();
 }
 
 #endif

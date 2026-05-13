@@ -239,3 +239,18 @@ proto  proto stop proto stop double cc
  Files tlsproxy tlsproxy c tlsproxy tlsproxy h 
  for consistency Files tlsproxy tlsproxy hc 
  tlsproxy tlsproxy_diff c tlsproxy tlsproxy h 
+ calls File tlsproxy tlsproxy c 
+ Files postscreen postscreen hc 
+ server role support Files smtpd smtpd c tlsproxy tlsproxy c 
+ support Files tlsproxy tlsproxy c tlsproxy tlsproxy_server hc 
+ calls Files tlsproxy tlsproxy c mantools postlink 
+ global yana_policy_test c postscreen postscreen c 
+ postscreen postscreen h postscreen postscreen_starttls c 
+ posttls finger posttls finger c smtp smtp c smtp smtp h 
+ smtp smtp_proto c smtpd smtpd c tls tls_client c tls tls h 
+ across Postfix command line tools Files postalias postalias c 
+ for Claude findings File proxymap proxymap c 
+ Postfix command line tools but avoid postfix postfix 
+ postfix postfix c postmap postmap c postmulti postmulti c 
+ stutter File postmulti postmulti c 
+ with other command line tools File postlog postlog c 

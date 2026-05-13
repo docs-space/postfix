@@ -704,6 +704,11 @@ for messages received with the REQUIRETLS option.
 .IP "\fBsmtp_log_tls_feature_status (yes)\fR"
 Enable logging of TLS feature information in delivery status
 logging.
+.PP
+Available in Postfix version 3.12 and later:
+.IP "\fBsmtp_tls_loglevel_maps (empty)\fR"
+Optional TLS loglevel override that depends on the remote peer
+host name or IP address.
 .SH "OBSOLETE TLS CONTROLS"
 .na
 .nf

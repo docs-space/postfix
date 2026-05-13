@@ -230,6 +230,10 @@ int     tls_proxy_client_start_print(ATTR_PRINT_COMMON_FN print_fn,
 #define STRING_OR_EMPTY(s) ((s) ? (s) : "")
 
     ret = print_fn(fp, flags | ATTR_FLAG_MORE,
+		   SEND_ATTR_STR(TLS_ATTR_LOG_PARAM,
+				 STRING_OR_EMPTY(props->log_param)),
+		   SEND_ATTR_STR(TLS_ATTR_LOG_LEVEL,
+				 STRING_OR_EMPTY(props->log_level)),
 		   SEND_ATTR_INT(TLS_ATTR_TIMEOUT, props->timeout),
 		   SEND_ATTR_INT(TLS_ATTR_ENABLE_RPK, props->enable_rpk),
 		   SEND_ATTR_INT(TLS_ATTR_TLS_LEVEL, props->tls_level),
@@ -274,6 +278,8 @@ int     tls_proxy_client_start_print(ATTR_PRINT_COMMON_FN print_fn,
 
 void    tls_proxy_client_start_free(TLS_CLIENT_START_PROPS *props)
 {
+    myfree((void *) props->log_param);
+    myfree((void *) props->log_level);
     myfree((void *) props->nexthop);
     myfree((void *) props->host);
     myfree((void *) props->namaddr);
@@ -478,6 +484,8 @@ int     tls_proxy_client_start_scan(ATTR_SCAN_COMMON_FN scan_fn, VSTREAM *fp,
     TLS_CLIENT_START_PROPS *props
     = (TLS_CLIENT_START_PROPS *) mymalloc(sizeof(*props));
     int     ret;
+    VSTRING *log_param = vstring_alloc(25);
+    VSTRING *log_level = vstring_alloc(25);
     VSTRING *nexthop = vstring_alloc(25);
     VSTRING *host = vstring_alloc(25);
     VSTRING *namaddr = vstring_alloc(25);
@@ -491,9 +499,9 @@ int     tls_proxy_client_start_scan(ATTR_SCAN_COMMON_FN scan_fn, VSTREAM *fp,
     VSTRING *ffail_type = vstring_alloc(25);
 
 #ifdef USE_TLSRPT
-#define EXPECT_START_SCAN_RETURN	17
+#define EXPECT_START_SCAN_RETURN	19
 #else
-#define EXPECT_START_SCAN_RETURN	16
+#define EXPECT_START_SCAN_RETURN	18
 #endif
 
     if (msg_verbose)
@@ -508,6 +516,8 @@ int     tls_proxy_client_start_scan(ATTR_SCAN_COMMON_FN scan_fn, VSTREAM *fp,
     props->fd = -1;
     props->dane = 0;				/* scan_fn may return early */
     ret = scan_fn(fp, flags | ATTR_FLAG_MORE,
+		  RECV_ATTR_STR(TLS_ATTR_LOG_PARAM, log_param),
+		  RECV_ATTR_STR(TLS_ATTR_LOG_LEVEL, log_level),
 		  RECV_ATTR_INT(TLS_ATTR_TIMEOUT, &props->timeout),
 		  RECV_ATTR_INT(TLS_ATTR_ENABLE_RPK, &props->enable_rpk),
 		  RECV_ATTR_INT(TLS_ATTR_TLS_LEVEL, &props->tls_level),
@@ -532,6 +542,8 @@ int     tls_proxy_client_start_scan(ATTR_SCAN_COMMON_FN scan_fn, VSTREAM *fp,
 		  RECV_ATTR_STR(TLS_ATTR_FFAIL_TYPE, ffail_type),
 		  ATTR_TYPE_END);
     /* Always construct a well-formed structure. */
+    props->log_param = vstring_export(log_param);
+    props->log_level = vstring_export(log_level);
     props->nexthop = vstring_export(nexthop);
     props->host = vstring_export(host);
     props->namaddr = vstring_export(namaddr);

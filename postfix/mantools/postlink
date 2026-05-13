@@ -275,6 +275,7 @@ while (<>) {
     s;\blmtp_tls_exclude_ciphers\b;<a href="postconf.5.html#lmtp_tls_exclude_ciphers">$&</a>;g;
     s;\blmtp_tls_mandatory_exclude_ciphers\b;<a href="postconf.5.html#lmtp_tls_mandatory_exclude_ciphers">$&</a>;g;
     s;\blmtp_tls_loglevel\b;<a href="postconf.5.html#lmtp_tls_loglevel">$&</a>;g;
+    s;\blmtp_tls_loglevel_maps\b;<a href="postconf.5.html#lmtp_tls_loglevel_maps">$&</a>;g;
     s;\blmtp_tls_session_cache_database\b;<a href="postconf.5.html#lmtp_tls_session_cache_database">$&</a>;g;
     s;\blmtp_tls_session_cache_timeout\b;<a href="postconf.5.html#lmtp_tls_session_cache_timeout">$&</a>;g;
     s;\blmtp_tls_enable_rpk\b;<a href="postconf.5.html#lmtp_tls_enable_rpk">$&</a>;g;
@@ -693,6 +694,7 @@ while (<>) {
     s;\bsmtp_tls_enforce_peername\b;<a href="postconf.5.html#smtp_tls_enforce_peername">$&</a>;g;
     s;\bsmtp_tls_key_file\b;<a href="postconf.5.html#smtp_tls_key_file">$&</a>;g;
     s;\bsmtp_tls_loglevel\b;<a href="postconf.5.html#smtp_tls_loglevel">$&</a>;g;
+    s;\bsmtp_tls_loglevel_maps\b;<a href="postconf.5.html#smtp_tls_loglevel_maps">$&</a>;g;
     s;\bsmtp_tls_note_starttls_offer\b;<a href="postconf.5.html#smtp_tls_note_starttls_offer">$&</a>;g;
     s;\bsmtp_tls_per_site\b;<a href="postconf.5.html#smtp_tls_per_site">$&</a>;g;
     s;\bsmtp_tls_policy_maps\b;<a href="postconf.5.html#smtp_tls_policy_maps">$&</a>;g;
@@ -767,6 +769,7 @@ while (<>) {
     s;\bsmtpd_tls_key_file\b;<a href="postconf.5.html#smtpd_tls_key_file">$&</a>;g;
     s;\bsmtpd_tls_security_level\b;<a href="postconf.5.html#smtpd_tls_security_level">$&</a>;g;
     s;\bsmtpd_tls_loglevel\b;<a href="postconf.5.html#smtpd_tls_loglevel">$&</a>;g;
+    s;\bsmtpd_tls_loglevel_maps\b;<a href="postconf.5.html#smtpd_tls_loglevel_maps">$&</a>;g;
     s;\bsmtpd_tls_manda[-</bB>]*\n*[ <bB>]*tory_protocols\b;<a href="postconf.5.html#smtpd_tls_mandatory_protocols">$&</a>;g;
     s;\bsmtpd_tls_received_header\b;<a href="postconf.5.html#smtpd_tls_received_header">$&</a>;g;
     s;\bsmtpd_tls_req_ccert\b;<a href="postconf.5.html#smtpd_tls_req_ccert">$&</a>;g;
@@ -1214,6 +1217,36 @@ while (<>) {
     s;\brequiretls_redact_dsn\b;<a href="postconf.5.html#requiretls_redact_dsn">$&</a>;g;
     s;\bfull_name_encoding_charset\b;<a href="postconf.5.html#full_name_encoding_charset">$&</a>;g;
     s;\bsmtpd_hide_client_session\b;<a href="postconf.5.html#smtpd_hide_client_session">$&</a>;g;
+
+    # postscreen 3.12
+
+    s;\bpostscreen_starttls_timeout\b;<a href="postconf.5.html#postscreen_starttls_timeout">$&</a>;g;
+    s;\bpostscreen_tls_always_issue_session_ids\b;<a href="postconf.5.html#postscreen_tls_always_issue_session_ids">$&</a>;g;
+    s;\bpostscreen_tls_ask_ccert\b;<a href="postconf.5.html#postscreen_tls_ask_ccert">$&</a>;g;
+    s;\bpostscreen_tls_CAfile\b;<a href="postconf.5.html#postscreen_tls_CAfile">$&</a>;g;
+    s;\bpostscreen_tls_CApath\b;<a href="postconf.5.html#postscreen_tls_CApath">$&</a>;g;
+    s;\bpostscreen_tls_cert_file\b;<a href="postconf.5.html#postscreen_tls_cert_file">$&</a>;g;
+    s;\bpostscreen_tls_chain_files\b;<a href="postconf.5.html#postscreen_tls_chain_files">$&</a>;g;
+    s;\bpostscreen_tls_ciphers\b;<a href="postconf.5.html#postscreen_tls_ciphers">$&</a>;g;
+    s;\bpostscreen_tls_dcert_file\b;<a href="postconf.5.html#postscreen_tls_dcert_file">$&</a>;g;
+    s;\bpostscreen_tls_dh1024_param_file\b;<a href="postconf.5.html#postscreen_tls_dh1024_param_file">$&</a>;g;
+    s;\bpostscreen_tls_dh512_param_file\b;<a href="postconf.5.html#postscreen_tls_dh512_param_file">$&</a>;g;
+    s;\bpostscreen_tls_dkey_file\b;<a href="postconf.5.html#postscreen_tls_dkey_file">$&</a>;g;
+    s;\bpostscreen_tls_eccert_file\b;<a href="postconf.5.html#postscreen_tls_eccert_file">$&</a>;g;
+    s;\bpostscreen_tls_eckey_file\b;<a href="postconf.5.html#postscreen_tls_eckey_file">$&</a>;g;
+    s;\bpostscreen_tls_eecdh_grade\b;<a href="postconf.5.html#postscreen_tls_eecdh_grade">$&</a>;g;
+    s;\bpostscreen_tls_enable_rpk\b;<a href="postconf.5.html#postscreen_tls_enable_rpk">$&</a>;g;
+    s;\bpostscreen_tls_exclude_ciphers\b;<a href="postconf.5.html#postscreen_tls_exclude_ciphers">$&</a>;g;
+    s;\bpostscreen_tls_fingerprint_digest\b;<a href="postconf.5.html#postscreen_tls_fingerprint_digest">$&</a>;g;
+    s;\bpostscreen_tls_key_file\b;<a href="postconf.5.html#postscreen_tls_key_file">$&</a>;g;
+    s;\bpostscreen_tls_loglevel\b;<a href="postconf.5.html#postscreen_tls_loglevel">$&</a>;g;
+    s;\bpostscreen_tls_loglevel_maps\b;<a href="postconf.5.html#postscreen_tls_loglevel_maps">$&</a>;g;
+    s;\bpostscreen_tls_mandatory_ciphers\b;<a href="postconf.5.html#postscreen_tls_mandatory_ciphers">$&</a>;g;
+    s;\bpostscreen_tls_mandatory_exclude_ciphers\b;<a href="postconf.5.html#postscreen_tls_mandatory_exclude_ciphers">$&</a>;g;
+    s;\bpostscreen_tls_mandatory_protocols\b;<a href="postconf.5.html#postscreen_tls_mandatory_protocols">$&</a>;g;
+    s;\bpostscreen_tls_protocols\b;<a href="postconf.5.html#postscreen_tls_protocols">$&</a>;g;
+    s;\bpostscreen_tls_req_ccert\b;<a href="postconf.5.html#postscreen_tls_req_ccert">$&</a>;g;
+    s;\bpostscreen_tls_ccert_verifydepth\b;<a href="postconf.5.html#postscreen_tls_ccert_verifydepth">$&</a>;g;
 
     # Service-defined parameters...
 

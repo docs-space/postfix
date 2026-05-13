@@ -30838,7 +30838,7 @@ Apologies for any names omitted.
 	util/attr_print_plain.c, util/attr_scan0.c, util/attr_scan0.ref,
 	util/attr_scan64.c, util/attr_scan64.ref, util/attr_scan_plain.c,
 	util/attr_scan_plain.ref. There is no code that uses this now,
-	but there are tests to make sure that it is works when needed.
+	but there are tests to make sure that it works when needed.
 
 20260408
 
@@ -30964,8 +30964,166 @@ Apologies for any names omitted.
 
 	Added missing text to manpages. Files: tls/tls_proxy_*_proto.c.
 
+20260419
+
+	Testing: completed smtpd(8) support to remotely call
+	tls_server_init() and tls_server_start() in tlsproxy(8);
+	tlsproxy(8) still ignores that information. This is a
+	non-production feature that will be used to test tlsproxy(8)
+	server role support. Files: smtpd/smtpd.c, tlsproxy/tlsproxy.c.
+
+20260420
+
+	Code health: completed tlsproxy(8) support to use remote
+	arguments for tls_server_init() and tls_server_start()
+	calls. Files: tlsproxy/tlsproxy.c, mantools/postlink,
+	proto/postconf.proto.
+
+20260422
+
+	Code health: completed postscreen(8) support to remotely
+	call tls_server_init() and tls_server_start() in tlsproxy(8).
+	Files: postscreen/postscreen.[hc],
+	postscreen/postscreen_starttls.c, postscreen/postscreen_tls_conf.c
+
+	Code health: script to enforce consistent upper and lower
+	bounds in Postfix configuration parameter definitions. File:
+	mantools/check-param-defaults.
+
+	Remaining tech debt: we now have three subtly-different
+	instances of code that maps main.cf settings to tls_client_xxx()
+	and tls_server_xxx() arguments.
+
+20260423
+
+	Cleanup: silence tlsproxy warnings about harmless differences
+	in xxx_tls_loglevel parameter names; use the posttls-finger(1)
+	process name when delegating TLS to a tlsproxy(8) daemon.
+	Files: tlsproxy/tlsproxy_client.c, tlsproxy/tlsproxy_server.c,
+	posttls-finger/posttls-finger.c.
+
+	Cleanup: the tlsproxy_client_loglevel_parameter feature is
+	gone. It was solving the wrong problem, and therefore no-one
+	should miss it. Files: postconf/postconf_unused.c,
+	proto/DEPRECATION_README.html, tlsproxy/tlsproxy_client.c,
+	src/global/mail_params.h.
+
+	Code health: eliminate a null pointer time bomb by assigning
+	the "service_name" parameter value to the "var_servname" C
+	variable. Every daemon program already sets its service name
+	value in the configuration parameter dictionary. File:
+	global/mail_params.c.
+
+20260426
+
+	Portability: support for recent FreeBSD, NetBSD and OpenBSD
+	versions. Brad Smith. Files: makedefs, util/sys_defs.h.
+
+	Future proofing: eliminate duplicate makedefs sections for
+	similar OS versions, and reduce OS version toil. Major OS
+	versions still need to be blessed in <sys_defs.h>. File:
+	makedefs.
+
+20260428
+
+	Feature: per-peer TLS logging support, configurable with
+	smtp_tls_loglevel_maps, smtpd_tls_loglevel_maps, and
+	postscreen_tls_loglevel_maps. This adds two arguments to
+	each tls_client_start() and tls_server_start() call. Files:
+	mantools/postlink, proto/postconf.proto, global/mail_params.h,
+	global/yana_policy.c, global/yana_policy.h,
+	global/yana_policy_test.c postscreen/postscreen.c,
+	postscreen/postscreen.h, postscreen/postscreen_starttls.c,
+	postscreen/postscreen_state.c, postscreen/postscreen_tls_conf.c,
+	posttls-finger/posttls-finger.c, smtp/smtp.c, smtp/smtp.h,
+	smtp/smtp_proto.c, smtpd/smtpd.c, tls/tls_client.c, tls/tls.h,
+	tls/tls_misc.c, tls/tls_proxy_client_start_proto.[hc],
+	tls/tls_proxy_server_start_proto.[hc], tls/tls_server.c.
+
+	Next up is replacing a large number of "[%s]:%s" format strings
+	in postscreen code.
+
+20260429
+
+	Testing: portability. Files: postscreen/postscreen_dnsbl_test.c,
+	testing/mock_myaddrinfo_test.c.
+
+20260501
+
+	The Postfix 3.12 proxymap server missed one of the fixes
+	for Claude findings. File: proxymap/proxymap.c.
+
+20260506
+
+	Tech debt: make the $process_name initialization consistent
+	across Postfix command-line tools. Files: postalias/postalias.c,
+	postfix/postfix.c, postmap/postmap.c, postmulti/postmulti.c.
+
+	Tech debt: consistent logging with "postfix" prefix across
+	Postfix command-line tools, but avoid "postfix/postfix"
+	stutter. File: postmulti/postmulti.c.
+
+	Tech debt: make postlog logging initialization consistent
+	with other command-line tools. File: postlog/postlog.c.
+
+	No change: don't add syslog/maillog_file logging to the
+	postcat and postkick command-line tools.
+
+	Documentation: readability and typographical fixes. Files:
+	proto/REQUIRETLS_README.html, proto/postconf.proto,
+	postscreen/postscreen_tls_conf.c.
+
+	Workaround for MacOS: rename a top-level temporary "testing"
+	directory to "test-conf". On MacOS, "rm -rf testing" deleted
+	the TESTING text file. Files: Makefile.in, postalias/Makefile.in,
+	postmap/Makefile.in, smtpd/Makefile.in, util/Makefile.in.
+
+20260507
+
+	Fix for 'uninitialized value' error. Viktor Dukhovni. File:
+	auxiliary/collate/collate.pl.
+
+	Tech debt: restructured initialization of $service_name.
+	Also enforced that Postfix daemons ignore $process_name and
+	$service_name parameter settings in main.cf or master.cf
+	(parameters are read-only). Files: global/mail_params.c,
+	master/dgram_server.c, master/event_server.c,
+	master/multi_server.c, master/single_server.c,
+	master/trigger_server.c, postconf/postconf_builtin.c.
+
+20260508
+
+	Claude AI findings, brought to our attention by Robert Sayre.
+	Deleted an obsolete __MAXINT__ definition (util/timecmp.c);
+	fixed a signed integer overshift operation (util/vstring.h).
+
+	Testing: Ptest usability: don't require expectations for
+	msg_info() logging, to facilitate debugging; pass through
+	expected logging to make test output more informative.
+	Files: proto/PTEST_README.html, ptest/ptest_log.c,
+	ptest/ptest_log_test.c, ptest/ptest_run.c.
+
+20260509
+
+	Bitrot fixes: deprecation warning with OpenSSL 4.0
+	(tls/tls_dane.c); race condition fix in a test script
+	(tls/dls_dane.sh). Viktor Dukhovni.
+
+20260510
+
+	Bugfix (defect introduced: 20260507): unterminated comment
+	caused missing initializations, crashing postscreen with a
+	null pointer while handling a STARTTLS request. Report by
+	Florian Piekert, fix by Viktor Dukhovni with Claude AI.
+	Files: master/dgram_server.c, master/event_server.c,
+	master/multi_server.c, master/single_server.c,
+	src/master/trigger_server.c.
+
 TODO
 
 	Reorganize PTEST_LIB, PMOCK_LIB, TESTLIB, TESTLIBS, etc.
 
 	Document TLS parameters in tlsproxy(8) and postscreen(8).
+
+	Why are process_name and service_name implemented in different
+	ways?

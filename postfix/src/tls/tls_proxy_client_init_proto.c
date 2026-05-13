@@ -133,7 +133,7 @@ char   *tls_proxy_client_init_serialize(ATTR_PRINT_COMMON_FN print_fn,
 
 TLS_CLIENT_INIT_PROPS *tls_proxy_client_init_from_string(
 					        ATTR_SCAN_COMMON_FN scan_fn,
-						             VSTRING *buf)
+						               VSTRING *buf)
 {
     const char myname[] = "tls_proxy_client_init_from_string";
     TLS_CLIENT_INIT_PROPS *props = 0;
@@ -276,10 +276,13 @@ int     tls_proxy_client_init_scan(ATTR_SCAN_COMMON_FN scan_fn, VSTREAM *fp,
     props->CAfile = vstring_export(CAfile);
     props->CApath = vstring_export(CApath);
     props->mdalg = vstring_export(mdalg);
-    ret = (ret == 14 ? 1 : -1);
-    if (ret != 1) {
+    if (ret != 14) {
+	msg_warn("%s: want 14 attributes, got %d", __func__, ret);
+	ret = -1;
 	tls_proxy_client_init_free(props);
 	props = 0;
+    } else {
+	ret = 1;
     }
     *(TLS_CLIENT_INIT_PROPS **) ptr = props;
     if (msg_verbose)

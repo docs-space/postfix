@@ -670,6 +670,11 @@
 /* .IP "\fBsmtp_log_tls_feature_status (yes)\fR"
 /*	Enable logging of TLS feature information in delivery status
 /*	logging.
+/* .PP
+/*	Available in Postfix version 3.12 and later:
+/* .IP "\fBsmtp_tls_loglevel_maps (empty)\fR"
+/*	Optional TLS loglevel override that depends on the remote peer
+/*	host name or IP address.
 /* OBSOLETE TLS CONTROLS
 /* .ad
 /* .fi
@@ -1038,6 +1043,11 @@
 #include <ext_prop.h>
 #include <hfrom_format.h>
 
+#ifdef USE_TLS
+#include <match_parent_style.h>
+#include <yana_policy.h>
+#endif
+
 /* DNS library. */
 
 #include <dns.h>
@@ -1132,6 +1142,7 @@ char   *var_smtp_tls_dkey_file;
 bool    var_smtp_tls_enforce_peername;
 char   *var_smtp_tls_key_file;
 char   *var_smtp_tls_loglevel;
+char   *var_smtp_tls_loglevel_maps;
 bool    var_smtp_tls_note_starttls_offer;
 char   *var_smtp_tls_mand_proto;
 char   *var_smtp_tls_sec_cmatch;
@@ -1220,6 +1231,8 @@ SMTP_REQTLS_POLICY *smtp_reqtls_policy;
   */
 TLS_APPL_STATE *smtp_tls_ctx;
 int     smtp_tls_insecure_mx_policy;
+
+YANA_POLICY *smtp_tls_loglevel_maps;
 
 #endif
 
@@ -1729,6 +1742,17 @@ static void pre_init(char *unused_name, char **unused_argv)
 	smtp_reqtls_policy =
 	    smtp_reqtls_policy_parse(VAR_LMTP_SMTP(REQTLS_POLICY),
 				     var_smtp_reqtls_policy);
+
+    /*
+     * Per-peer TLS logging.
+     */
+#ifdef USE_TLS
+    if (*var_smtp_tls_loglevel_maps)
+	smtp_tls_loglevel_maps =
+	    yana_policy_create(VAR_SMTP_TLS_LOGLEVEL_MAPS,
+			       var_smtp_tls_loglevel_maps,
+			    match_parent_style(VAR_SMTP_TLS_LOGLEVEL_MAPS));
+#endif
 }
 
 /* pre_accept - see if tables have changed */

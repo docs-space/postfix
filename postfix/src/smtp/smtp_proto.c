@@ -160,6 +160,9 @@
 #if defined(USE_TLS) && defined(USE_TLSRPT)
 #include <tlsrpt_wrapper.h>
 #endif
+#ifdef USE_TLS
+#include <yana_policy.h>
+#endif
 
 /* Application-specific. */
 
@@ -984,6 +987,18 @@ static int smtp_start_tls(SMTP_STATE *state)
     TLS_CLIENT_INIT_PROPS init_props;
     VSTREAM *tlsproxy;
     VSTRING *port_buf;
+    const char *peer_log_param;
+    const char *peer_log_level;
+
+    if (smtp_tls_loglevel_maps
+	&& (peer_log_level = yana_policy_lookup(smtp_tls_loglevel_maps,
+						STR(iter->host),
+						STR(iter->addr))) != 0) {
+	peer_log_param = VAR_SMTP_TLS_LOGLEVEL_MAPS;
+    } else {
+	peer_log_param = VAR_SMTP_TLS_LOGLEVEL;
+	peer_log_level = var_smtp_tls_loglevel;
+    }
 
     /*
      * When the TLS handshake succeeds, we can reuse a connection only if TLS
@@ -1059,6 +1074,8 @@ static int smtp_start_tls(SMTP_STATE *state)
 				    CApath = var_smtp_tls_CApath,
 				    mdalg = var_smtp_tls_fpt_dgst);
 	TLS_PROXY_CLIENT_START_PROPS(&start_props,
+				     log_param = peer_log_param,
+				     log_level = peer_log_level,
 				     timeout = var_smtp_starttls_tmout,
 				     tls_level = state->tls->level,
 				     enable_rpk = state->tls->enable_rpk,
@@ -1186,6 +1203,8 @@ static int smtp_start_tls(SMTP_STATE *state)
 	session->tls_context =
 	    TLS_CLIENT_START(&start_props,
 			     ctx = smtp_tls_ctx,
+			     log_param = peer_log_param,
+			     log_level = peer_log_level,
 			     stream = session->stream,
 			     fd = -1,
 			     timeout = var_smtp_starttls_tmout,

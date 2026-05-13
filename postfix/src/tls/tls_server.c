@@ -394,7 +394,7 @@ static int trust_server_ccerts(X509_STORE_CTX *ctx, void *unused)
     int     i, usages = 0;
 
     if ((x = X509_STORE_CTX_get0_cert(ctx)) == NULL
-        || (xku = X509_get_ext_d2i(x, NID_ext_key_usage, NULL, NULL)) == NULL)
+      || (xku = X509_get_ext_d2i(x, NID_ext_key_usage, NULL, NULL)) == NULL)
 	return X509_verify_cert(ctx);
 
     for (i = 0; i < sk_ASN1_OBJECT_num(xku); i++) {
@@ -740,7 +740,6 @@ TLS_APPL_STATE *tls_server_init(const TLS_SERVER_INIT_PROPS *props)
 	}
 	SSL_CTX_set_client_CA_list(server_ctx, calist);
     }
-
     if (props->ask_ccert && var_tls_srvr_ccerts)
 	SSL_CTX_set_cert_verify_callback(server_ctx, trust_server_ccerts, NULL);
 
@@ -820,7 +819,12 @@ TLS_SESS_STATE *tls_server_start(const TLS_SERVER_START_PROPS *props)
     TLS_SESS_STATE *TLScontext;
     const char *cipher_list;
     TLS_APPL_STATE *app_ctx = props->ctx;
-    int     log_mask = app_ctx->log_mask;
+    int     log_mask;
+
+    /*
+     * Convert user loglevel to internal logmask.
+     */
+    log_mask = tls_log_mask(props->log_param, props->log_level);
 
     /*
      * Implicitly enable logging of trust chain errors when verified certs
@@ -847,6 +851,17 @@ TLS_SESS_STATE *tls_server_start(const TLS_SERVER_START_PROPS *props)
 	tls_free_context(TLScontext);
 	return (0);
     }
+
+    /*
+     * Set the call-back routine for verbose logging.
+     * 
+     * Log_mask-dependent behavior should be consistent whether it is specified
+     * globally in tls_server_init(), or per-connection in
+     * tls_server_start().
+     */
+    if (log_mask & TLS_LOG_DEBUG)
+	SSL_set_info_callback(TLScontext->con, tls_info_callback);
+
     cipher_list = tls_set_ciphers(TLScontext, props->cipher_grade,
 				  props->cipher_exclusions);
     if (cipher_list == 0) {
@@ -868,7 +883,6 @@ TLS_SESS_STATE *tls_server_start(const TLS_SERVER_START_PROPS *props)
 	tls_free_context(TLScontext);
 	return (0);
     }
-
     /* Configure the SNI-based certificate selection callback */
     SSL_set_cert_cb(TLScontext->con, tls_cert_cb, TLScontext);
 

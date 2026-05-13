@@ -3630,6 +3630,10 @@ The LMTP\-specific version of the smtp_tls_loglevel
 configuration parameter.  See there for details.
 .PP
 This feature is available in Postfix 2.3 and later.
+.SH lmtp_tls_loglevel_maps (default: $smtp_tls_loglevel_maps)
+The \fBlmtp\fR(8) equivalent of smtp_tls_loglevel_maps.
+.PP
+This feature is available in Postfix 3.12 and later.
 .SH lmtp_tls_mandatory_ciphers (default: medium)
 The LMTP\-specific version of the smtp_tls_mandatory_ciphers
 configuration parameter.  See there for details.
@@ -6022,6 +6026,116 @@ or 5XX \fBpostscreen\fR(8) server response. See smtpd_reject_footer_maps for
 further details.
 .PP
 This feature is available in Postfix 3.4 and later.
+.SH postscreen_starttls_timeout (default: $smtpd_starttls_timeout)
+The \fBpostscreen\fR(8) equivalent of smtpd_starttls_timeout.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_CAfile (default: $smtpd_tls_CAfile)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_CAfile.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_CApath (default: $smtpd_tls_CApath)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_CApath.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_always_issue_session_ids (default: $smtpd_tls_always_issue_session_ids)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_always_issue_session_ids.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_ask_ccert (default: $smtpd_tls_ask_ccert)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_ask_ccert.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_ccert_verifydepth (default: $smtpd_tls_ccert_verifydepth)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_ccert_verifydepth.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_cert_file (default: $smtpd_tls_cert_file)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_cert_file.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_chain_files (default: $smtpd_tls_chain_files)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_chain_files.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_ciphers (default: $smtpd_tls_ciphers)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_ciphers.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_dcert_file (default: $smtpd_tls_dcert_file)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_dcert_file.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_dh1024_param_file (default: $smtpd_tls_dh1024_param_file)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_dh1024_param_file.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_dh512_param_file (default: $smtpd_tls_dh512_param_file)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_dh512_param_file.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_dkey_file (default: $smtpd_tls_dkey_file)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_dkey_file.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_eccert_file (default: $smtpd_tls_eccert_file)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_eccert_file.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_eckey_file (default: $smtpd_tls_eckey_file)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_eckey_file.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_eecdh_grade (default: $smtpd_tls_eecdh_grade)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_eecdh_grade.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_enable_rpk (default: $smtpd_tls_enable_rpk)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_enable_rpk.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_exclude_ciphers (default: $smtpd_tls_exclude_ciphers)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_exclude_ciphers.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_fingerprint_digest (default: $smtpd_tls_fingerprint_digest)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_fingerprint_digest.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_key_file (default: $smtpd_tls_key_file)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_key_file.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_loglevel (default: $smtpd_tls_loglevel)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_loglevel.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_loglevel_maps (default: $smtpd_tls_loglevel_maps)
+Optional TLS loglevel override that depends on the remote peer
+host name or IP address. See smtp_tls_loglevel_maps for a detailed
+description.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_mandatory_ciphers (default: $smtpd_tls_mandatory_ciphers)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_mandatory_ciphers.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_mandatory_exclude_ciphers (default: $smtpd_tls_mandatory_exclude_ciphers)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_mandatory_exclude_ciphers.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_mandatory_protocols (default: $smtpd_tls_mandatory_protocols)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_mandatory_protocols.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_protocols (default: $smtpd_tls_protocols)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_protocols.
+.PP
+This feature is available in Postfix 3.12 and later.
+.SH postscreen_tls_req_ccert (default: $smtpd_tls_req_ccert)
+The \fBpostscreen\fR(8) equivalent of smtpd_tls_req_ccert.
+.PP
+This feature is available in Postfix 3.12 and later.
 .SH postscreen_tls_security_level (default: $smtpd_tls_security_level)
 The SMTP TLS security level for the \fBpostscreen\fR(8) server; when
 a non\-empty value is specified, this overrides the obsolete parameters
@@ -9781,6 +9895,66 @@ Do not use "smtp_tls_loglevel = 2" or higher except in case of
 problems. Use of loglevel 4 is strongly discouraged.
 .PP
 This feature is available in Postfix 2.2 and later.
+.SH smtp_tls_loglevel_maps (default: empty)
+Optional TLS loglevel override that depends on the remote peer
+host name or IP address. The text below also covers smtpd_tls_loglevel_maps
+and postscreen_tls_loglevel_maps.
+.PP
+Specify zero or more lookup tables separated by comma or
+whitespace. The table syntax is as follows:
+.IP \(bu
+On the left\-hand side, specify a domain name, IPv4 or IPv6
+network address, or a substring pattern as described below. An
+internationalized domain name MUST be in A\-label form (xn\-\-mumble).
+An IPv4 address MUST be in dotted\-quad form; an IPv6 address MUST
+be in compressed form (text::text). Do not enclose any of these
+inputs with "[" and "]".
+.IP \(bu
+On the right\-hand side, specify a valid TLS loglevel value,
+or "DUNNO" for a "quick exit" as described below.
+.br
+.PP
+The over\-all search strategy is as follows:
+.IP \(bu
+Look up the peer name in all specified lookup tables, and
+stop at the first match. If no match was found, this may be followed
+by substring lookups as described below. Note: peer name lookup is
+not applicable for \fBpostscreen\fR(8) because that service does not have
+the remote SMTP client name.
+.IP \(bu
+If no peer name match is found, look up the peer IP address
+in all specified lookup tables, and stop at the first match. If no
+match was found, this may be followed by substring lookups as
+described below.
+.IP \(bu
+If any lookup returns "DUNNO", terminate the search and
+pretend that no name match and no address match were found.
+.br
+.PP
+This feature may generate substring queries for a fixed\-string
+lookup table (examples: hash:, lmdb:, pgsql:). Substring queries
+do not happen with regexp:, pcre:, and cidr: tables.
+.IP \(bu
+By default, after all table queries with a full domain
+name (example: "mail.example.com") produce "not found", the next
+queries will use the parent domains with '.' prepended (examples:
+".example.com" and ".com") until a match is found or until all
+substrings have been tried.
+.IP \(bu
+To generate domain name substring queries without the
+leading '.' (examples: "example.com" and "com"), specify the
+applicable configuration parameter name ("smtpd_tls_loglevel_maps",
+"smtp_tls_loglevel_maps", or "postscreen_tls_loglevel_maps") in the
+parent_domain_matches_subdomains parameter value.
+.IP \(bu
+After all table queries with a full IP address produce
+"not found", the next queries will use subnetworks, by repeatedly
+removing the last ".text" component from a dotted\-quad IPv4 address,
+or the last ":text" component from a compressed\-form IPv6 address,
+until a match is found or until all subnetworks have been tried.
+.br
+.PP
+This feature is available in Postfix 3.12 and later.
 .SH smtp_tls_mandatory_ciphers (default: medium)
 The minimum TLS cipher grade that the Postfix SMTP client will
 use with
@@ -14249,6 +14423,12 @@ Do not use "smtpd_tls_loglevel = 2" or higher except in case
 of problems. Use of loglevel 4 is strongly discouraged.
 .PP
 This feature is available in Postfix 2.2 and later.
+.SH smtpd_tls_loglevel_maps (default: empty)
+Optional TLS loglevel override that depends on the remote peer
+host name or IP address. See smtp_tls_loglevel_maps for a detailed
+description.
+.PP
+This feature is available in Postfix 3.12 and later.
 .SH smtpd_tls_mandatory_ciphers (default: medium)
 The minimum TLS cipher grade that the Postfix SMTP server will
 use with mandatory TLS encryption. The default grade ("medium") is
@@ -15876,7 +16056,7 @@ This feature is available in Postfix 3.4 and later.
 The name of the parameter that provides the tlsproxy_client_loglevel
 value.
 .PP
-This feature is available in Postfix 3.4 and later.
+This feature is available in Postfix 3.4 through 3.11.
 .SH tlsproxy_client_per_site (default: $smtp_tls_per_site)
 Optional lookup tables with the Postfix \fBtlsproxy\fR(8) client TLS
 usage policy by next\-hop destination and by remote TLS server

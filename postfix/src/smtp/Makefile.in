@@ -118,6 +118,7 @@ smtp.o: ../../include/mail_server.h
 smtp.o: ../../include/mail_version.h
 smtp.o: ../../include/maps.h
 smtp.o: ../../include/match_list.h
+smtp.o: ../../include/match_parent_style.h
 smtp.o: ../../include/mime_state.h
 smtp.o: ../../include/msg.h
 smtp.o: ../../include/msg_stats.h
@@ -149,6 +150,7 @@ smtp.o: ../../include/tok822.h
 smtp.o: ../../include/vbuf.h
 smtp.o: ../../include/vstream.h
 smtp.o: ../../include/vstring.h
+smtp.o: ../../include/yana_policy.h
 smtp.o: lmtp_params.c
 smtp.o: smtp.c
 smtp.o: smtp.h
@@ -552,6 +554,7 @@ smtp_proto.o: ../../include/vstream.h
 smtp_proto.o: ../../include/vstring.h
 smtp_proto.o: ../../include/vstring_vstream.h
 smtp_proto.o: ../../include/xtext.h
+smtp_proto.o: ../../include/yana_policy.h
 smtp_proto.o: smtp.h
 smtp_proto.o: smtp_proto.c
 smtp_proto.o: smtp_reqtls_policy.h

@@ -978,7 +978,12 @@ TLS_SESS_STATE *tls_client_start(const TLS_CLIENT_START_PROPS *props)
     SSL_SESSION *session = 0;
     TLS_SESS_STATE *TLScontext;
     TLS_APPL_STATE *app_ctx = props->ctx;
-    int     log_mask = app_ctx->log_mask;
+    int     log_mask;
+
+    /*
+     * Convert user loglevel to internal logmask.
+     */
+    log_mask = tls_log_mask(props->log_param, props->log_level);
 
     /*
      * When certificate verification is required, log trust chain validation
@@ -1037,6 +1042,16 @@ TLS_SESS_STATE *tls_client_start(const TLS_CLIENT_START_PROPS *props)
 	tls_free_context(TLScontext);
 	return (0);
     }
+
+    /*
+     * Set the call-back routine for verbose logging.
+     * 
+     * Log_mask-dependent behavior should be consistent whether it is specified
+     * globally in tls_client_init(), or per-connection in
+     * tls_client_start().
+     */
+    if (log_mask & TLS_LOG_DEBUG)
+	SSL_set_info_callback(TLScontext->con, tls_info_callback);
 
     /*
      * Per session cipher selection for sessions with mandatory encryption

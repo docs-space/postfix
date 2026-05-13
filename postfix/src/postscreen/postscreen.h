@@ -31,6 +31,13 @@
 #include <server_acl.h>
 
  /*
+  * TLS library.
+  */
+#ifdef USE_TLS
+#include <tls_proxy.h>
+#endif
+
+ /*
   * Preliminary stuff, to be fixed.
   */
 #define PSC_READ_BUF_SIZE	1024
@@ -73,6 +80,7 @@ typedef struct {
     int     smtp_server_fd;		/* real SMTP server */
     char   *smtp_client_addr;		/* client address */
     char   *smtp_client_port;		/* client port */
+    char   *smtp_client_addr_port;	/* [client_addr]:client_port */
     char   *smtp_server_addr;		/* server address */
     char   *smtp_server_port;		/* server port */
     const char *final_reply;		/* cause for hanging up */
@@ -410,6 +418,8 @@ extern HTABLE *psc_client_concurrency;	/* per-client concurrency */
 
  /*
   * postscreen_state.c
+  * 
+  * TODO(wietse): migrate PSC_CLIENT_ADDR_PORT to smtp_client_addr_port.
   */
 #define PSC_CLIENT_ADDR_PORT(state) \
 	(state)->smtp_client_addr, (state)->smtp_client_port
@@ -554,6 +564,19 @@ extern void psc_send_socket(PSC_STATE *);
   * postscreen_starttls.c
   */
 extern void psc_starttls_open(PSC_STATE *, EVENT_NOTIFY_FN);
+
+ /*
+  * postscreen_tls_conf.c.
+  */
+extern bool psc_tls_ready;
+extern bool psc_tls_pre_jail(void);
+
+#ifdef USE_TLS
+extern TLS_SERVER_PARAMS psc_tls_params;
+extern TLS_SERVER_INIT_PROPS psc_init_props;
+extern bool psc_tls_pre_start(const PSC_STATE *, TLS_SERVER_START_PROPS *);
+
+#endif
 
  /*
   * postscreen_expand.c

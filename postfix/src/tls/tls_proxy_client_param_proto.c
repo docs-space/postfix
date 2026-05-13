@@ -319,11 +319,13 @@ int     tls_proxy_client_param_scan(ATTR_SCAN_COMMON_FN scan_fn, VSTREAM *fp,
     params->tls_dane_digests = vstring_export(tls_dane_digests);
     params->tls_mgr_service = vstring_export(tls_mgr_service);
     params->tls_tkt_cipher = vstring_export(tls_tkt_cipher);
-
-    ret = (ret == 19 ? 1 : -1);
-    if (ret != 1) {
+    if (ret != 19) {
+	msg_warn("%s: want 19 attributes, got %d", __func__, ret);
+	ret = -1;
 	tls_proxy_client_param_free(params);
 	params = 0;
+    } else {
+	ret = 1;
     }
     *(TLS_CLIENT_PARAMS **) ptr = params;
     if (msg_verbose)

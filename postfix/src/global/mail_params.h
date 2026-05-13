@@ -1441,6 +1441,10 @@ extern char *var_smtpd_tls_eecdh;
 #define DEF_SMTPD_TLS_LOGLEVEL	"0"
 extern char *var_smtpd_tls_loglevel;
 
+#define VAR_SMTPD_TLS_LOGLEVEL_MAPS	"smtpd_tls_loglevel_maps"
+#define DEF_SMTPD_TLS_LOGLEVEL_MAPS	""
+extern char *var_smtpd_tls_loglevel_maps;
+
 #define VAR_SMTPD_TLS_RECHEAD	"smtpd_tls_received_header"
 #define DEF_SMTPD_TLS_RECHEAD	0
 extern bool var_smtpd_tls_received_header;
@@ -1614,6 +1618,13 @@ extern char *var_smtp_tls_tafile;
 #define DEF_LMTP_TLS_LOGLEVEL	"0"
 extern char *var_smtp_tls_loglevel;	/* In smtp(8) and tlsmgr(8) */
 extern char *var_lmtp_tls_loglevel;	/* In tlsmgr(8) */
+
+#define VAR_SMTP_TLS_LOGLEVEL_MAPS	"smtp_tls_loglevel_maps"
+#define DEF_SMTP_TLS_LOGLEVEL_MAPS	""
+#define VAR_LMTP_TLS_LOGLEVEL_MAPS	"lmtp_tls_loglevel_maps"
+#define DEF_LMTP_TLS_LOGLEVEL_MAPS	""
+extern char *var_smtp_tls_loglevel_maps;
+extern char *var_lmtp_tls_loglevel_maps;
 
 #define VAR_SMTP_TLS_NOTEOFFER	"smtp_tls_note_starttls_offer"
 #define DEF_SMTP_TLS_NOTEOFFER	0
@@ -2611,6 +2622,10 @@ extern int var_local_rcpt_code;
 				" $" VAR_VERP_CLIENTS \
 				" $" VAR_XCLIENT_HOSTS \
 				" $" VAR_XFORWARD_HOSTS \
+				" $" VAR_LMTP_TLS_LOGLEVEL_MAPS \
+				" $" VAR_PSC_TLS_LOGLEVEL_MAPS \
+				" $" VAR_SMTP_TLS_LOGLEVEL_MAPS \
+				" $" VAR_SMTPD_TLS_LOGLEVEL_MAPS \
 
 extern char *var_proxy_read_maps;
 
@@ -4185,10 +4200,6 @@ extern bool var_tlsp_tls_set_sessid;
 #define DEF_TLSP_CLNT_LOGLEVEL		"$" VAR_SMTP_TLS_LOGLEVEL
 extern char *var_tlsp_clnt_loglevel;
 
-#define VAR_TLSP_CLNT_LOGPARAM		"tlsproxy_client_loglevel_parameter"
-#define DEF_TLSP_CLNT_LOGPARAM		VAR_SMTP_TLS_LOGLEVEL
-extern char *var_tlsp_clnt_logparam;
-
 #define VAR_TLSP_CLNT_SCERT_VD		"tlsproxy_client_scert_verifydepth"
 #define DEF_TLSP_CLNT_SCERT_VD		"$" VAR_SMTP_TLS_SCERT_VD
 extern int var_tlsp_clnt_scert_vd;
@@ -4658,6 +4669,117 @@ extern char *var_nbdb_allow_user_pfxs;
 #define VAR_NBDB_LOG_REDIRECT		"non_bdb_migration_log_redirect"
 #define DEF_NBDB_LOG_REDIRECT		"yes"
 extern bool var_nbdb_log_redirect;
+
+ /*
+  * Postfix 3.12 postscreen parameters.
+  */
+#define VAR_PSC_TLS_ACERT	"postscreen_tls_ask_ccert"
+#define DEF_PSC_TLS_ACERT	"$" VAR_SMTPD_TLS_ACERT
+extern bool var_psc_tls_ask_ccert;
+
+#define VAR_PSC_TLS_ENABLE_RPK	"postscreen_tls_enable_rpk"
+#define DEF_PSC_TLS_ENABLE_RPK	"$" VAR_SMTPD_TLS_ENABLE_RPK
+extern bool var_psc_tls_enable_rpk;
+
+#define VAR_PSC_TLS_RCERT	"postscreen_tls_req_ccert"
+#define DEF_PSC_TLS_RCERT	"$" VAR_SMTPD_TLS_RCERT
+extern bool var_psc_tls_req_ccert;
+
+#define VAR_PSC_TLS_SET_SESSID	"postscreen_tls_always_issue_session_ids"
+#define DEF_PSC_TLS_SET_SESSID	"$" VAR_SMTPD_TLS_SET_SESSID
+extern bool var_psc_tls_set_sessid;
+
+#define VAR_PSC_TLS_CAFILE	"postscreen_tls_CAfile"
+#define DEF_PSC_TLS_CAFILE	"$" VAR_SMTPD_TLS_CA_FILE
+extern char *var_psc_tls_CAfile;
+
+#define VAR_PSC_TLS_CAPATH	"postscreen_tls_CApath"
+#define DEF_PSC_TLS_CAPATH	"$" VAR_SMTPD_TLS_CA_PATH
+extern char *var_psc_tls_CApath;
+
+#define VAR_PSC_TLS_CERT_FILE	"postscreen_tls_cert_file"
+#define DEF_PSC_TLS_CERT_FILE	"$" VAR_SMTPD_TLS_CERT_FILE
+extern char *var_psc_tls_cert_file;
+
+#define VAR_PSC_TLS_CHAIN_FILES	"postscreen_tls_chain_files"
+#define DEF_PSC_TLS_CHAIN_FILES	"$" VAR_SMTPD_TLS_CHAIN_FILES
+extern char *var_psc_tls_chain_files;
+
+#define VAR_PSC_TLS_CIPH	"postscreen_tls_ciphers"
+#define DEF_PSC_TLS_CIPH	"$" VAR_SMTPD_TLS_CIPH
+extern char *var_psc_tls_ciph;
+
+#define VAR_PSC_TLS_DCERT_FILE	"postscreen_tls_dcert_file"
+#define DEF_PSC_TLS_DCERT_FILE	"$" VAR_SMTPD_TLS_DCERT_FILE
+extern char *var_psc_tls_dcert_file;
+
+#define VAR_PSC_TLS_1024_FILE	"postscreen_tls_dh1024_param_file"
+#define DEF_PSC_TLS_1024_FILE	"$" VAR_SMTPD_TLS_1024_FILE
+extern char *var_psc_tls_dh1024_param_file;
+
+#define VAR_PSC_TLS_512_FILE	"postscreen_tls_dh512_param_file"
+#define DEF_PSC_TLS_512_FILE	"$" VAR_SMTPD_TLS_512_FILE
+extern char *var_psc_tls_dh512_param_file;
+
+#define VAR_PSC_TLS_DKEY_FILE	"postscreen_tls_dkey_file"
+#define DEF_PSC_TLS_DKEY_FILE	"$" VAR_SMTPD_TLS_DKEY_FILE
+extern char *var_psc_tls_dkey_file;
+
+#define VAR_PSC_TLS_ECCERT_FILE	"postscreen_tls_eccert_file"
+#define DEF_PSC_TLS_ECCERT_FILE	"$" VAR_SMTPD_TLS_ECCERT_FILE
+extern char *var_psc_tls_eccert_file;
+
+#define VAR_PSC_TLS_ECKEY_FILE	"postscreen_tls_eckey_file"
+#define DEF_PSC_TLS_ECKEY_FILE	"$" VAR_SMTPD_TLS_ECKEY_FILE
+extern char *var_psc_tls_eckey_file;
+
+#define VAR_PSC_TLS_EECDH	"postscreen_tls_eecdh_grade"
+#define DEF_PSC_TLS_EECDH	"$" VAR_SMTPD_TLS_EECDH
+extern char *var_psc_tls_eecdh;
+
+#define VAR_PSC_TLS_EXCL_CIPH	"postscreen_tls_exclude_ciphers"
+#define DEF_PSC_TLS_EXCL_CIPH	"$" VAR_SMTPD_TLS_EXCL_CIPH
+extern char *var_psc_tls_excl_ciph;
+
+#define VAR_PSC_TLS_FPT_DGST	"postscreen_tls_fingerprint_digest"
+#define DEF_PSC_TLS_FPT_DGST	"$" VAR_SMTPD_TLS_FPT_DGST
+extern char *var_psc_tls_fpt_dgst;
+
+#define VAR_PSC_TLS_KEY_FILE	"postscreen_tls_key_file"
+#define DEF_PSC_TLS_KEY_FILE	"$" VAR_SMTPD_TLS_KEY_FILE
+extern char *var_psc_tls_key_file;
+
+#define VAR_PSC_TLS_LOGLEVEL	"postscreen_tls_loglevel"
+#define DEF_PSC_TLS_LOGLEVEL	"$" VAR_SMTPD_TLS_LOGLEVEL
+extern char *var_psc_tls_loglevel;
+
+#define VAR_PSC_TLS_LOGLEVEL_MAPS "postscreen_tls_loglevel_maps"
+#define DEF_PSC_TLS_LOGLEVEL_MAPS "$" VAR_SMTPD_TLS_LOGLEVEL_MAPS
+extern char *var_psc_tls_loglevel_maps;
+
+#define VAR_PSC_TLS_MAND_CIPH	"postscreen_tls_mandatory_ciphers"
+#define DEF_PSC_TLS_MAND_CIPH	"$" VAR_SMTPD_TLS_MAND_CIPH
+extern char *var_psc_tls_mand_ciph;
+
+#define VAR_PSC_TLS_MAND_EXCL	"postscreen_tls_mandatory_exclude_ciphers"
+#define DEF_PSC_TLS_MAND_EXCL	"$" VAR_SMTPD_TLS_MAND_EXCL
+extern char *var_psc_tls_mand_excl;
+
+#define VAR_PSC_TLS_MAND_PROTO	"postscreen_tls_mandatory_protocols"
+#define DEF_PSC_TLS_MAND_PROTO	"$" VAR_SMTPD_TLS_MAND_PROTO
+extern char *var_psc_tls_mand_proto;
+
+#define VAR_PSC_TLS_PROTO	"postscreen_tls_protocols"
+#define DEF_PSC_TLS_PROTO	"$" VAR_SMTPD_TLS_PROTO
+extern char *var_psc_tls_proto;
+
+#define VAR_PSC_TLS_CCERT_VD	"postscreen_tls_ccert_verifydepth"
+#define DEF_PSC_TLS_CCERT_VD 	"$" VAR_SMTPD_TLS_CCERT_VD
+extern int var_psc_tls_ccert_vd;
+
+#define VAR_PSC_STARTTLS_TMOUT "postscreen_starttls_timeout"
+#define DEF_PSC_STARTTLS_TMOUT "$" VAR_SMTPD_STARTTLS_TMOUT
+extern int var_psc_starttls_tmout;
 
 /* LICENSE
 /* .ad

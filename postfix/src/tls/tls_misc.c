@@ -660,7 +660,7 @@ int     tls_proto_mask_lims(const char *plist, int *floor, int *ceiling)
 
 void    tls_param_init(void)
 {
-    /* If this changes, update TLS_CLIENT_PARAMS in tls_proxy.h. */
+    /* If this changes, update TLS_*_PARAMS* in tls_*.h. */
     static const CONFIG_STR_TABLE str_table[] = {
 	VAR_TLS_CNF_FILE, DEF_TLS_CNF_FILE, &var_tls_cnf_file, 0, 0,
 	VAR_TLS_CNF_NAME, DEF_TLS_CNF_NAME, &var_tls_cnf_name, 0, 0,
@@ -682,13 +682,13 @@ void    tls_param_init(void)
 	0,
     };
 
-    /* If this changes, update TLS_CLIENT_PARAMS in tls_proxy.h. */
+    /* If this changes, update TLS_*_PARAMS* in tls_*.h. */
     static const CONFIG_INT_TABLE int_table[] = {
 	VAR_TLS_DAEMON_RAND_BYTES, DEF_TLS_DAEMON_RAND_BYTES, &var_tls_daemon_rand_bytes, 1, 0,
 	0,
     };
 
-    /* If this changes, update TLS_CLIENT_PARAMS in tls_proxy.h. */
+    /* If this changes, update TLS_*_PARAMS* in tls_*.h. */
     static const CONFIG_BOOL_TABLE bool_table[] = {
 	VAR_TLS_APPEND_DEF_CA, DEF_TLS_APPEND_DEF_CA, &var_tls_append_def_CA,
 	VAR_TLS_PREEMPT_CLIST, DEF_TLS_PREEMPT_CLIST, &var_tls_preempt_clist,
@@ -845,7 +845,7 @@ void    tls_pre_jail_init(TLS_ROLE role)
 	maps_create(VAR_TLS_SERVER_SNI_MAPS, var_tls_server_sni_maps, flags);
 }
 
-int tls_cert_cb(SSL *ssl, void *arg)
+int     tls_cert_cb(SSL *ssl, void *arg)
 {
     TLS_SESS_STATE *TLScontext = arg;
     const char *cp = TLScontext->peer_sni;
@@ -869,12 +869,11 @@ int tls_cert_cb(SSL *ssl, void *arg)
 	}
 	msg_info("TLS SNI %s from %s not matched, using default chain",
 		 TLScontext->peer_sni, TLScontext->namaddr);
-        return 1;
+	return 1;
     }
-
     SSL_certs_clear(ssl);
     if (tls_load_pem_chain(ssl, pem, TLScontext->peer_sni) == 0)
-        return 1;
+	return 1;
 
     /* errors already logged */
     return 0;
@@ -917,7 +916,6 @@ static int server_sni_callback(SSL *ssl, int *alert, void *unused)
 		 TLScontext->namaddr, TLScontext->peer_sni, sni);
 	return SSL_TLSEXT_ERR_NOACK;
     }
-
     TLScontext->peer_sni = mystrdup(sni);
     return SSL_TLSEXT_ERR_OK;
 }

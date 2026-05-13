@@ -5976,6 +5976,16 @@ configuration parameter.  See there for details. </p>
 
 </DD>
 
+<DT><b><a name="lmtp_tls_loglevel_maps">lmtp_tls_loglevel_maps</a>
+(default: $<a href="postconf.5.html#smtp_tls_loglevel_maps">smtp_tls_loglevel_maps</a>)</b></DT><DD>
+
+<p> The <a href="lmtp.8.html">lmtp(8)</a> equivalent of <a href="postconf.5.html#smtp_tls_loglevel_maps">smtp_tls_loglevel_maps</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
 <DT><b><a name="lmtp_tls_mandatory_ciphers">lmtp_tls_mandatory_ciphers</a>
 (default: medium)</b></DT><DD>
 
@@ -9615,6 +9625,278 @@ or 5XX <a href="postscreen.8.html">postscreen(8)</a> server response. See <a hre
 further details. </p>
 
 <p> This feature is available in Postfix 3.4 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_starttls_timeout">postscreen_starttls_timeout</a>
+(default: $<a href="postconf.5.html#smtpd_starttls_timeout">smtpd_starttls_timeout</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_starttls_timeout">smtpd_starttls_timeout</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_CAfile">postscreen_tls_CAfile</a>
+(default: $<a href="postconf.5.html#smtpd_tls_CAfile">smtpd_tls_CAfile</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_CAfile">smtpd_tls_CAfile</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_CApath">postscreen_tls_CApath</a>
+(default: $<a href="postconf.5.html#smtpd_tls_CApath">smtpd_tls_CApath</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_CApath">smtpd_tls_CApath</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_always_issue_session_ids">postscreen_tls_always_issue_session_ids</a>
+(default: $<a href="postconf.5.html#smtpd_tls_always_issue_session_ids">smtpd_tls_always_issue_session_ids</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_always_issue_session_ids">smtpd_tls_always_issue_session_ids</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_ask_ccert">postscreen_tls_ask_ccert</a>
+(default: $<a href="postconf.5.html#smtpd_tls_ask_ccert">smtpd_tls_ask_ccert</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_ask_ccert">smtpd_tls_ask_ccert</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_ccert_verifydepth">postscreen_tls_ccert_verifydepth</a>
+(default: $<a href="postconf.5.html#smtpd_tls_ccert_verifydepth">smtpd_tls_ccert_verifydepth</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_ccert_verifydepth">smtpd_tls_ccert_verifydepth</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_cert_file">postscreen_tls_cert_file</a>
+(default: $<a href="postconf.5.html#smtpd_tls_cert_file">smtpd_tls_cert_file</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_cert_file">smtpd_tls_cert_file</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_chain_files">postscreen_tls_chain_files</a>
+(default: $<a href="postconf.5.html#smtpd_tls_chain_files">smtpd_tls_chain_files</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_chain_files">smtpd_tls_chain_files</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_ciphers">postscreen_tls_ciphers</a>
+(default: $<a href="postconf.5.html#smtpd_tls_ciphers">smtpd_tls_ciphers</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_ciphers">smtpd_tls_ciphers</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_dcert_file">postscreen_tls_dcert_file</a>
+(default: $<a href="postconf.5.html#smtpd_tls_dcert_file">smtpd_tls_dcert_file</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_dcert_file">smtpd_tls_dcert_file</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_dh1024_param_file">postscreen_tls_dh1024_param_file</a>
+(default: $<a href="postconf.5.html#smtpd_tls_dh1024_param_file">smtpd_tls_dh1024_param_file</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_dh1024_param_file">smtpd_tls_dh1024_param_file</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_dh512_param_file">postscreen_tls_dh512_param_file</a>
+(default: $<a href="postconf.5.html#smtpd_tls_dh512_param_file">smtpd_tls_dh512_param_file</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_dh512_param_file">smtpd_tls_dh512_param_file</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_dkey_file">postscreen_tls_dkey_file</a>
+(default: $<a href="postconf.5.html#smtpd_tls_dkey_file">smtpd_tls_dkey_file</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_dkey_file">smtpd_tls_dkey_file</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_eccert_file">postscreen_tls_eccert_file</a>
+(default: $<a href="postconf.5.html#smtpd_tls_eccert_file">smtpd_tls_eccert_file</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_eccert_file">smtpd_tls_eccert_file</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_eckey_file">postscreen_tls_eckey_file</a>
+(default: $<a href="postconf.5.html#smtpd_tls_eckey_file">smtpd_tls_eckey_file</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_eckey_file">smtpd_tls_eckey_file</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_eecdh_grade">postscreen_tls_eecdh_grade</a>
+(default: $<a href="postconf.5.html#smtpd_tls_eecdh_grade">smtpd_tls_eecdh_grade</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_eecdh_grade">smtpd_tls_eecdh_grade</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_enable_rpk">postscreen_tls_enable_rpk</a>
+(default: $<a href="postconf.5.html#smtpd_tls_enable_rpk">smtpd_tls_enable_rpk</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_enable_rpk">smtpd_tls_enable_rpk</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_exclude_ciphers">postscreen_tls_exclude_ciphers</a>
+(default: $<a href="postconf.5.html#smtpd_tls_exclude_ciphers">smtpd_tls_exclude_ciphers</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_exclude_ciphers">smtpd_tls_exclude_ciphers</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_fingerprint_digest">postscreen_tls_fingerprint_digest</a>
+(default: $<a href="postconf.5.html#smtpd_tls_fingerprint_digest">smtpd_tls_fingerprint_digest</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_fingerprint_digest">smtpd_tls_fingerprint_digest</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_key_file">postscreen_tls_key_file</a>
+(default: $<a href="postconf.5.html#smtpd_tls_key_file">smtpd_tls_key_file</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_key_file">smtpd_tls_key_file</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_loglevel">postscreen_tls_loglevel</a>
+(default: $<a href="postconf.5.html#smtpd_tls_loglevel">smtpd_tls_loglevel</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_loglevel">smtpd_tls_loglevel</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_loglevel_maps">postscreen_tls_loglevel_maps</a>
+(default: $<a href="postconf.5.html#smtpd_tls_loglevel_maps">smtpd_tls_loglevel_maps</a>)</b></DT><DD>
+
+<p> Optional TLS loglevel override that depends on the remote peer
+host name or IP address. See <a href="postconf.5.html#smtp_tls_loglevel_maps">smtp_tls_loglevel_maps</a> for a detailed
+description.
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_mandatory_ciphers">postscreen_tls_mandatory_ciphers</a>
+(default: $<a href="postconf.5.html#smtpd_tls_mandatory_ciphers">smtpd_tls_mandatory_ciphers</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_mandatory_ciphers">smtpd_tls_mandatory_ciphers</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_mandatory_exclude_ciphers">postscreen_tls_mandatory_exclude_ciphers</a>
+(default: $<a href="postconf.5.html#smtpd_tls_mandatory_exclude_ciphers">smtpd_tls_mandatory_exclude_ciphers</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_mandatory_exclude_ciphers">smtpd_tls_mandatory_exclude_ciphers</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_mandatory_protocols">postscreen_tls_mandatory_protocols</a>
+(default: $<a href="postconf.5.html#smtpd_tls_mandatory_protocols">smtpd_tls_mandatory_protocols</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_mandatory_protocols">smtpd_tls_mandatory_protocols</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_protocols">postscreen_tls_protocols</a>
+(default: $<a href="postconf.5.html#smtpd_tls_protocols">smtpd_tls_protocols</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_protocols">smtpd_tls_protocols</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
+<DT><b><a name="postscreen_tls_req_ccert">postscreen_tls_req_ccert</a>
+(default: $<a href="postconf.5.html#smtpd_tls_req_ccert">smtpd_tls_req_ccert</a>)</b></DT><DD>
+
+<p> The <a href="postscreen.8.html">postscreen(8)</a> equivalent of <a href="postconf.5.html#smtpd_tls_req_ccert">smtpd_tls_req_ccert</a>. </p>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
 
 
 </DD>
@@ -14724,6 +15006,83 @@ transmission after STARTTLS. </dd>
 problems. Use of loglevel 4 is strongly discouraged. </p>
 
 <p> This feature is available in Postfix 2.2 and later.  </p>
+
+
+</DD>
+
+<DT><b><a name="smtp_tls_loglevel_maps">smtp_tls_loglevel_maps</a>
+(default: empty)</b></DT><DD>
+
+<p> Optional TLS loglevel override that depends on the remote peer
+host name or IP address. The text below also covers <a href="postconf.5.html#smtpd_tls_loglevel_maps">smtpd_tls_loglevel_maps</a>
+and <a href="postconf.5.html#postscreen_tls_loglevel_maps">postscreen_tls_loglevel_maps</a>. </p>
+
+<p> Specify zero or more lookup tables separated by comma or
+whitespace. The table syntax is as follows: <p>
+
+<ul>
+
+<li> <p> On the left-hand side, specify a domain name, IPv4 or IPv6
+network address, or a substring pattern as described below. An
+internationalized domain name MUST be in A-label form (xn--mumble).
+An IPv4 address MUST be in dotted-quad form; an IPv6 address MUST
+be in compressed form (text::text). Do not enclose any of these
+inputs with "[" and "]". </p>
+
+<li> <p> On the right-hand side, specify a valid TLS loglevel value,
+or "DUNNO" for a "quick exit" as described below. </p>
+
+</ul>
+
+<p> The over-all search strategy is as follows: </p>
+
+<ul>
+
+<li> <p> Look up the peer name in all specified lookup tables, and
+stop at the first match. If no match was found, this may be followed
+by substring lookups as described below. Note: peer name lookup is
+not applicable for <a href="postscreen.8.html">postscreen(8)</a> because that service does not have
+the remote SMTP client name. </p>
+
+<li> <p> If no peer name match is found, look up the peer IP address
+in all specified lookup tables, and stop at the first match. If no
+match was found, this may be followed by substring lookups as
+described below. </p>
+
+<li> <p> If any lookup returns "DUNNO", terminate the search and
+pretend that no name match and no address match were found.
+</p>
+
+</ul>
+
+<p> This feature may generate substring queries for a fixed-string
+lookup table (examples: <a href="DATABASE_README.html#types">hash</a>:, <a href="lmdb_table.5.html">lmdb</a>:, <a href="pgsql_table.5.html">pgsql</a>:). Substring queries
+do not happen with <a href="regexp_table.5.html">regexp</a>:, <a href="pcre_table.5.html">pcre</a>:, and <a href="cidr_table.5.html">cidr</a>: tables. </p>
+
+<ul>
+
+<li> <p> By default, after all table queries with a full domain
+name (example: "mail.example.com") produce "not found", the next
+queries will use the parent domains with '.' prepended (examples:
+".example.com" and ".com") until a match is found or until all
+substrings have been tried. </p>
+
+<li> <p> To generate domain name substring queries without the
+leading '.' (examples: "example.com" and "com"), specify the
+applicable configuration parameter name ("<a href="postconf.5.html#smtpd_tls_loglevel_maps">smtpd_tls_loglevel_maps</a>",
+"<a href="postconf.5.html#smtp_tls_loglevel_maps">smtp_tls_loglevel_maps</a>", or "<a href="postconf.5.html#postscreen_tls_loglevel_maps">postscreen_tls_loglevel_maps</a>") in the
+<a href="postconf.5.html#parent_domain_matches_subdomains">parent_domain_matches_subdomains</a> parameter value. </p>
+
+<li> <p> After all table queries with a full IP address produce
+"not found", the next queries will use subnetworks, by repeatedly
+removing the last ".text" component from a dotted-quad IPv4 address,
+or the last ":text" component from a compressed-form IPv6 address,
+until a match is found or until all subnetworks have been tried.
+</p>
+
+</ul>
+
+<p> This feature is available in Postfix 3.12 and later. </p>
 
 
 </DD>
@@ -20246,6 +20605,18 @@ of problems. Use of loglevel 4 is strongly discouraged. </p>
 
 </DD>
 
+<DT><b><a name="smtpd_tls_loglevel_maps">smtpd_tls_loglevel_maps</a>
+(default: empty)</b></DT><DD>
+
+<p> Optional TLS loglevel override that depends on the remote peer
+host name or IP address. See <a href="postconf.5.html#smtp_tls_loglevel_maps">smtp_tls_loglevel_maps</a> for a detailed
+description.
+
+<p> This feature is available in Postfix 3.12 and later. </p>
+
+
+</DD>
+
 <DT><b><a name="smtpd_tls_mandatory_ciphers">smtpd_tls_mandatory_ciphers</a>
 (default: medium)</b></DT><DD>
 
@@ -22344,7 +22715,7 @@ activity. See <a href="postconf.5.html#smtp_tls_loglevel">smtp_tls_loglevel</a> 
 <p> The name of the parameter that provides the <a href="postconf.5.html#tlsproxy_client_loglevel">tlsproxy_client_loglevel</a>
 value. </p>
 
-<p> This feature is available in Postfix 3.4 and later. </p>
+<p> This feature is available in Postfix 3.4 through 3.11. </p>
 
 
 </DD>

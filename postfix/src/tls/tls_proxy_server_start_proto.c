@@ -101,6 +101,10 @@ int     tls_proxy_server_start_print(ATTR_PRINT_COMMON_FN print_fn, VSTREAM *fp,
 #define STRING_OR_EMPTY(s) ((s) ? (s) : "")
 
     ret = print_fn(fp, flags | ATTR_FLAG_MORE,
+		   SEND_ATTR_STR(TLS_ATTR_LOG_PARAM,
+				 STRING_OR_EMPTY(props->log_param)),
+		   SEND_ATTR_STR(TLS_ATTR_LOG_LEVEL,
+				 STRING_OR_EMPTY(props->log_level)),
 		   SEND_ATTR_INT(TLS_ATTR_TIMEOUT, props->timeout),
 		   SEND_ATTR_INT(TLS_ATTR_ENABLE_RPK, props->enable_rpk),
 		   SEND_ATTR_INT(TLS_ATTR_REQUIRECERT, props->requirecert),
@@ -127,6 +131,8 @@ int     tls_proxy_server_start_scan(ATTR_SCAN_COMMON_FN scan_fn, VSTREAM *fp,
     TLS_SERVER_START_PROPS *props
     = (TLS_SERVER_START_PROPS *) mymalloc(sizeof(*props));
     int     ret;
+    VSTRING *log_param = vstring_alloc(25);
+    VSTRING *log_level = vstring_alloc(25);
     VSTRING *serverid = vstring_alloc(25);
     VSTRING *namaddr = vstring_alloc(25);
     VSTRING *cipher_grade = vstring_alloc(25);
@@ -141,6 +147,8 @@ int     tls_proxy_server_start_scan(ATTR_SCAN_COMMON_FN scan_fn, VSTREAM *fp,
     props->stream = 0;
     /* XXX Caller sets fd. */
     ret = scan_fn(fp, flags | ATTR_FLAG_MORE,
+		  RECV_ATTR_STR(TLS_ATTR_LOG_PARAM, log_param),
+		  RECV_ATTR_STR(TLS_ATTR_LOG_LEVEL, log_level),
 		  RECV_ATTR_INT(TLS_ATTR_TIMEOUT, &props->timeout),
 		  RECV_ATTR_INT(TLS_ATTR_ENABLE_RPK, &props->enable_rpk),
 		  RECV_ATTR_INT(TLS_ATTR_REQUIRECERT, &props->requirecert),
@@ -151,12 +159,15 @@ int     tls_proxy_server_start_scan(ATTR_SCAN_COMMON_FN scan_fn, VSTREAM *fp,
 				cipher_exclusions),
 		  RECV_ATTR_STR(TLS_ATTR_MDALG, mdalg),
 		  ATTR_TYPE_END);
+    /* Always construct a well-formed structure. */
+    props->log_param = vstring_export(log_param);
+    props->log_level = vstring_export(log_level);
     props->serverid = vstring_export(serverid);
     props->namaddr = vstring_export(namaddr);
     props->cipher_grade = vstring_export(cipher_grade);
     props->cipher_exclusions = vstring_export(cipher_exclusions);
     props->mdalg = vstring_export(mdalg);
-    ret = (ret == 8 ? 1 : -1);
+    ret = (ret == 10 ? 1 : -1);
     if (ret != 1) {
 	tls_proxy_server_start_free(props);
 	props = 0;
@@ -170,6 +181,8 @@ int     tls_proxy_server_start_scan(ATTR_SCAN_COMMON_FN scan_fn, VSTREAM *fp,
 void    tls_proxy_server_start_free(TLS_SERVER_START_PROPS *props)
 {
     /* XXX Caller closes fd. */
+    myfree((void *) props->log_param);
+    myfree((void *) props->log_level);
     myfree((void *) props->serverid);
     myfree((void *) props->namaddr);
     myfree((void *) props->cipher_grade);

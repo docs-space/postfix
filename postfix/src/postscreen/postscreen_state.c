@@ -140,6 +140,7 @@
 #include <mymalloc.h>
 #include <name_mask.h>
 #include <htable.h>
+#include <vstring.h>
 
 /* Global library. */
 
@@ -162,6 +163,7 @@ PSC_STATE *psc_new_session_state(VSTREAM *stream,
 				         const char *server_port)
 {
     PSC_STATE *state;
+    VSTRING *addr_port;
 
     state = (PSC_STATE *) mymalloc(sizeof(*state));
     if ((state->smtp_client_stream = stream) != 0)
@@ -169,6 +171,9 @@ PSC_STATE *psc_new_session_state(VSTREAM *stream,
     state->smtp_server_fd = (-1);
     state->smtp_client_addr = mystrdup(client_addr);
     state->smtp_client_port = mystrdup(client_port);
+    addr_port = vstring_alloc(30);
+    vstring_sprintf(addr_port, "[%s]:%s", client_addr, client_port);
+    state->smtp_client_addr_port = vstring_export(addr_port);
     state->smtp_server_addr = mystrdup(server_addr);
     state->smtp_server_port = mystrdup(server_port);
     state->send_buf = vstring_alloc(100);
@@ -243,6 +248,7 @@ void    psc_free_session_state(PSC_STATE *state)
 	state->send_buf = vstring_free(state->send_buf);
     myfree(state->smtp_client_addr);
     myfree(state->smtp_client_port);
+    myfree(state->smtp_client_addr_port);
     myfree(state->smtp_server_addr);
     myfree(state->smtp_server_port);
     if (state->dnsbl_reply)

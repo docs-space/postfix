@@ -280,19 +280,9 @@ case "$SYSTEM.$RELEASE" in
 	      *) error "Seems to be UnixWare`uname -v`. Untested.";;
 		esac
 		;;
-  FreeBSD.2*)	SYSTYPE=FREEBSD2
+FreeBSD.[2-7].*) SYSTYPE=FREEBSD$RELEASE_MAJOR
 		;;
-  FreeBSD.3*)	SYSTYPE=FREEBSD3
-		;;
-  FreeBSD.4*)	SYSTYPE=FREEBSD4
-		;;
-  FreeBSD.5*)	SYSTYPE=FREEBSD5
-		;;
-  FreeBSD.6*)	SYSTYPE=FREEBSD6
-		;;
-  FreeBSD.7*)	SYSTYPE=FREEBSD7
-		;;
-  FreeBSD.8*)	SYSTYPE=FREEBSD8
+FreeBSD.[89].*)	SYSTYPE=FREEBSD$RELEASE_MAJOR
 		: ${SHLIB_SUFFIX=.so}
 		: ${SHLIB_CFLAGS=-fPIC}
 		: ${SHLIB_LD="${CC-gcc} -shared"' -Wl,-soname,${LIB}'}
@@ -300,51 +290,7 @@ case "$SYSTEM.$RELEASE" in
 		: ${SHLIB_ENV="LD_LIBRARY_PATH=`pwd`/lib"}
 		: ${PLUGIN_LD="${CC-gcc} -shared"}
 		;;
-  FreeBSD.9*)	SYSTYPE=FREEBSD9
-		: ${SHLIB_SUFFIX=.so}
-		: ${SHLIB_CFLAGS=-fPIC}
-		: ${SHLIB_LD="${CC-gcc} -shared"' -Wl,-soname,${LIB}'}
-		: ${SHLIB_RPATH='-Wl,-rpath,${SHLIB_DIR}'}
-		: ${SHLIB_ENV="LD_LIBRARY_PATH=`pwd`/lib"}
-		: ${PLUGIN_LD="${CC-gcc} -shared"}
-		;;
-  FreeBSD.10*)	SYSTYPE=FREEBSD10
-		: ${CC=cc}
-		: ${SHLIB_SUFFIX=.so}
-		: ${SHLIB_CFLAGS=-fPIC}
-		: ${SHLIB_LD="${CC} -shared"' -Wl,-soname,${LIB}'}
-		: ${SHLIB_RPATH='-Wl,-rpath,${SHLIB_DIR}'}
-		: ${SHLIB_ENV="LD_LIBRARY_PATH=`pwd`/lib"}
-		: ${PLUGIN_LD="${CC} -shared"}
-		;;
-   FreeBSD.11*) SYSTYPE=FREEBSD11
-		: ${CC=cc}
-		: ${SHLIB_SUFFIX=.so}
-		: ${SHLIB_CFLAGS=-fPIC}
-		: ${SHLIB_LD="${CC} -shared"' -Wl,-soname,${LIB}'}
-		: ${SHLIB_RPATH='-Wl,-rpath,${SHLIB_DIR}'}
-		: ${SHLIB_ENV="LD_LIBRARY_PATH=`pwd`/lib"}
-		: ${PLUGIN_LD="${CC} -shared"}
-		;;
-   FreeBSD.12*) SYSTYPE=FREEBSD12
-		: ${CC=cc}
-		: ${SHLIB_SUFFIX=.so}
-		: ${SHLIB_CFLAGS=-fPIC}
-		: ${SHLIB_LD="${CC} -shared"' -Wl,-soname,${LIB}'}
-		: ${SHLIB_RPATH='-Wl,-rpath,${SHLIB_DIR}'}
-		: ${SHLIB_ENV="LD_LIBRARY_PATH=`pwd`/lib"}
-		: ${PLUGIN_LD="${CC} -shared"}
-		;;
-   FreeBSD.13*)	SYSTYPE=FREEBSD13
-		: ${CC=cc}
-		: ${SHLIB_SUFFIX=.so}
-		: ${SHLIB_CFLAGS=-fPIC}
-		: ${SHLIB_LD="${CC} -shared"' -Wl,-soname,${LIB}'}
-		: ${SHLIB_RPATH='-Wl,-rpath,${SHLIB_DIR}'}
-		: ${SHLIB_ENV="LD_LIBRARY_PATH=`pwd`/lib"}
-		: ${PLUGIN_LD="${CC} -shared"}
-		;;
-   FreeBSD.14*)	SYSTYPE=FREEBSD14
+  FreeBSD.*)	SYSTYPE=FREEBSD$RELEASE_MAJOR
 		: ${CC=cc}
 		: ${SHLIB_SUFFIX=.so}
 		: ${SHLIB_CFLAGS=-fPIC}
@@ -355,31 +301,9 @@ case "$SYSTEM.$RELEASE" in
 		;;
  DragonFly.*)	SYSTYPE=DRAGONFLY
 		;;
-  OpenBSD.2*)	SYSTYPE=OPENBSD2
+OpenBSD.[2-4].*) SYSTYPE=OPENBSD$RELEASE_MAJOR
 		;;
-  OpenBSD.3*)	SYSTYPE=OPENBSD3
-		;;
-  OpenBSD.4*)	SYSTYPE=OPENBSD4
-		;;
-  OpenBSD.5*)	SYSTYPE=OPENBSD5
-		: ${CC=cc}
-		: ${SHLIB_SUFFIX=.so.1.0}
-		: ${SHLIB_CFLAGS=-fPIC}
-		: ${SHLIB_LD="${CC} -shared"' -Wl,-soname,${LIB}'}
-		: ${SHLIB_RPATH='-Wl,-rpath,${SHLIB_DIR}'}
-		: ${SHLIB_ENV="LD_LIBRARY_PATH=`pwd`/lib"}
-		: ${PLUGIN_LD="${CC} -shared"}
-		;;
-  OpenBSD.6*)	SYSTYPE=OPENBSD6
-		: ${CC=cc}
-		: ${SHLIB_SUFFIX=.so.1.0}
-		: ${SHLIB_CFLAGS=-fPIC}
-		: ${SHLIB_LD="${CC} -shared"' -Wl,-soname,${LIB}'}
-		: ${SHLIB_RPATH='-Wl,-rpath,${SHLIB_DIR}'}
-		: ${SHLIB_ENV="LD_LIBRARY_PATH=`pwd`/lib"}
-		: ${PLUGIN_LD="${CC} -shared"}
-		;;
-  OpenBSD.7*)	SYSTYPE=OPENBSD7
+  OpenBSD.*)	SYSTYPE=OPENBSD$RELEASE_MAJOR
 		: ${CC=cc}
 		: ${SHLIB_SUFFIX=.so.1.0}
 		: ${SHLIB_CFLAGS=-fPIC}
@@ -390,49 +314,9 @@ case "$SYSTEM.$RELEASE" in
 		;;
   ekkoBSD.1*)	SYSTYPE=EKKOBSD1
 		;;
-   NetBSD.1*)	SYSTYPE=NETBSD1
+NetBSD.[1-5].*)	SYSTYPE=NETBSD$RELEASE_MAJOR
 		;;
-   NetBSD.2*)	SYSTYPE=NETBSD2
-		;;
-   NetBSD.3*)	SYSTYPE=NETBSD3
-		;;
-   NetBSD.4*)	SYSTYPE=NETBSD4
-		;;
-   NetBSD.5*)	SYSTYPE=NETBSD5
-		;;
-   NetBSD.6*)	SYSTYPE=NETBSD6
-		: ${SHLIB_SUFFIX=.so}
-		: ${SHLIB_CFLAGS=-fPIC}
-		: ${SHLIB_LD="${CC-gcc} -shared"' -Wl,-soname,${LIB}'}
-		: ${SHLIB_RPATH='-Wl,-rpath,${SHLIB_DIR}'}
-		: ${SHLIB_ENV="LD_LIBRARY_PATH=`pwd`/lib"}
-		: ${PLUGIN_LD="${CC-gcc} -shared"}
-		;;
-   NetBSD.7*)	SYSTYPE=NETBSD7
-		: ${SHLIB_SUFFIX=.so}
-		: ${SHLIB_CFLAGS=-fPIC}
-		: ${SHLIB_LD="${CC-gcc} -shared"' -Wl,-soname,${LIB}'}
-		: ${SHLIB_RPATH='-Wl,-rpath,${SHLIB_DIR}'}
-		: ${SHLIB_ENV="LD_LIBRARY_PATH=`pwd`/lib"}
-		: ${PLUGIN_LD="${CC-gcc} -shared"}
-		;;
-   NetBSD.8*)	SYSTYPE=NETBSD8
-		: ${SHLIB_SUFFIX=.so}
-		: ${SHLIB_CFLAGS=-fPIC}
-		: ${SHLIB_LD="${CC-gcc} -shared"' -Wl,-soname,${LIB}'}
-		: ${SHLIB_RPATH='-Wl,-rpath,${SHLIB_DIR}'}
-		: ${SHLIB_ENV="LD_LIBRARY_PATH=`pwd`/lib"}
-		: ${PLUGIN_LD="${CC-gcc} -shared"}
-		;;
-   NetBSD.9*)	SYSTYPE=NETBSD9
-		: ${SHLIB_SUFFIX=.so}
-		: ${SHLIB_CFLAGS=-fPIC}
-		: ${SHLIB_LD="${CC-gcc} -shared"' -Wl,-soname,${LIB}'}
-		: ${SHLIB_RPATH='-Wl,-rpath,${SHLIB_DIR}'}
-		: ${SHLIB_ENV="LD_LIBRARY_PATH=`pwd`/lib"}
-		: ${PLUGIN_LD="${CC-gcc} -shared"}
-		;;
-   NetBSD.10*)	SYSTYPE=NETBSD10
+   NetBSD.*)	SYSTYPE=NETBSD$RELEASE_MAJOR
 		: ${SHLIB_SUFFIX=.so}
 		: ${SHLIB_CFLAGS=-fPIC}
 		: ${SHLIB_LD="${CC-gcc} -shared"' -Wl,-soname,${LIB}'}
@@ -454,10 +338,10 @@ case "$SYSTEM.$RELEASE" in
 		V[0-4].*) CCARGS="$CCARGS -DNO_IPV6";;
 		esac
 		;;
-    SunOS.4*)	SYSTYPE=SUNOS4
+    SunOS.4.*)	SYSTYPE=SUNOS4
 		SYSLIBS=-lresolv
 		;;
-    SunOS.5*)	SYSTYPE=SUNOS5
+    SunOS.5.*)	SYSTYPE=SUNOS5
 		RANLIB=echo
 		SYSLIBS="-lresolv -lsocket -lnsl -ldl"
 		: ${SHLIB_SUFFIX=.so}
@@ -554,14 +438,14 @@ case "$SYSTEM.$RELEASE" in
 		*)	error "Unknown AIX version: `uname -v`.";;
 		esac;;
 		# Tested with RedHat 3.03 on 20020729.
-    Linux.1*)	SYSTYPE=LINUX1
+    Linux.1.*)	SYSTYPE=LINUX1
 		case "$CCARGS" in
 		 *-DNO_DB*) ;;
 		 *-DHAS_DB*) ;;
 		 *) SYSLIBS="-ldb";;
 		esac
 		;;
-    Linux.2*)	SYSTYPE=LINUX2
+    Linux.2.*)	SYSTYPE=LINUX2
 		case "$CCARGS" in
 		 *-DNO_DB*) ;;
 		 *-DHAS_DB*) ;;
@@ -642,8 +526,7 @@ EOF
 		: ${SHLIB_ENV="LD_LIBRARY_PATH=`pwd`/lib"}
 		: ${PLUGIN_LD="${CC-gcc} -shared"}
 		;;
-    Linux.[34567].*)
-		SYSTYPE=LINUX$RELEASE_MAJOR
+    Linux.*)	SYSTYPE=LINUX$RELEASE_MAJOR
 		case "$CCARGS" in
 		 *-DNO_DB*) ;;
 		 *-DHAS_DB*) case "$AUXLIBS_DB" in

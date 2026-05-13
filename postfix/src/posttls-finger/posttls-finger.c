@@ -820,6 +820,8 @@ static int starttls(STATE *state)
 				    CApath = state->CApath,
 				    mdalg = state->mdalg);
 	TLS_PROXY_CLIENT_START_PROPS(&start_props,
+				     log_param = "-L option",
+				     log_level = state->options.logopts,
 				     timeout = smtp_tmout,
 				     enable_rpk = state->options.enable_rpk,
 				     tls_level = state->level,
@@ -853,7 +855,7 @@ static int starttls(STATE *state)
 	tlsproxy =
 	    tls_proxy_open(DEF_TLSPROXY_SERVICE /* TODO */ , PROXY_OPEN_FLAGS,
 			   state->stream, state->paddr, STR(port_buf),
-			   smtp_tmout, smtp_tmout, state->addrport,
+			   smtp_tmout, smtp_tmout, var_procname,
 			   tls_proxy_client_param_from_config(&tls_params),
 			   &init_props, &start_props);
 	vstring_free(port_buf);
@@ -924,6 +926,8 @@ static int starttls(STATE *state)
 	state->tls_context =
 	    TLS_CLIENT_START(&start_props,
 			     ctx = state->tls_ctx,
+			     log_param = "-L option",
+			     log_level = state->options.logopts,
 			     stream = stream,
 			     fd = -1,
 			     timeout = smtp_tmout,
