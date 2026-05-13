@@ -162,7 +162,7 @@ proxy_read_maps =
 ###
 #Транспортные настройки
 ###
-default_transport = smtp:
+default_transport = smtp-tls:
 virtual_mailbox_domains = proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/virtual_email/psql-virtual_mailbox_domains.cf
 virtual_mailbox_maps = proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/virtual_email/psql-virtual_mailbox_maps.cf
 transport_maps = proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/virtual_transport/psql-virtual_transport.cf

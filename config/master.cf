@@ -39,6 +39,11 @@ submissions     inet  n       -       y       -       -       smtpd
 #SMTP
 smtp      unix  -       -       n       -       -       smtp
         -o syslog_name=postfix/smtp_client[SMTP]
+        -o smtp_tls_security_level=none
+
+#SMTP + STARTTLS
+smtp-tls      unix  -       -       n       -       -       smtp
+        -o syslog_name=postfix/smtp_client[SMTP/STARTTLS]
         -o smtp_tls_security_level=may
 
 #SMTPS
