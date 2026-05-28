@@ -188,6 +188,8 @@ if [ "$1" = "configure" ]; then
     conf_owner
     save_params_debconf
 
+    systemctl daemon-reload || true
+
     echo "Restart postfix"
     deb-systemd-invoke enable 'postfix.service' >/dev/null || true
     deb-systemd-invoke restart 'postfix.service' >/dev/null || true
