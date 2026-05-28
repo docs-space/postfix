@@ -9,7 +9,9 @@ Wants=network-online.target
 
 [Service]
 Type=forking
-GuessMainPID=no
+PIDFile=/opt/r7-mailserver/mtaserver/var/spool/postfix/pid/master.pid
+#GuessMainPID=no
+ExecStartPre=/opt/r7-mailserver/mtaserver/usr/sbin/postfix check
 ExecStart=/opt/r7-mailserver/mtaserver/usr/sbin/postfix start
 ExecReload=/opt/r7-mailserver/mtaserver/usr/sbin/postfix reload
 ExecStop=/opt/r7-mailserver/mtaserver/usr/sbin/postfix stop
@@ -17,3 +19,4 @@ WorkingDirectory=/opt/r7-mailserver/mtaserver
 
 [Install]
 WantedBy=multi-user.target
+
