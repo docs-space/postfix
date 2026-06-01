@@ -11,6 +11,8 @@
 /* DESCRIPTION
 /*	Route /api/v1/<Controller>/<Action> to controller handlers and
 /*	send JSON or raw NDJSON HTTP responses via libmicrohttpd.
+/*	Controller code that calls msg_fatal() or msg_panic() is trapped
+/*	and turned into a 503/500 JSON error instead of killing postapi.
 /*
 /*	postapi_query_parse() reads MHD_GET_ARGUMENT_KIND into a JSON
 /*	object (duplicate keys become JSON arrays of values). The \fIurl\fR

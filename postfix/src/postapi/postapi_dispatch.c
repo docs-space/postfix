@@ -6,12 +6,14 @@
 /*--*/
 
 #include <sys_defs.h>
+#include <setjmp.h>
 #include <string.h>
 #include <stdlib.h>
 
 #include <microhttpd.h>
 #include <jansson.h>
 
+#include <msg.h>
 #include <mymalloc.h>
 #include <vstring.h>
 
@@ -24,6 +26,48 @@
 
 typedef POSTAPI_RESP *(*POSTAPI_CTRL_FN) (int, const char *, const char *,
 			                           json_t *, json_t *);
+
+static jmp_buf postapi_ctrl_jmp_buf;
+
+ /* postapi_ctrl_longjmp - trap msg_fatal/msg_panic from a controller */
+
+static NORETURN void postapi_ctrl_longjmp(int code)
+{
+    longjmp(postapi_ctrl_jmp_buf, code);
+}
+
+ /* postapi_call_controller - invoke controller; return 5xx on failure */
+
+static POSTAPI_RESP *
+postapi_call_controller(const char *controller, POSTAPI_CTRL_FN fn,
+		        int authorized, const char *method, const char *action,
+		        json_t *query, json_t *body)
+{
+    POSTAPI_RESP *resp;
+    int     except;
+
+    msg_set_longjmp_action(postapi_ctrl_longjmp);
+    except = setjmp(postapi_ctrl_jmp_buf);
+    if (except == 0) {
+	resp = fn(authorized, method, action, query, body);
+	msg_set_longjmp_action(0);
+	if (resp == 0) {
+	    msg_warn("postapi: controller %s returned no response", controller);
+	    return (postapi_resp_json(500,
+				      json_pack("{s:s}", "error",
+						"internal_server_error")));
+	}
+	return (resp);
+    }
+    msg_set_longjmp_action(0);
+    msg_warn("postapi: controller %s aborted: %s", controller,
+	     except == MSG_LONGJMP_PANIC ? "panic" : "fatal");
+    return (postapi_resp_json(except == MSG_LONGJMP_PANIC ? 500 : 503,
+			      json_pack("{s:s}", "error",
+					except == MSG_LONGJMP_PANIC ?
+					"internal_server_error" :
+					"service_unavailable")));
+}
 
 static struct {
     const char *name;
@@ -225,6 +269,7 @@ postapi_dispatch(const char *url, const char *method, int authorized,
     size_t  ctrl_len;
     POSTAPI_CTRL_FN fn;
     POSTAPI_RESP *resp;
+    const char *ctrl_name;
     int     n;
 
     path_buf = vstring_alloc(strlen(url) + 1);
@@ -262,10 +307,12 @@ postapi_dispatch(const char *url, const char *method, int authorized,
     ctrl_len = (size_t) (slash - path);
     action = slash + 1;
     fn = 0;
+    ctrl_name = "unknown";
     for (n = 0; postapi_controllers[n].name != 0; n++) {
 	if (strlen(postapi_controllers[n].name) == ctrl_len
 	    && strncmp(controller, postapi_controllers[n].name, ctrl_len) == 0) {
 	    fn = postapi_controllers[n].dispatch;
+	    ctrl_name = postapi_controllers[n].name;
 	    break;
 	}
     }
@@ -273,7 +320,8 @@ postapi_dispatch(const char *url, const char *method, int authorized,
 	vstring_free(path_buf);
 	return (postapi_resp_json(404, json_pack("{s:s}", "error", "not_found")));
     }
-    resp = fn(authorized, method, action, query, body);
+    resp = postapi_call_controller(ctrl_name, fn, authorized, method, action,
+				  query, body);
     vstring_free(path_buf);
     return (resp);
 }
