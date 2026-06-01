@@ -340,7 +340,7 @@
   * Queue manipulation access lists.
   */
 char   *var_flush_acl;
-extern char *var_showq_acl;
+char   *var_showq_acl;
 
 static const CONFIG_STR_TABLE str_table[] = {
     VAR_FLUSH_ACL, DEF_FLUSH_ACL, &var_flush_acl, 0, 0,

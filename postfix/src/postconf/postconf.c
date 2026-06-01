@@ -653,8 +653,8 @@
  /*
   * Global storage. See postconf.h for description.
   */
-PCF_PARAM_TABLE *pcf_param_table;
-PCF_MASTER_ENT *pcf_master_table;
+extern PCF_PARAM_TABLE *pcf_param_table;
+extern PCF_MASTER_ENT *pcf_master_table;
 extern int pcf_cmd_mode;
 
  /*

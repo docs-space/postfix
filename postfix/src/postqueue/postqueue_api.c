@@ -20,7 +20,7 @@
 
 #include <postqueue.h>
 
-char   *var_showq_acl;
+extern char *var_showq_acl;
 
 static const CONFIG_STR_TABLE str_table[] = {
     VAR_SHOWQ_ACL, DEF_SHOWQ_ACL, &var_showq_acl, 0, 0,
