@@ -57,5 +57,15 @@ queue_dispatch(int authorized, const char *method, const char *action,
 	return (postapi_resp_json(503,
 				 json_pack("{s:s}", "error", "service_unavailable")));
     }
-    return (postapi_resp_ndjson(200, buf));
+    {
+	json_t *arr;
+
+	arr = postapi_ndjson_to_json_array(vstring_str(buf), VSTRING_LEN(buf));
+	vstring_free(buf);
+	if (arr == 0)
+	    return (postapi_resp_json(503,
+				     json_pack("{s:s}", "error",
+					       "invalid_queue_json")));
+	return (postapi_resp_json(200, arr));
+    }
 }
