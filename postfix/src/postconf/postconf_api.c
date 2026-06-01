@@ -9,7 +9,6 @@
 #include <unistd.h>
 
 #include <mail_conf.h>
-#include <mail_dict.h>
 #include <vstream.h>
 
 #include <postconf.h>
@@ -29,7 +28,6 @@ postconf_list_json(VSTREAM *fp)
 
     if (!postconf_api_initialized) {
 	mail_conf_read();
-	mail_dict_init();
 	pcf_read_parameters();
 	pcf_register_builtin_parameters("postapi", getpid());
 	pcf_read_master(PCF_WARN_ON_OPEN_ERROR);
