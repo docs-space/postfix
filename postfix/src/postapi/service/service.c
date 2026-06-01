@@ -14,7 +14,7 @@
 #include "postapi.h"
 #include "service.h"
 
- /* service_dispatch - GET /api/v1/Service */
+ /* service_dispatch - GET /api/v1/Service (empty action) */
 
 POSTAPI_RESP *
 service_dispatch(int authorized, const char *method, const char *action,
@@ -23,9 +23,6 @@ service_dispatch(int authorized, const char *method, const char *action,
     (void) query;
     (void) body;
 
-    if (!authorized)
-	return (postapi_resp_json(401,
-				 json_pack("{s:s}", "error", "unauthorized")));
     if (*action != 0)
 	return (postapi_resp_json(404, json_pack("{s:s}", "error", "not_found")));
     if (strcmp(method, "GET") != 0)
@@ -33,6 +30,7 @@ service_dispatch(int authorized, const char *method, const char *action,
 				 json_pack("{s:s}", "error", "method_not_allowed")));
 
     return (postapi_resp_json(200,
-			       json_pack("{s:s}", "instance_name",
-					 postapi_get_instance_name())));
+			       json_pack("{s:s,s:b}", "instance_name",
+					 postapi_get_instance_name(),
+					 "auth_check", authorized)));
 }

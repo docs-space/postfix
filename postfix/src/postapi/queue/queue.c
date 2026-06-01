@@ -19,7 +19,7 @@
 #include "postapi_dispatch.h"
 #include "queue.h"
 
- /* queue_dispatch - GET /api/v1/Queue/All */
+ /* queue_dispatch - GET /api/v1/Queue/All (empty action is not found) */
 
 POSTAPI_RESP *
 queue_dispatch(int authorized, const char *method, const char *action,

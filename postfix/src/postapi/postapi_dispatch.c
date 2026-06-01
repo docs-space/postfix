@@ -80,6 +80,70 @@ static struct {
     {0, 0},
 };
 
+ /* postapi_route_parse_path - split /api/v1/<Controller>[/<Action>] */
+
+static int
+postapi_route_parse_path(const char *url, VSTRING *path_buf,
+			         const char **controller, size_t *controller_len,
+			         const char **action)
+{
+    const char *path;
+    const char *slash;
+
+    {
+	const char *qmark = strchr(url, '?');
+
+	if (qmark != 0)
+	    vstring_strncpy(path_buf, url, qmark - url);
+	else
+	    vstring_strcpy(path_buf, url);
+    }
+    url = vstring_str(path_buf);
+
+    if (strncmp(url, POSTAPI_API_PREFIX, POSTAPI_API_PREFIX_LEN) != 0)
+	return (0);
+    path = url + POSTAPI_API_PREFIX_LEN;
+    while (*path == '/')
+	path++;
+    if (*path == 0)
+	return (0);
+    slash = strchr(path, '/');
+    if (slash == 0) {
+	*controller = path;
+	*controller_len = strlen(path);
+	*action = "";
+	return (1);
+    }
+    if (slash[1] == 0 || strchr(slash + 1, '/') != 0)
+	return (0);
+    *controller = path;
+    *controller_len = (size_t) (slash - path);
+    *action = slash + 1;
+    return (1);
+}
+
+ /* postapi_route_lookup - map controller name to handler */
+
+static int
+postapi_route_lookup(const char *controller, size_t controller_len,
+		             POSTAPI_CTRL_FN *fn_out, const char **ctrl_name_out)
+{
+    int     n;
+
+    for (n = 0; postapi_controllers[n].name != 0; n++) {
+	if (strlen(postapi_controllers[n].name) == controller_len
+	    && strncmp(controller, postapi_controllers[n].name,
+		       controller_len) == 0) {
+	    if (fn_out)
+		*fn_out = postapi_controllers[n].dispatch;
+	    if (ctrl_name_out)
+		*ctrl_name_out = postapi_controllers[n].name;
+	    return (1);
+	}
+    }
+    return (0);
+}
+
  /* postapi_resp_free - release response object */
 
 void
@@ -264,63 +328,19 @@ postapi_dispatch(const char *url, const char *method, int authorized,
 		         json_t *query, json_t *body)
 {
     VSTRING *path_buf;
-    const char *path;
-    const char *slash;
     const char *controller;
     const char *action;
     size_t  ctrl_len;
     POSTAPI_CTRL_FN fn;
     POSTAPI_RESP *resp;
     const char *ctrl_name;
-    int     n;
 
     path_buf = vstring_alloc(strlen(url) + 1);
-    {
-	const char *qmark = strchr(url, '?');
-
-	if (qmark != 0)
-	    vstring_strncpy(path_buf, url, qmark - url);
-	else
-	    vstring_strcpy(path_buf, url);
-    }
-    url = vstring_str(path_buf);
-
-    if (strncmp(url, POSTAPI_API_PREFIX, POSTAPI_API_PREFIX_LEN) != 0) {
+    if (!postapi_route_parse_path(url, path_buf, &controller, &ctrl_len, &action)) {
 	vstring_free(path_buf);
 	return (postapi_resp_json(404, json_pack("{s:s}", "error", "not_found")));
     }
-    path = url + POSTAPI_API_PREFIX_LEN;
-    while (*path == '/')
-	path++;
-    if (*path == 0) {
-	vstring_free(path_buf);
-	return (postapi_resp_json(404, json_pack("{s:s}", "error", "not_found")));
-    }
-    slash = strchr(path, '/');
-    if (slash == 0) {
-	controller = path;
-	ctrl_len = strlen(path);
-	action = "";
-    } else {
-	if (slash[1] == 0 || strchr(slash + 1, '/') != 0) {
-	    vstring_free(path_buf);
-	    return (postapi_resp_json(404, json_pack("{s:s}", "error", "not_found")));
-	}
-	controller = path;
-	ctrl_len = (size_t) (slash - path);
-	action = slash + 1;
-    }
-    fn = 0;
-    ctrl_name = "unknown";
-    for (n = 0; postapi_controllers[n].name != 0; n++) {
-	if (strlen(postapi_controllers[n].name) == ctrl_len
-	    && strncmp(controller, postapi_controllers[n].name, ctrl_len) == 0) {
-	    fn = postapi_controllers[n].dispatch;
-	    ctrl_name = postapi_controllers[n].name;
-	    break;
-	}
-    }
-    if (fn == 0) {
+    if (!postapi_route_lookup(controller, ctrl_len, &fn, &ctrl_name)) {
 	vstring_free(path_buf);
 	return (postapi_resp_json(404, json_pack("{s:s}", "error", "not_found")));
     }

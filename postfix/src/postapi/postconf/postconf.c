@@ -17,7 +17,7 @@
 #include "postapi_dispatch.h"
 #include "postconf.h"
 
- /* postconf_dispatch - GET /api/v1/PostConf/All */
+ /* postconf_dispatch - GET /api/v1/PostConf/All (empty action is not found) */
 
 POSTAPI_RESP *
 postconf_dispatch(int authorized, const char *method, const char *action,

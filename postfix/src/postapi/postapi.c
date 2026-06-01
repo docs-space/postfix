@@ -286,7 +286,7 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
 
     /*
      * Authorization: Bearer <access_token> only (no other schemes).
-     * Controllers decide 401; lookup errors return 503 before dispatch.
+     * Always validate when a token is present; controllers decide 401/200.
      */
     authorized = 0;
     auth_hdr = MHD_lookup_connection_value(connection, MHD_HEADER_KIND,
@@ -294,35 +294,22 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
     token = postapi_bearer_token(auth_hdr);
     if (token != 0) {
 	auth_rc = postapi_access_token_check(token);
-	switch (auth_rc) {
-	case POSTAPI_AUTH_OK:
-	    authorized = 1;
+	authorized = (auth_rc == POSTAPI_AUTH_OK);
+	if (authorized) {
 	    msg_info("postapi: authorization ok: instance=%s; %s %s",
 		     var_multi_instance_name, method, url);
-	    break;
-	case POSTAPI_AUTH_LOOKUP_ERR:
+	} else if (auth_rc == POSTAPI_AUTH_LOOKUP_ERR) {
 	    msg_warn("postapi: authorization failed: access token map lookup error; instance=%s; %s %s",
 		     var_multi_instance_name, method, url);
-	    return postapi_json_reply(connection, 503,
-				      json_pack("{s:s}", "error",
-						"token_lookup_failed"));
-	case POSTAPI_AUTH_NO_ENTRY:
+	} else if (auth_rc == POSTAPI_AUTH_NO_ENTRY) {
 	    msg_warn("postapi: authorization denied: no map entry for instance=%s; %s %s",
 		     var_multi_instance_name, method, url);
-	    break;
-	case POSTAPI_AUTH_MISMATCH:
+	} else if (auth_rc == POSTAPI_AUTH_MISMATCH) {
 	    msg_warn("postapi: authorization denied: bearer token does not match map; instance=%s; %s %s",
 		     var_multi_instance_name, method, url);
-	    break;
-	default:
+	} else {
 	    msg_warn("postapi: authorization internal error; %s %s", method, url);
-	    return postapi_json_reply(connection, 500,
-				      json_pack("{s:s}", "error",
-						"internal_server_error"));
 	}
-    } else {
-	msg_warn("postapi: authorization denied: missing or invalid Authorization header; %s %s",
-		 method, url);
     }
 
     /*
