@@ -31,6 +31,7 @@ compatibility_level = 3.11
 # SSL/TLS Параметры Postfix API
 ###
 postapi_access_token_maps = proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/postapi/psql-postapi_access_token_maps.cf
+postapi_access_salt_maps = proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/postapi/psql-postapi_access_salt_maps.cf
 postapi_tls_cert_file = {{ MAIL_MTA_CERT_CRT_FILE }}
 postapi_tls_key_file = {{ MAIL_MTA_CERT_KEY_FILE }}
 postapi_tls_security_level = encrypt
@@ -157,6 +158,7 @@ proxy_read_maps =
     proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_recipient_access_scope_recipient.cf,
     proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/notify/psql-relocated_maps.cf,
     proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/postapi/psql-postapi_access_token_maps.cf
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/postapi/psql-postapi_access_salt_maps.cf
 
 
 ###

@@ -163,6 +163,13 @@
 #	unqualified or does not have enough domain components to satisfy
 #	all the specified patterns, the search is suppressed and returns
 #	no results.
+# .IP "\fB%{name}\fR"
+#	Replace with the value of the named \fBmain.cf\fR parameter, after
+#	RFC 2254 quoting. The name must contain only characters [a-zA-Z0-9_].
+#	The parameter must be defined in \fBmain.cf\fR (an empty value is
+#	allowed). This expansion does not depend on the lookup key.
+# .IP
+#	This feature is available in Postfix 3.12 and later.
 # .RE
 # .IP "\fBquery_filter (default: mailacceptinggeneralid=%s)\fR"
 #	The RFC2254 filter used to search the directory, where \fB%s\fR
@@ -212,6 +219,13 @@
 # .IP
 #	The above %1, ..., %9 expansions are available with Postfix 2.2
 #	and later.
+# .IP "\fB%{name}\fR"
+#	Replace with the value of the named \fBmain.cf\fR parameter, after
+#	RFC 2254 quoting. The name must contain only characters [a-zA-Z0-9_].
+#	The parameter must be defined in \fBmain.cf\fR (an empty value is
+#	allowed). This expansion does not depend on the lookup key.
+# .IP
+#	This feature is available in Postfix 3.12 and later.
 # .RE
 # .IP
 #	The "domain" parameter described below limits the input

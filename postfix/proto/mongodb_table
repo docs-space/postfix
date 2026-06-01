@@ -98,6 +98,12 @@
 #	most significant component of the input key's domain. If
 #	the input key is \fIuser@mail.example.com\fR, then %1 is
 #	\fBcom\fR, %2 is \fBexample\fR and %3 is \fBmail\fR.
+# .IP "\fB%{name}\fR"
+#	Replace with the value of the named \fBmain.cf\fR parameter, after
+#	quoting as required by RFC 4627. The name must contain only characters
+#	[a-zA-Z0-9_]. The parameter must be defined in \fBmain.cf\fR (an
+#	empty value is allowed). This expansion does not depend on the lookup
+#	key. This feature is available in Postfix 3.12 and later.
 # .RE
 # .IP
 #	In the above substitutions, characters will be quoted as
