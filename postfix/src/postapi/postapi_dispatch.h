@@ -41,6 +41,8 @@ extern void postapi_resp_free(POSTAPI_RESP *resp);
 extern POSTAPI_RESP *postapi_resp_json(unsigned int code, json_t *obj);
 extern POSTAPI_RESP *postapi_resp_ndjson(unsigned int code, VSTRING *body);
 
+extern json_t *postapi_ndjson_to_json_array(const char *data, ssize_t len);
+
 extern enum MHD_Result postapi_send_response(struct MHD_Connection *connection,
 				             POSTAPI_RESP *resp);
 

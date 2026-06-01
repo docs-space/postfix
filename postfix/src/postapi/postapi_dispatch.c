@@ -78,6 +78,56 @@ postapi_resp_ndjson(unsigned int code, VSTRING *body)
     return (resp);
 }
 
+ /* postapi_ndjson_to_json_array - parse JSON Lines into one JSON array */
+
+json_t *
+postapi_ndjson_to_json_array(const char *data, ssize_t len)
+{
+    const char *cp;
+    const char *end;
+    json_t *arr;
+    json_error_t jerr;
+
+    if (data == 0 || len < 0)
+	return (0);
+    arr = json_array();
+    if (arr == 0)
+	return (0);
+    cp = data;
+    end = data + len;
+    while (cp < end) {
+	const char *nl;
+	size_t  line_len;
+	json_t *obj;
+
+	while (cp < end && (*cp == '\n' || *cp == '\r'))
+	    cp++;
+	if (cp >= end)
+	    break;
+	nl = memchr(cp, '\n', (size_t) (end - cp));
+	line_len = nl ? (size_t) (nl - cp) : (size_t) (end - cp);
+	while (line_len > 0
+	       && (cp[line_len - 1] == '\r' || cp[line_len - 1] == '\n'))
+	    line_len--;
+	if (line_len == 0) {
+	    cp = nl ? nl + 1 : end;
+	    continue;
+	}
+	obj = json_loadb(cp, line_len, 0, &jerr);
+	if (obj == 0) {
+	    json_decref(arr);
+	    return (0);
+	}
+	if (json_array_append_new(arr, obj) < 0) {
+	    json_decref(obj);
+	    json_decref(arr);
+	    return (0);
+	}
+	cp = nl ? nl + 1 : end;
+    }
+    return (arr);
+}
+
  /* postapi_query_append - append one value for a query key (arrays on repeat) */
 
 static int
