@@ -1152,7 +1152,7 @@ db_common.o: ../../include/vstring.h
 db_common.o: cfg_parser.h
 db_common.o: db_common.c
 db_common.o: db_common.h
-db_common.o: ../../include/mail_conf.h
+db_common.o: mail_conf.h
 db_common.o: string_list.h
 debug_peer.o: ../../include/argv.h
 debug_peer.o: ../../include/check_arg.h
@@ -3482,7 +3482,7 @@ yana_policy_test.o: yana_policy.h
 yana_policy_test.o: yana_policy_test.c
 
 db_common_test.o: ../../include/dict.h
-db_common_test.o: ../../include/mail_conf.h
+db_common_test.o: mail_conf.h
 db_common_test.o: ../../include/msg.h
 db_common_test.o: ../../include/mymalloc.h
 db_common_test.o: ../../include/ptest.h
