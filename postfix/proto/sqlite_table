@@ -90,6 +90,13 @@
 #	unqualified or does not have enough domain components to satisfy
 #	all the specified patterns, the query is suppressed and returns
 #	no results.
+# .IP "\fB%{name}\fR"
+#	Replace with the value of the named \fBmain.cf\fR parameter, after
+#	SQL quoting. The name must contain only characters [a-zA-Z0-9_].
+#	The parameter must be defined in \fBmain.cf\fR (an empty value is
+#	allowed). This expansion does not depend on the lookup key.
+# .IP
+#	This feature is available in Postfix 3.12 and later.
 # .RE
 # .IP
 #	The \fBdomain\fR parameter described below limits the input

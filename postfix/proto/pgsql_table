@@ -173,6 +173,13 @@
 # .IP
 #	The above %1, ... %9 expansions are available with Postfix 2.2
 #	and later
+# .IP "\fB%{name}\fR"
+#	Replace with the value of the named \fBmain.cf\fR parameter, after
+#	SQL quoting. The name must contain only characters [a-zA-Z0-9_].
+#	The parameter must be defined in \fBmain.cf\fR (an empty value is
+#	allowed). This expansion does not depend on the lookup key.
+# .IP
+#	This feature is available in Postfix 3.12 and later.
 # .RE
 # .IP
 #	The \fBdomain\fR parameter described below limits the input
@@ -215,6 +222,9 @@
 #	and in fact because the input key is known in advance, queries
 #	whose key does not contain all the information specified in
 #	the result template are suppressed and return no results.
+# .IP "\fB%{name}\fR"
+#	Replace with the value of the named \fBmain.cf\fR parameter. See
+#	the \fBquery\fR parameter description for details.
 # .RE
 # .IP
 #	For example, using "result_format = smtp:[%s]" allows one

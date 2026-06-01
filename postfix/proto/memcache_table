@@ -168,6 +168,12 @@
 #	components to satisfy all the specified patterns, a lookup
 #	is silently suppressed and returns no results (an update
 #	is skipped with a warning).
+# .IP "\fB%{name}\fR"
+#	Replace with the value of the named \fBmain.cf\fR parameter, after
+#	quoting. The name must contain only characters [a-zA-Z0-9_]. The
+#	parameter must be defined in \fBmain.cf\fR (an empty value is allowed).
+#	This expansion does not depend on the lookup key. This feature is
+#	available in Postfix 3.12 and later.
 # .RE
 # .IP "\fBdomain (default: no domain list)\fR"
 #	This feature can significantly reduce database server load.

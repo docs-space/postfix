@@ -88,6 +88,14 @@
 /*	address.  Otherwise the query against the database is suppressed and
 /*	the lookup returns no results.
 /* .PP
+/*	The following '%' expansion is performed on main.cf parameters:
+/* .IP %{name}
+/*	Replace with the value of the named main.cf parameter, after
+/*	SQL/LDAP/etc. quoting. The name must contain only characters
+/*	[a-zA-Z0-9_]. The parameter must be defined in main.cf (an empty
+/*	value is allowed). This expansion does not depend on the lookup
+/*	key. This feature is available in Postfix 3.12 and later.
+/* .PP
 /*	\fIdb_common_check_domain\fR() checks the domain list so
 /*	that query optimization can be performed. The result is >0
 /*	(match found), 0 (no match), or <0 (dictionary error code).
@@ -144,6 +152,7 @@
   * Global library.
   */
 #include "cfg_parser.h"
+#include <mail_conf.h>
 
  /*
   * Utility library.
@@ -158,6 +167,9 @@
   */
 #include "db_common.h"
 
+#define DB_COMMON_CF_PARAM_OPEN	'{'
+#define DB_COMMON_CF_PARAM_CLOSE	'}'
+
 #define	DB_COMMON_KEY_DOMAIN	(1 << 0)/* Need lookup key domain */
 #define	DB_COMMON_KEY_USER	(1 << 1)/* Need lookup key localpart */
 #define	DB_COMMON_VALUE_DOMAIN	(1 << 2)/* Need result domain */
@@ -170,6 +182,65 @@ typedef struct {
     int     flags;
     int     nparts;
 } DB_COMMON_CTX;
+
+/* db_common_cf_param_name_valid - validate main.cf parameter name */
+
+static int db_common_cf_param_name_valid(const char *name, const char *end)
+{
+    const char *cp;
+
+    if (name >= end)
+	return (0);
+    for (cp = name; cp < end; cp++)
+	if (!ISALNUM((unsigned char) *cp) && *cp != '_')
+	    return (0);
+    return (1);
+}
+
+/* db_common_parse_cf_param - validate %{name} in query or result template */
+
+static void db_common_parse_cf_param(DB_COMMON_CTX *ctx, const char *name_start,
+				            const char *end,
+				            const char *format, int query)
+{
+    char   *name;
+
+    if (!db_common_cf_param_name_valid(name_start, end))
+	msg_fatal("db_common_parse: %s: invalid %s template: %s",
+		  ctx->dict->name, query ? "query" : "result", format);
+    name = mystrndup(name_start, end - name_start);
+    if (mail_conf_lookup(name) == 0)
+	msg_fatal("db_common_parse: %s: unknown main.cf parameter '%s' in %s template: %s",
+		  ctx->dict->name, name, query ? "query" : "result", format);
+    myfree(name);
+}
+
+/* db_common_expand_cf_param - expand %{name} from main.cf */
+
+static void db_common_expand_cf_param(DB_COMMON_CTX *ctx, const char *name_start,
+				              const char *end, VSTRING *result,
+				              db_quote_callback_t quote_func)
+{
+    const char *myname = "db_common_expand_cf_param";
+    char   *name;
+    const char *value;
+
+#define QUOTE_VAL(d, q, v, buf) do { \
+	if (q) \
+	    q(d, v, buf); \
+	else \
+	    vstring_strcat(buf, v); \
+    } while (0)
+
+    name = mystrndup(name_start, end - name_start);
+    if ((value = mail_conf_lookup_eval(name)) == 0)
+	value = "";
+    if (msg_verbose > 2)
+	msg_info("%s: %s: expand %%%c%s%c -> %s", myname, ctx->dict->name,
+		 DB_COMMON_CF_PARAM_OPEN, name, DB_COMMON_CF_PARAM_CLOSE, value);
+    QUOTE_VAL(ctx->dict, quote_func, value, result);
+    myfree(name);
+}
 
 /* db_common_alloc - allocate db_common context */
 
@@ -196,11 +267,23 @@ int     db_common_parse(DICT *dict, void **ctxPtr, const char *format, int query
     if (ctx == 0)
 	ctx = (DB_COMMON_CTX *) (*ctxPtr = db_common_alloc(dict));
 
-    for (cp = format; *cp; ++cp)
-	if (*cp == '%')
-	    switch (*++cp) {
-	    case '%':
-		break;
+    for (cp = format; *cp; ++cp) {
+	if (*cp != '%')
+	    continue;
+	if (*++cp == '%')
+	    continue;
+	if (*cp == DB_COMMON_CF_PARAM_OPEN) {
+	    const char *name_start = cp + 1;
+	    const char *name_end = strchr(name_start, DB_COMMON_CF_PARAM_CLOSE);
+
+	    if (name_end == 0)
+		msg_fatal("db_common_parse: %s: invalid %s template: %s",
+			  ctx->dict->name, query ? "query" : "result", format);
+	    db_common_parse_cf_param(ctx, name_start, name_end, format, query);
+	    cp = name_end;
+	    continue;
+	}
+	switch (*cp) {
 	    case 'u':
 		ctx->flags |=
 		    query ? DB_COMMON_KEY_USER | DB_COMMON_KEY_PARTIAL
@@ -248,6 +331,7 @@ int     db_common_parse(DICT *dict, void **ctxPtr, const char *format, int query
 		msg_fatal("db_common_parse: %s: Invalid %s template: %s",
 		       ctx->dict->name, query ? "query" : "result", format);
 	    }
+    }
     return dynamic;
 }
 
@@ -407,11 +491,27 @@ int     db_common_expand(void *ctxArg, const char *format, const char *value,
      */
     for (cp = format; *cp; cp++) {
 	if (*cp == '%') {
-	    switch (*++cp) {
+	    const char *spec = cp + 1;
 
-	    case '%':
+	    if (*spec == '%') {
 		VSTRING_ADDCH(result, '%');
-		break;
+		cp = spec;
+		continue;
+	    }
+	    if (*spec == DB_COMMON_CF_PARAM_OPEN) {
+		const char *name_start = spec + 1;
+		const char *name_end = strchr(name_start, DB_COMMON_CF_PARAM_CLOSE);
+
+		if (name_end == 0)
+		    msg_panic("%s: %s: %s: unterminated %%%c in template",
+			      myname, ctx->dict->name, format,
+			      DB_COMMON_CF_PARAM_OPEN);
+		db_common_expand_cf_param(ctx, name_start, name_end, result,
+					  quote_func);
+		cp = name_end;
+		continue;
+	    }
+	    switch (*spec) {
 
 	    case 's':
 		QUOTE_VAL(ctx->dict, quote_func, value, result);
@@ -505,6 +605,7 @@ int     db_common_expand(void *ctxArg, const char *format, const char *value,
 			  ctx->dict->name, key ? "result" : "query",
 			  format);
 	    }
+	    cp = spec;
 	} else
 	    VSTRING_ADDCH(result, *cp);
     }
