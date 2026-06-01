@@ -43,6 +43,7 @@
 
 #include "auth_key.h"
 #include "postapi_dispatch.h"
+#include "postapi.h"
 
 #ifdef USE_TLS
 #include <tls.h>
@@ -530,6 +531,16 @@ static void postapi_service(VSTREAM *client_stream, char *service, char **argv)
 	    break;
 	}
     }
+}
+
+ /* postapi_get_instance_name - multi_instance_name for API responses */
+
+const char *
+postapi_get_instance_name(void)
+{
+    if (var_multi_instance_name == 0)
+	return ("");
+    return (var_multi_instance_name);
 }
 
 MAIL_VERSION_STAMP_DECLARE;

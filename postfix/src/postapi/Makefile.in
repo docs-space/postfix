@@ -1,6 +1,6 @@
 SHELL	= /bin/sh
 SRCS	= postapi.c auth_key.c postapi_dispatch.c \
-	queue/queue.c postconf/postconf.c \
+	queue/queue.c postconf/postconf.c service/service.c \
 	../postqueue/postqueue_api.c ../postqueue/showq_json.c \
 	../postconf/postconf_api.c ../postconf/postconf_builtin.c \
 	../postconf/postconf_edit.c ../postconf/postconf_main.c \
@@ -11,7 +11,7 @@ SRCS	= postapi.c auth_key.c postapi_dispatch.c \
 	../postconf/postconf_lookup.c ../postconf/postconf_match.c \
 	../postconf/postconf_print.c
 OBJS	= postapi.o auth_key.o postapi_dispatch.o \
-	queue/queue.o postconf/postconf.o \
+	queue/queue.o postconf/postconf.o service/service.o \
 	../postqueue/postqueue_api.o ../postqueue/showq_json.o \
 	../postconf/postconf_api.o ../postconf/postconf_builtin.o \
 	../postconf/postconf_edit.o ../postconf/postconf_main.o \
@@ -23,7 +23,7 @@ OBJS	= postapi.o auth_key.o postapi_dispatch.o \
 	../postconf/postconf_print.o
 HDRS	=
 TESTSRC	=
-DEFS	= -I. -I../postconf -I../postqueue -Iqueue -Ipostconf \
+DEFS	= -I. -I../postconf -I../postqueue -Iqueue -Ipostconf -Iservice \
 	-I$(INC_DIR) -D$(SYSTYPE) -DLEGACY_DBMS_SUPPORT
 CFLAGS	= $(DEBUG) $(OPT) $(DEFS)
 TESTPROG=
@@ -101,7 +101,7 @@ tidy:	clean
 
 depend: $(MAKES)
 	(sed '1,/^# do not edit/!d' Makefile.in; \
-	set -e; for i in [a-z][a-z0-9]*.c queue/*.c postconf/*.c; do \
+	set -e; for i in [a-z][a-z0-9]*.c queue/*.c postconf/*.c service/*.c; do \
 	    $(CC) -E $(DEFS) $(INCL) $$i | grep -v '[<>]' | sed -n -e '/^# *1 *"\([^"]*\)".*/{' \
 	    -e 's//'`echo $$i|sed 's/c$$/o/'`': \1/' \
 	    -e 's/o: \.\//o: /' -e p -e '}' ; \

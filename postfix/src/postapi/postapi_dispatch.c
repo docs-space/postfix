@@ -20,6 +20,7 @@
 #include "postapi_dispatch.h"
 #include "queue/queue.h"
 #include "postconf/postconf.h"
+#include "service/service.h"
 
 #define POSTAPI_API_PREFIX	"/api/v1"
 #define POSTAPI_API_PREFIX_LEN	(sizeof(POSTAPI_API_PREFIX) - 1)
@@ -75,6 +76,7 @@ static struct {
 } postapi_controllers[] = {
     {"Queue", queue_dispatch},
     {"PostConf", postconf_dispatch},
+    {"Service", service_dispatch},
     {0, 0},
 };
 
@@ -295,17 +297,19 @@ postapi_dispatch(const char *url, const char *method, int authorized,
 	return (postapi_resp_json(404, json_pack("{s:s}", "error", "not_found")));
     }
     slash = strchr(path, '/');
-    if (slash == 0 || slash[1] == 0) {
-	vstring_free(path_buf);
-	return (postapi_resp_json(404, json_pack("{s:s}", "error", "not_found")));
+    if (slash == 0) {
+	controller = path;
+	ctrl_len = strlen(path);
+	action = "";
+    } else {
+	if (slash[1] == 0 || strchr(slash + 1, '/') != 0) {
+	    vstring_free(path_buf);
+	    return (postapi_resp_json(404, json_pack("{s:s}", "error", "not_found")));
+	}
+	controller = path;
+	ctrl_len = (size_t) (slash - path);
+	action = slash + 1;
     }
-    if (strchr(slash + 1, '/') != 0) {
-	vstring_free(path_buf);
-	return (postapi_resp_json(404, json_pack("{s:s}", "error", "not_found")));
-    }
-    controller = path;
-    ctrl_len = (size_t) (slash - path);
-    action = slash + 1;
     fn = 0;
     ctrl_name = "unknown";
     for (n = 0; postapi_controllers[n].name != 0; n++) {
