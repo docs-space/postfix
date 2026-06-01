@@ -1,9 +1,9 @@
 SHELL	= /bin/sh
-SRCS	= postconf.c postconf_builtin.c postconf_edit.c postconf_main.c \
+SRCS	= postconf.c postconf_api.c postconf_builtin.c postconf_edit.c postconf_main.c \
 	postconf_master.c postconf_misc.c postconf_node.c postconf_other.c \
 	postconf_service.c postconf_unused.c postconf_user.c postconf_dbms.c \
 	postconf_lookup.c postconf_match.c postconf_print.c
-OBJS	= postconf.o postconf_builtin.o postconf_edit.o postconf_main.o \
+OBJS	= postconf.o postconf_api.o postconf_builtin.o postconf_edit.o postconf_main.o \
 	postconf_master.o postconf_misc.o postconf_node.o postconf_other.o \
 	postconf_service.o postconf_unused.o postconf_user.o postconf_dbms.o \
 	postconf_lookup.o postconf_match.o postconf_print.o

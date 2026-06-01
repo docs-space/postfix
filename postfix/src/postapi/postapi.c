@@ -42,6 +42,7 @@
 #include <vstring.h>
 
 #include "auth_key.h"
+#include "postapi_dispatch.h"
 
 #ifdef USE_TLS
 #include <tls.h>
@@ -237,10 +238,13 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
     const char *auth_hdr;
     const char *token;
     const char *ctype;
-    json_t *out;
     json_t *body_json = 0;
+    json_t *query_json = 0;
     json_error_t jerr;
     int     is_mutating;
+    int     authorized;
+    int     auth_rc;
+    POSTAPI_RESP *resp;
 
     (void) cls;
     (void) version;
@@ -281,45 +285,43 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
 
     /*
      * Authorization: Bearer <access_token> only (no other schemes).
+     * Controllers decide 401; lookup errors return 503 before dispatch.
      */
+    authorized = 0;
     auth_hdr = MHD_lookup_connection_value(connection, MHD_HEADER_KIND,
 					   "Authorization");
     token = postapi_bearer_token(auth_hdr);
-    if (token == 0) {
+    if (token != 0) {
+	auth_rc = postapi_access_token_check(token);
+	switch (auth_rc) {
+	case POSTAPI_AUTH_OK:
+	    authorized = 1;
+	    msg_info("postapi: authorization ok: instance=%s; %s %s",
+		     var_multi_instance_name, method, url);
+	    break;
+	case POSTAPI_AUTH_LOOKUP_ERR:
+	    msg_warn("postapi: authorization failed: access token map lookup error; instance=%s; %s %s",
+		     var_multi_instance_name, method, url);
+	    return postapi_json_reply(connection, 503,
+				      json_pack("{s:s}", "error",
+						"token_lookup_failed"));
+	case POSTAPI_AUTH_NO_ENTRY:
+	    msg_warn("postapi: authorization denied: no map entry for instance=%s; %s %s",
+		     var_multi_instance_name, method, url);
+	    break;
+	case POSTAPI_AUTH_MISMATCH:
+	    msg_warn("postapi: authorization denied: bearer token does not match map; instance=%s; %s %s",
+		     var_multi_instance_name, method, url);
+	    break;
+	default:
+	    msg_warn("postapi: authorization internal error; %s %s", method, url);
+	    return postapi_json_reply(connection, 500,
+				      json_pack("{s:s}", "error",
+						"internal_server_error"));
+	}
+    } else {
 	msg_warn("postapi: authorization denied: missing or invalid Authorization header; %s %s",
 		 method, url);
-	return postapi_json_reply(connection, 401,
-				    json_pack("{s:s}", "error",
-					      "missing_or_invalid_authorization"));
-    }
-    switch (postapi_access_token_check(token)) {
-    case POSTAPI_AUTH_OK:
-	msg_info("postapi: authorization ok: instance=%s; %s %s",
-		 var_multi_instance_name, method, url);
-	break;
-    case POSTAPI_AUTH_LOOKUP_ERR:
-	msg_warn("postapi: authorization failed: access token map lookup error; instance=%s; %s %s",
-		 var_multi_instance_name, method, url);
-	return postapi_json_reply(connection, 503,
-				  json_pack("{s:s}", "error",
-					    "token_lookup_failed"));
-    case POSTAPI_AUTH_NO_ENTRY:
-	msg_warn("postapi: authorization denied: no map entry for instance=%s; %s %s",
-		 var_multi_instance_name, method, url);
-	return postapi_json_reply(connection, 401,
-				  json_pack("{s:s}", "error",
-					    "invalid_token"));
-    case POSTAPI_AUTH_MISMATCH:
-	msg_warn("postapi: authorization denied: bearer token does not match map; instance=%s; %s %s",
-		 var_multi_instance_name, method, url);
-	return postapi_json_reply(connection, 401,
-				  json_pack("{s:s}", "error",
-					    "invalid_token"));
-    default:
-	msg_warn("postapi: authorization internal error; %s %s", method, url);
-	return postapi_json_reply(connection, 500,
-				  json_pack("{s:s}", "error",
-					    "internal_server_error"));
     }
 
     /*
@@ -361,18 +363,18 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
 					    "allow", "GET, POST, PUT, PATCH, DELETE"));
     }
 
-    out = json_pack("{s:s,s:s,s:s}", "path", url, "method", method,
-		    "api", "v1");
-    if (out == 0) {
+    query_json = postapi_query_parse(connection);
+    if (query_json == 0) {
 	if (body_json)
 	    json_decref(body_json);
 	return postapi_json_reply(connection, 500,
 				  json_pack("{s:s}", "error", "out_of_memory"));
     }
+    resp = postapi_dispatch(url, method, authorized, query_json, body_json);
+    postapi_query_free(query_json);
     if (body_json)
-	json_object_set_new(out, "body", body_json);
-
-    return postapi_json_reply(connection, 200, out);
+	json_decref(body_json);
+    return postapi_send_response(connection, resp);
 }
 
 static void postapi_pre_accept(char *unused_name, char **unused_argv)

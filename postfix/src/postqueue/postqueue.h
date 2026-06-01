@@ -17,6 +17,12 @@ extern void showq_compat(VSTREAM *);
   * showq_json.c
   */
 extern void showq_json(VSTREAM *);
+extern void showq_json_fp(VSTREAM *, VSTREAM *);
+
+ /*
+  * postqueue_api.c
+  */
+extern int postqueue_list_json(VSTREAM *);
 
 /* LICENSE
 /* .ad

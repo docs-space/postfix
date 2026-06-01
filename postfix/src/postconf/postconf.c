@@ -655,7 +655,7 @@
   */
 PCF_PARAM_TABLE *pcf_param_table;
 PCF_MASTER_ENT *pcf_master_table;
-int     pcf_cmd_mode = PCF_DEF_MODE;
+extern int pcf_cmd_mode;
 
  /*
   * Application fingerprinting.

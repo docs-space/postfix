@@ -1,26 +1,74 @@
 SHELL	= /bin/sh
-SRCS	= postapi.c auth_key.c
-OBJS	= postapi.o auth_key.o
+SRCS	= postapi.c auth_key.c postapi_dispatch.c \
+	queue/queue.c postconf/postconf.c \
+	../postqueue/postqueue_api.c ../postqueue/showq_json.c \
+	../postconf/postconf_api.c ../postconf/postconf_builtin.c \
+	../postconf/postconf_edit.c ../postconf/postconf_main.c \
+	../postconf/postconf_master.c ../postconf/postconf_misc.c \
+	../postconf/postconf_node.c ../postconf/postconf_other.c \
+	../postconf/postconf_service.c ../postconf/postconf_unused.c \
+	../postconf/postconf_user.c ../postconf/postconf_dbms.c \
+	../postconf/postconf_lookup.c ../postconf/postconf_match.c \
+	../postconf/postconf_print.c
+OBJS	= postapi.o auth_key.o postapi_dispatch.o \
+	queue/queue.o postconf/postconf.o \
+	../postqueue/postqueue_api.o ../postqueue/showq_json.o \
+	../postconf/postconf_api.o ../postconf/postconf_builtin.o \
+	../postconf/postconf_edit.o ../postconf/postconf_main.o \
+	../postconf/postconf_master.o ../postconf/postconf_misc.o \
+	../postconf/postconf_node.o ../postconf/postconf_other.o \
+	../postconf/postconf_service.o ../postconf/postconf_unused.o \
+	../postconf/postconf_user.o ../postconf/postconf_dbms.o \
+	../postconf/postconf_lookup.o ../postconf/postconf_match.o \
+	../postconf/postconf_print.o
 HDRS	=
 TESTSRC	=
-DEFS	= -I. -I$(INC_DIR) -D$(SYSTYPE)
+DEFS	= -I. -I../postconf -I../postqueue -Iqueue -Ipostconf \
+	-I$(INC_DIR) -D$(SYSTYPE) -DLEGACY_DBMS_SUPPORT
 CFLAGS	= $(DEBUG) $(OPT) $(DEFS)
 TESTPROG=
 PROG	= postapi
 INC_DIR = ../../include
-LIBS	= ../../lib/lib$(LIB_PREFIX)master$(LIB_SUFFIX) \
+LIBS	= ../../lib/libxsasl.a \
+	../../lib/lib$(LIB_PREFIX)master$(LIB_SUFFIX) \
 	../../lib/lib$(LIB_PREFIX)tls$(LIB_SUFFIX) \
 	../../lib/lib$(LIB_PREFIX)dns$(LIB_SUFFIX) \
 	../../lib/lib$(LIB_PREFIX)global$(LIB_SUFFIX) \
 	../../lib/lib$(LIB_PREFIX)util$(LIB_SUFFIX)
 
 HTTP_EXTRA_LIBS ?= -lmicrohttpd -ljansson -lgnutls
+
+POSTCONF_HDRS = ../postconf/bool_table.h ../postconf/bool_vars.h \
+	../postconf/int_table.h ../postconf/int_vars.h \
+	../postconf/str_table.h ../postconf/str_vars.h \
+	../postconf/time_table.h ../postconf/time_vars.h \
+	../postconf/raw_table.h ../postconf/raw_vars.h \
+	../postconf/nint_table.h ../postconf/nint_vars.h \
+	../postconf/nbool_table.h ../postconf/nbool_vars.h \
+	../postconf/long_table.h ../postconf/long_vars.h \
+	../postconf/str_fn_table.h ../postconf/str_fn_vars.h \
+	../postconf/pcf_ldap_suffixes.h ../postconf/pcf_mysql_suffixes.h \
+	../postconf/pcf_pgsql_suffixes.h ../postconf/pcf_sqlite_suffixes.h \
+	../postconf/pcf_memcache_suffixes.h ../postconf/pcf_mongodb_suffixes.h
+
 .c.o:;	$(CC) $(CFLAGS) -c $*.c
+
+../postqueue/%.o: ../postqueue/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+../postconf/%.o: ../postconf/%.c $(POSTCONF_HDRS)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+queue/%.o: queue/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+postconf/%.o: postconf/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(PROG): $(OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(SHLIB_RPATH) -o $@ $(OBJS) $(LIBS) $(SYSLIBS) $(HTTP_EXTRA_LIBS)
 
-$(OBJS): ../../conf/makedefs.out
+$(OBJS): ../../conf/makedefs.out $(POSTCONF_HDRS)
 
 Makefile: Makefile.in
 	cat ../../conf/makedefs.out $? >$@
@@ -37,13 +85,23 @@ update: ../../libexec/$(PROG)
 	cp $(PROG) ../../libexec
 
 clean:
-	rm -f *.o *core $(PROG) $(TESTPROG) junk
+	rm -f *.o queue/*.o postconf/*.o \
+	../postqueue/postqueue_api.o ../postqueue/showq_json.o \
+	../postconf/postconf_api.o ../postconf/postconf_builtin.o \
+	../postconf/postconf_edit.o ../postconf/postconf_main.o \
+	../postconf/postconf_master.o ../postconf/postconf_misc.o \
+	../postconf/postconf_node.o ../postconf/postconf_other.o \
+	../postconf/postconf_service.o ../postconf/postconf_unused.o \
+	../postconf/postconf_user.o ../postconf/postconf_dbms.o \
+	../postconf/postconf_lookup.o ../postconf/postconf_match.o \
+	../postconf/postconf_print.o \
+	*core $(PROG) $(TESTPROG) junk
 
 tidy:	clean
 
 depend: $(MAKES)
 	(sed '1,/^# do not edit/!d' Makefile.in; \
-	set -e; for i in [a-z][a-z0-9]*.c; do \
+	set -e; for i in [a-z][a-z0-9]*.c queue/*.c postconf/*.c; do \
 	    $(CC) -E $(DEFS) $(INCL) $$i | grep -v '[<>]' | sed -n -e '/^# *1 *"\([^"]*\)".*/{' \
 	    -e 's//'`echo $$i|sed 's/c$$/o/'`': \1/' \
 	    -e 's/o: \.\//o: /' -e p -e '}' ; \

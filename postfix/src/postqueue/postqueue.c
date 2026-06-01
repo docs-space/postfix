@@ -340,7 +340,7 @@
   * Queue manipulation access lists.
   */
 char   *var_flush_acl;
-char   *var_showq_acl;
+extern char *var_showq_acl;
 
 static const CONFIG_STR_TABLE str_table[] = {
     VAR_FLUSH_ACL, DEF_FLUSH_ACL, &var_flush_acl, 0, 0,
@@ -376,6 +376,11 @@ static void show_queue(int mode)
     VSTREAM *showq;
     int     n;
     uid_t   uid = getuid();
+
+    if (mode == PQ_MODE_JSON_LIST) {
+	postqueue_list_json(VSTREAM_OUT);
+	return;
+    }
 
     if (uid != 0 && uid != var_owner_uid
 	&& (errstr = check_user_acl_byuid(VAR_SHOWQ_ACL, var_showq_acl,

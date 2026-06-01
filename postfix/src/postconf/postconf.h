@@ -318,6 +318,11 @@ extern void pcf_show_locks(void);
 extern void pcf_show_sasl(int);
 extern void pcf_show_tls(const char *);
 
+ /*
+  * postconf_api.c
+  */
+extern void postconf_list_json(VSTREAM *);
+
 /* LICENSE
 /* .ad
 /* .fi

@@ -60,7 +60,7 @@
 
 /* json_message - report status for one message */
 
-static void format_json(VSTREAM *showq_stream)
+static void format_json(VSTREAM *showq_stream, VSTREAM *out)
 {
     static VSTRING *queue_name = 0;
     static VSTRING *queue_id = 0;
@@ -107,27 +107,27 @@ static void format_json(VSTREAM *showq_stream)
 		  RECV_ATTR_STR(MAIL_ATTR_SENDER, addr),
 		  ATTR_TYPE_END) != 6)
 	msg_fatal_status(EX_SOFTWARE, "malformed showq server response");
-    vstream_printf("{");
-    vstream_printf("\"queue_name\": \"%s\", ",
-		   QUOTE_JSON(quote_buf, STR(queue_name)));
-    vstream_printf("\"queue_id\": \"%s\", ",
-		   QUOTE_JSON(quote_buf, STR(queue_id)));
-    vstream_printf("\"arrival_time\": %ld, ", arrival_time);
-    vstream_printf("\"message_size\": %ld, ", message_size);
-    vstream_printf("\"forced_expire\": %s, ", forced_expire ? "true" : "false");
-    vstream_printf("\"sender\": \"%s\", ",
-		   QUOTE_JSON(quote_buf, STR(addr)));
+    vstream_fprintf(out, "{");
+    vstream_fprintf(out, "\"queue_name\": \"%s\", ",
+		    QUOTE_JSON(quote_buf, STR(queue_name)));
+    vstream_fprintf(out, "\"queue_id\": \"%s\", ",
+		    QUOTE_JSON(quote_buf, STR(queue_id)));
+    vstream_fprintf(out, "\"arrival_time\": %ld, ", arrival_time);
+    vstream_fprintf(out, "\"message_size\": %ld, ", message_size);
+    vstream_fprintf(out, "\"forced_expire\": %s, ", forced_expire ? "true" : "false");
+    vstream_fprintf(out, "\"sender\": \"%s\", ",
+		    QUOTE_JSON(quote_buf, STR(addr)));
 
     /*
      * Read zero or more (recipient, reason) pair(s) until attr_scan_more()
      * consumes a terminator. If the showq daemon messes up, don't try to
      * resynchronize.
      */
-    vstream_printf("\"recipients\": [");
+    vstream_fprintf(out, "\"recipients\": [");
     for (rcpt_count = 0; (showq_status = attr_scan_more(showq_stream)) > 0; rcpt_count++) {
 	if (rcpt_count > 0)
-	    vstream_printf(", ");
-	vstream_printf("{");
+	    vstream_fprintf(out, ", ");
+	vstream_fprintf(out, "{");
 	if (attr_scan(showq_stream, ATTR_FLAG_MORE | ATTR_FLAG_STRICT
 		      | ATTR_FLAG_PRINTABLE,
 		      RECV_ATTR_STR(MAIL_ATTR_ORCPT, oaddr),
@@ -136,29 +136,29 @@ static void format_json(VSTREAM *showq_stream)
 		      RECV_ATTR_STR(MAIL_ATTR_WHY, why),
 		      ATTR_TYPE_END) != 4)
 	    msg_fatal_status(EX_SOFTWARE, "malformed showq server response");
-	vstream_printf("\"orig_address\": \"%s\", ",
-		       QUOTE_JSON(quote_buf, STR(oaddr)));
-	vstream_printf("\"address\": \"%s\"",
-		       QUOTE_JSON(quote_buf, STR(addr)));
+	vstream_fprintf(out, "\"orig_address\": \"%s\", ",
+			QUOTE_JSON(quote_buf, STR(oaddr)));
+	vstream_fprintf(out, "\"address\": \"%s\"",
+			QUOTE_JSON(quote_buf, STR(addr)));
 	if (LEN(why) > 0)
-	    vstream_printf(", \"%s\": \"%s\"",
+	    vstream_fprintf(out, ", \"%s\": \"%s\"",
 	    strcmp(STR(log_class), MAIL_QUEUE_DEFER) == 0 ? "delay_reason" :
 			   strcmp(STR(log_class), MAIL_QUEUE_BOUNCE) == 0 ? "bounce_reason" :
 			   "other_reason",
 			   QUOTE_JSON(quote_buf, STR(why)));
-	vstream_printf("}");
+	vstream_fprintf(out, "}");
     }
-    vstream_printf("]");
+    vstream_fprintf(out, "]");
     if (showq_status < 0)
 	msg_fatal_status(EX_SOFTWARE, "malformed showq server response");
-    vstream_printf("}\n");
-    if (vstream_fflush(VSTREAM_OUT) && errno != EPIPE)
+    vstream_fprintf(out, "}\n");
+    if (vstream_fflush(out) && errno != EPIPE)
 	msg_fatal_status(EX_IOERR, "output write error: %m");
 }
 
-/* showq_json - streaming JSON-format output adapter */
+/* showq_json_fp - streaming JSON-format output to a given stream */
 
-void    showq_json(VSTREAM *showq_stream)
+void    showq_json_fp(VSTREAM *showq_stream, VSTREAM *out)
 {
     int     showq_status;
 
@@ -167,9 +167,16 @@ void    showq_json(VSTREAM *showq_stream)
      * terminator.
      */
     while ((showq_status = attr_scan_more(showq_stream)) > 0
-	   && vstream_ferror(VSTREAM_OUT) == 0) {
-	format_json(showq_stream);
+	   && vstream_ferror(out) == 0) {
+	format_json(showq_stream, out);
     }
     if (showq_status < 0)
 	msg_fatal_status(EX_SOFTWARE, "malformed showq server response");
+}
+
+/* showq_json - streaming JSON-format output adapter */
+
+void    showq_json(VSTREAM *showq_stream)
+{
+    showq_json_fp(showq_stream, VSTREAM_OUT);
 }
