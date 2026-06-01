@@ -10,8 +10,9 @@
 /*	that serves JSON over HTTP or HTTPS using GNU libmicrohttpd,
 /*	validates \fBAuthorization: Bearer\fR tokens against Postfix
 /*	lookup tables (including \fBproxy:\fR dynamicmaps). The lookup key
-/*	is \fBmulti_instance_name\fR; the map value is the expected token,
-/*	compared to the Bearer credential.
+/*	is \fBmulti_instance_name\fR; the map value lists credentials as
+/*	\fB{algorithm}payload\fR entries (PLAIN, SHA1.HEX, AES-256-CBC).
+/*	Salts for AES-256-CBC are read from \fBpostapi_access_salt_maps\fR.
 /*	It exposes
 /*	\fB/api/v1\fR for GET, POST, PUT, PATCH and DELETE.
 /*--*/
@@ -40,6 +41,8 @@
 #include <vstream.h>
 #include <vstring.h>
 
+#include "auth_key.h"
+
 #ifdef USE_TLS
 #include <tls.h>
 #include <gnutls/gnutls.h>
@@ -56,6 +59,7 @@ static const char postapi_tls_scache_db_param[] = "postapi_tls_session_cache_dat
 static const char postapi_tls_scache_timeout_param[] = "postapi_tls_session_cache_timeout";
 static const char postapi_starttls_timeout_param[] = "postapi_starttls_timeout";
 static const char postapi_access_token_maps_param[] = "postapi_access_token_maps";
+static const char postapi_access_salt_maps_param[] = "postapi_access_salt_maps";
 static const char multi_instance_name_param[] = "multi_instance_name";
 
 static char *var_postapi_tls_cert_file;
@@ -66,10 +70,12 @@ static char *var_postapi_tls_scache_db;
 static int var_postapi_tls_scache_timeout;
 static int var_postapi_starttls_tmout;
 static char *var_postapi_access_token_maps;
+static char *var_postapi_access_salt_maps;
 static char *var_multi_instance_name;
 
 static int postapi_use_tls;
 static MAPS *postapi_token_maps;
+static MAPS *postapi_salt_maps;
 static struct MHD_Daemon *postapi_mhd;
 
 #ifdef USE_TLS
@@ -84,6 +90,7 @@ static const CONFIG_STR_TABLE str_table[] = {
     postapi_tls_loglevel_param, "0", &var_postapi_tls_loglevel, 0, 0,
     postapi_tls_scache_db_param, "btree:${data_directory}/postapi_scache", &var_postapi_tls_scache_db, 0, 0,
     postapi_access_token_maps_param, "", &var_postapi_access_token_maps, 0, 0,
+    postapi_access_salt_maps_param, "", &var_postapi_access_salt_maps, 0, 0,
     multi_instance_name_param, "", &var_multi_instance_name, 0, 0,
     0,
 };
@@ -193,18 +200,29 @@ static const char *postapi_bearer_token(const char *auth)
 
 static int postapi_access_token_check(const char *bearer_token)
 {
-    const char *expected;
+    const char *map_value;
+    int     auth_rc;
 
     if (postapi_token_maps == 0)
 	return (POSTAPI_AUTH_NO_ENTRY);
-    expected = maps_find(postapi_token_maps, var_multi_instance_name, 0);
+    map_value = maps_find(postapi_token_maps, var_multi_instance_name, 0);
     if (postapi_token_maps->error != 0)
 	return (POSTAPI_AUTH_LOOKUP_ERR);
-    if (expected == 0)
+    if (map_value == 0)
 	return (POSTAPI_AUTH_NO_ENTRY);
-    if (strcmp(bearer_token, expected) != 0)
+    auth_rc = auth_key_validate(map_value, bearer_token, postapi_salt_maps);
+    switch (auth_rc) {
+    case AUTH_KEY_OK:
+	return (POSTAPI_AUTH_OK);
+    case AUTH_KEY_MISMATCH:
 	return (POSTAPI_AUTH_MISMATCH);
-    return (POSTAPI_AUTH_OK);
+    case AUTH_KEY_FORMAT_ERR:
+	msg_warn("postapi: malformed access token map value for instance=%s",
+		 var_multi_instance_name);
+	return (POSTAPI_AUTH_MISMATCH);
+    default:
+	return (POSTAPI_AUTH_MISMATCH);
+    }
 }
 
  /* postapi_access_handler - libmicrohttpd callback */
@@ -412,6 +430,12 @@ static void postapi_post_init(char *unused_name, char **unused_argv)
     postapi_token_maps = maps_create("postapi access token",
 				     var_postapi_access_token_maps,
 				     DICT_FLAG_LOCK | DICT_FLAG_FOLD_FIX);
+    if (*var_postapi_access_salt_maps != 0) {
+	postapi_salt_maps = maps_create("postapi access salt",
+					var_postapi_access_salt_maps,
+					DICT_FLAG_LOCK | DICT_FLAG_FOLD_FIX);
+    } else
+	postapi_salt_maps = 0;
 
     if (postapi_use_tls) {
 #ifdef USE_TLS

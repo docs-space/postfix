@@ -1,0 +1,5 @@
+user = {MAIL_PSQL_USER}
+password = {MAIL_PSQL_PWD}
+hosts = {MAIL_PSQL_HOST}:{MAIL_PSQL_PORT}
+dbname = {MAIL_PSQL_DB}
+query = SELECT "Value" FROM public."Configurations" WHERE "Service"='Mail.Admin.Api.Host' AND "Key"='DovecotHttpService.AESKey' AND "Target"='';

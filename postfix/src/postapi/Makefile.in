@@ -1,6 +1,6 @@
 SHELL	= /bin/sh
-SRCS	= postapi.c
-OBJS	= postapi.o
+SRCS	= postapi.c auth_key.c
+OBJS	= postapi.o auth_key.o
 HDRS	=
 TESTSRC	=
 DEFS	= -I. -I$(INC_DIR) -D$(SYSTYPE)
