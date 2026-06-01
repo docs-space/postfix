@@ -31,7 +31,7 @@ static jmp_buf postapi_ctrl_jmp_buf;
 
  /* postapi_ctrl_longjmp - trap msg_fatal/msg_panic from a controller */
 
-static NORETURN void postapi_ctrl_longjmp(int code)
+static NORETURN postapi_ctrl_longjmp(int code)
 {
     longjmp(postapi_ctrl_jmp_buf, code);
 }
