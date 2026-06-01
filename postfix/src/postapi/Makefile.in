@@ -65,6 +65,9 @@ queue/%.o: queue/%.c
 postconf/%.o: postconf/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+service/%.o: service/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
 $(PROG): $(OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(SHLIB_RPATH) -o $@ $(OBJS) $(LIBS) $(SYSLIBS) $(HTTP_EXTRA_LIBS)
 
@@ -85,7 +88,7 @@ update: ../../libexec/$(PROG)
 	cp $(PROG) ../../libexec
 
 clean:
-	rm -f *.o queue/*.o postconf/*.o \
+	rm -f *.o queue/*.o postconf/*.o service/*.o \
 	../postqueue/postqueue_api.o ../postqueue/showq_json.o \
 	../postconf/postconf_api.o ../postconf/postconf_builtin.o \
 	../postconf/postconf_edit.o ../postconf/postconf_main.o \
