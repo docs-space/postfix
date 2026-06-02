@@ -21,6 +21,7 @@
 #include <record.h>
 #include <rec_type.h>
 #include <is_header.h>
+#include <lex_822.h>
 #include <quote_822_local.h>
 #include <bounce_log.h>
 
