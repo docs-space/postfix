@@ -1,6 +1,6 @@
 SHELL	= /bin/sh
-SRCS	= postqueue.c postqueue_api.c showq_compat.c showq_json.c
-OBJS	= postqueue.o postqueue_api.o showq_compat.o showq_json.o
+SRCS	= postqueue.c postqueue_api.c postqueue_queue_scan.c showq_compat.c showq_json.c
+OBJS	= postqueue.o postqueue_api.o postqueue_queue_scan.o showq_compat.o showq_json.o
 HDRS	= postqueue.h
 TESTSRC	= 
 DEFS	= -I. -I$(INC_DIR) -D$(SYSTYPE)

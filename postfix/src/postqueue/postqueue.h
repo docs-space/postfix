@@ -23,6 +23,12 @@ extern void showq_json_fp(VSTREAM *, VSTREAM *);
   * postqueue_api.c
   */
 extern int postqueue_list_json(VSTREAM *);
+extern int postqueue_list_json_by_queue(VSTREAM *, const char *);
+
+ /*
+  * postqueue_queue_scan.c
+  */
+extern int postqueue_scan_queue_json(VSTREAM *, const char *, const char *, int);
 
 /* LICENSE
 /* .ad
