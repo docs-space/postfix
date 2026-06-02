@@ -267,18 +267,20 @@ static void postqueue_scan_report_message_json(VSTREAM *out, const char *queue_n
 	    break;
 	default:
 	    if (in_message && TEXT_RECORD(rec_type)) {
+		size_t  text_len = strnlen(start, VSTRING_LEN(buf));
+
 		if (in_body == 0
 		    && prev_type != REC_TYPE_CONT
 		    && !(is_header(start) || IS_SPACE_TAB(start[0])))
 		    in_body = 1;
 		if (in_body) {
 		    if (include_body) {
-			vstring_memcat(body_buf, start, VSTRING_LEN(buf));
+			vstring_memcat(body_buf, start, text_len);
 			if (rec_type == REC_TYPE_NORM)
 			    VSTRING_ADDCH(body_buf, '\n');
 		    }
 		} else if (include_headers) {
-		    vstring_memcat(headers_buf, start, VSTRING_LEN(buf));
+		    vstring_memcat(headers_buf, start, text_len);
 		    if (rec_type == REC_TYPE_NORM)
 			VSTRING_ADDCH(headers_buf, '\n');
 		}
