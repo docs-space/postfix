@@ -219,6 +219,10 @@ static void postqueue_scan_report_message_json(VSTREAM *out, const char *queue_n
     int     in_body = 0;
 #define QUOTE_JSON(res, src) printable(quote_for_json((res), (src), -1), '?')
 #define TEXT_RECORD(type) ((type) == REC_TYPE_CONT || (type) == REC_TYPE_NORM)
+    const char *headers_json;
+    const char *body_json;
+    char   *trim_ptr;
+    size_t  tail_q;
 
     while ((rec_type = rec_get(qfile, buf, 0)) > 0) {
 	start = STR(buf);
@@ -314,12 +318,20 @@ static void postqueue_scan_report_message_json(VSTREAM *out, const char *queue_n
 	}
     }
     if (include_headers) {
+	headers_json = QUOTE_JSON(quote_buf, STR(headers_buf));
+	for (tail_q = strlen(headers_json); tail_q > 0 && headers_json[tail_q - 1] == '?'; tail_q--)
+	     /* void */ ;
+	(trim_ptr = STR(quote_buf))[tail_q] = 0;
 	vstream_fprintf(out, ", \"headers\": \"%s\"",
-			quote_for_json(quote_buf, STR(headers_buf), -1));
+			STR(quote_buf));
     }
     if (include_body) {
+	body_json = QUOTE_JSON(quote_buf, STR(body_buf));
+	for (tail_q = strlen(body_json); tail_q > 0 && body_json[tail_q - 1] == '?'; tail_q--)
+	     /* void */ ;
+	(trim_ptr = STR(quote_buf))[tail_q] = 0;
 	vstream_fprintf(out, ", \"body\": \"%s\"",
-			quote_for_json(quote_buf, STR(body_buf), -1));
+			STR(quote_buf));
     }
     vstream_fprintf(out, "}\n");
     if (vstream_fflush(out) && errno != EPIPE)
