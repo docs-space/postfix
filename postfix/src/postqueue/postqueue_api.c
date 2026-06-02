@@ -135,3 +135,36 @@ postqueue_list_json_by_id(VSTREAM *fp, const char *queue_id)
 	msg_warn("postqueue_list_json_by_id: queue scan failed for %s", queue_id);
     return (status);
 }
+
+/* postqueue_message_json_by_id - write one queue message as JSON by queue_id */
+
+int
+postqueue_message_json_by_id(VSTREAM *fp, const char *queue_id,
+			     int include_envelope, int include_headers,
+			     int include_body)
+{
+    const char *errstr;
+    uid_t   uid = getuid();
+    int     status;
+
+    if (queue_id == 0 || *queue_id == 0)
+	return (POSTQUEUE_MESSAGE_LOOKUP_NOT_FOUND);
+    mail_conf_read();
+    get_mail_conf_int_table(int_table);
+    get_mail_conf_str_table(str_table);
+    if (uid != 0 && uid != var_owner_uid
+	&& (errstr = check_user_acl_byuid(VAR_SHOWQ_ACL, var_showq_acl,
+					  uid)) != 0) {
+	msg_warn("postqueue_message_json_by_id: %s(%ld) is not allowed to view the mail queue",
+		 errstr, (long) uid);
+	return (POSTQUEUE_MESSAGE_LOOKUP_ERROR);
+    }
+    status = postqueue_scan_message_json_by_id(fp, queue_id, postqueue_empty_addr,
+					       postqueue_dup_filter_limit,
+					       include_envelope,
+					       include_headers,
+					       include_body);
+    if (status == POSTQUEUE_MESSAGE_LOOKUP_ERROR)
+	msg_warn("postqueue_message_json_by_id: queue scan failed for %s", queue_id);
+    return (status);
+}
