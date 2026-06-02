@@ -56,12 +56,53 @@ queue_dispatch(int authorized, const char *method, const char *action,
     VSTREAM *mem;
     VSTRING *buf;
 
-    (void) body;
-
     if (!authorized)
 	return (postapi_resp_json(401,
 				 json_pack("{s:s}", "error", "unauthorized")));
     if (*action == 0) {
+	if (strcmp(method, "DELETE") == 0) {
+	    json_t *deleted;
+	    size_t  n;
+	    size_t  count;
+
+	    if (body == 0 || !json_is_array(body))
+		return (postapi_resp_json(400,
+					  json_pack("{s:s}", "error", "invalid_body")));
+	    deleted = json_array();
+	    if (deleted == 0)
+		return (postapi_resp_json(503,
+					  json_pack("{s:s}", "error",
+						    "service_unavailable")));
+	    count = json_array_size(body);
+	    for (n = 0; n < count; n++) {
+		json_t *entry = json_array_get(body, n);
+		const char *queue_id;
+		int     status;
+
+		if (!json_is_string(entry)) {
+		    json_decref(deleted);
+		    return (postapi_resp_json(400,
+					      json_pack("{s:s}", "error",
+							"invalid_body")));
+		}
+		queue_id = json_string_value(entry);
+		status = postqueue_delete_by_id(queue_id);
+		if (status == POSTQUEUE_DELETE_DELETED) {
+		    if (json_array_append_new(deleted, json_string(queue_id)) < 0) {
+			json_decref(deleted);
+			return (postapi_resp_json(503,
+						  json_pack("{s:s}", "error",
+							    "service_unavailable")));
+		    }
+		} else if (status == POSTQUEUE_DELETE_ERROR) {
+		    json_decref(deleted);
+		    return (postapi_resp_json(503,
+					      json_pack("{s:s}", "error",
+							"service_unavailable")));
+		}
+	    }
+	    return (postapi_resp_json(200, deleted));
+	}
 	const json_t *id_value;
 	const char *queue_id;
 	int     lookup_status;

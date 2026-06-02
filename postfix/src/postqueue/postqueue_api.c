@@ -22,6 +22,7 @@
 #include <postqueue.h>
 
 extern char *var_showq_acl;
+extern int postqueue_delete_exec(const char *);
 
 static int postqueue_dup_filter_limit;
 static char *postqueue_empty_addr;
@@ -167,4 +168,27 @@ postqueue_message_json_by_id(VSTREAM *fp, const char *queue_id,
     if (status == POSTQUEUE_MESSAGE_LOOKUP_ERROR)
 	msg_warn("postqueue_message_json_by_id: queue scan failed for %s", queue_id);
     return (status);
+}
+
+/* postqueue_delete_by_id - delete one queue item by queue_id */
+
+int
+postqueue_delete_by_id(const char *queue_id)
+{
+    const char *errstr;
+    uid_t   uid = getuid();
+
+    if (queue_id == 0 || *queue_id == 0)
+	return (POSTQUEUE_DELETE_INVALID);
+    mail_conf_read();
+    get_mail_conf_int_table(int_table);
+    get_mail_conf_str_table(str_table);
+    if (uid != 0 && uid != var_owner_uid
+	&& (errstr = check_user_acl_byuid(VAR_SHOWQ_ACL, var_showq_acl,
+					  uid)) != 0) {
+	msg_warn("postqueue_delete_by_id: %s(%ld) is not allowed to modify the mail queue",
+		 errstr, (long) uid);
+	return (POSTQUEUE_DELETE_ERROR);
+    }
+    return (postqueue_delete_exec(queue_id));
 }
