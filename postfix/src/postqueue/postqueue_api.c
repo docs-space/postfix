@@ -11,6 +11,7 @@
 
 #include <mail_conf.h>
 #include <mail_params.h>
+#include <mail_addr.h>
 #include <mail_proto.h>
 #include <attr.h>
 #include <connect.h>
