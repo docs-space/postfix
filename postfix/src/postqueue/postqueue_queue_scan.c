@@ -51,7 +51,8 @@ static void postqueue_emit_recipient_json(VSTREAM *out, VSTRING *quote_buf,
 
 static void postqueue_emit_bounce_json(VSTREAM *out, const char *queue_id,
 					       VSTRING *quote_buf, int *rcpt_count,
-					       HTABLE *dup_filter)
+					       HTABLE *dup_filter,
+					       int dup_filter_limit)
 {
     const char *log_names[] = {MAIL_QUEUE_DEFER, MAIL_QUEUE_BOUNCE, 0};
     const char **cpp;
@@ -67,7 +68,7 @@ static void postqueue_emit_bounce_json(VSTREAM *out, const char *queue_id,
 	if (bp == 0)
 	    continue;
 	while (bounce_log_read(bp, rcpt_buf, dsn_buf) != 0) {
-	    if (var_dup_filter_limit == 0 || dup_filter->used < var_dup_filter_limit)
+	    if (dup_filter_limit == 0 || dup_filter->used < dup_filter_limit)
 		if (htable_locate(dup_filter, rcpt->address) == 0)
 		    htable_enter(dup_filter, rcpt->address, (void *) 0);
 	    postqueue_emit_recipient_json(out, quote_buf, rcpt_count,
@@ -83,7 +84,9 @@ static void postqueue_emit_bounce_json(VSTREAM *out, const char *queue_id,
 
 static void postqueue_scan_report_json(VSTREAM *out, const char *queue_name,
 					       const char *queue_id, VSTREAM *qfile,
-					       long size, time_t mtime, mode_t mode)
+					       long size, time_t mtime, mode_t mode,
+					       const char *empty_addr,
+					       int dup_filter_limit)
 {
     VSTRING *buf = vstring_alloc(100);
     VSTRING *printable_quoted_addr = vstring_alloc(100);
@@ -92,8 +95,8 @@ static void postqueue_scan_report_json(VSTREAM *out, const char *queue_name,
     VSTRING *id_q = vstring_alloc(100);
     VSTRING *sender_q = vstring_alloc(100);
     VSTRING *quote_buf = vstring_alloc(100);
-    HTABLE *dup_filter = htable_create(var_dup_filter_limit > 0 ?
-				       var_dup_filter_limit : 1);
+    HTABLE *dup_filter = htable_create(dup_filter_limit > 0 ?
+				       dup_filter_limit : 1);
     int     rec_type;
     char   *start;
     long    msg_size = size;
@@ -120,7 +123,7 @@ static void postqueue_scan_report_json(VSTREAM *out, const char *queue_name,
 	    break;
 	case REC_TYPE_FROM:
 	    if (*start == 0)
-		start = var_empty_addr;
+		start = (char *) empty_addr;
 	    quote_822_local(printable_quoted_addr, start);
 	    printable(STR(printable_quoted_addr), '?');
 	    if (sender_seen++ > 0)
@@ -138,7 +141,8 @@ static void postqueue_scan_report_json(VSTREAM *out, const char *queue_name,
 	    vstream_fprintf(out, "\"sender\": \"%s\", ",
 			    printable(quote_for_json(sender_q, STR(printable_quoted_addr), -1), '?'));
 	    vstream_fprintf(out, "\"recipients\": [");
-	    postqueue_emit_bounce_json(out, queue_id, quote_buf, &rcpt_count, dup_filter);
+	    postqueue_emit_bounce_json(out, queue_id, quote_buf, &rcpt_count,
+				       dup_filter, dup_filter_limit);
 	    break;
 	case REC_TYPE_ORCP:
 	    quote_822_local(orcpt_buf, start);
@@ -148,7 +152,7 @@ static void postqueue_scan_report_json(VSTREAM *out, const char *queue_name,
 	    if (sender_seen == 0)
 		goto cleanup;
 	    if (*start == 0)
-		start = var_empty_addr;
+		start = (char *) empty_addr;
 	    quote_822_local(printable_quoted_addr, start);
 	    printable(STR(printable_quoted_addr), '?');
 	    if (have_orcpt == 0)
@@ -187,13 +191,16 @@ cleanup:
 }
 
 int
-postqueue_scan_queue_json(VSTREAM *out, const char *queue_name)
+postqueue_scan_queue_json(VSTREAM *out, const char *queue_name,
+			  const char *empty_addr, int dup_filter_limit)
 {
     SCAN_DIR *scan;
     char   *(*scan_next) (SCAN_DIR *) = 0;
     char   *id;
     char   *saved_id = 0;
 
+    if (empty_addr == 0 || *empty_addr == 0)
+	empty_addr = "MAILER-DAEMON";
     if (strcmp(queue_name, MAIL_QUEUE_MAILDROP) == 0)
 	scan_next = scan_dir_next;
     else if (strcmp(queue_name, MAIL_QUEUE_ACTIVE) == 0
@@ -233,7 +240,8 @@ postqueue_scan_queue_json(VSTREAM *out, const char *queue_name)
 	    continue;
 	}
 	postqueue_scan_report_json(out, queue_name, id, qfile,
-				   (long) st.st_size, st.st_mtime, st.st_mode);
+				   (long) st.st_size, st.st_mtime, st.st_mode,
+				   empty_addr, dup_filter_limit);
 	if (vstream_fclose(qfile))
 	    msg_warn("close file %s %s: %m", queue_name, id);
     }

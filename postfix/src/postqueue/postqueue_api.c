@@ -21,19 +21,19 @@
 
 #include <postqueue.h>
 
-int     var_dup_filter_limit;
-char   *var_empty_addr;
-
 extern char *var_showq_acl;
 
+static int postqueue_dup_filter_limit;
+static char *postqueue_empty_addr;
+
 static const CONFIG_INT_TABLE int_table[] = {
-    VAR_DUP_FILTER_LIMIT, DEF_DUP_FILTER_LIMIT, &var_dup_filter_limit, 0, 0,
+    VAR_DUP_FILTER_LIMIT, DEF_DUP_FILTER_LIMIT, &postqueue_dup_filter_limit, 0, 0,
     0,
 };
 
 static const CONFIG_STR_TABLE str_table[] = {
     VAR_SHOWQ_ACL, DEF_SHOWQ_ACL, &var_showq_acl, 0, 0,
-    VAR_EMPTY_ADDR, DEF_EMPTY_ADDR, &var_empty_addr, 1, 0,
+    VAR_EMPTY_ADDR, DEF_EMPTY_ADDR, &postqueue_empty_addr, 1, 0,
     0,
 };
 
@@ -99,7 +99,8 @@ postqueue_list_json_by_queue(VSTREAM *fp, const char *queue_name)
 		 errstr, (long) uid);
 	return (-1);
     }
-    if (postqueue_scan_queue_json(fp, queue_name) < 0) {
+    if (postqueue_scan_queue_json(fp, queue_name, postqueue_empty_addr,
+				  postqueue_dup_filter_limit) < 0) {
 	msg_warn("postqueue_list_json_by_queue: queue scan failed for %s",
 		 queue_name);
 	return (-1);
