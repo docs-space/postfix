@@ -21,6 +21,7 @@
 #include <record.h>
 #include <rec_type.h>
 #include <is_header.h>
+#include <lex_822.h>
 #include <quote_822_local.h>
 #include <bounce_log.h>
 
@@ -218,6 +219,10 @@ static void postqueue_scan_report_message_json(VSTREAM *out, const char *queue_n
     int     in_body = 0;
 #define QUOTE_JSON(res, src) printable(quote_for_json((res), (src), -1), '?')
 #define TEXT_RECORD(type) ((type) == REC_TYPE_CONT || (type) == REC_TYPE_NORM)
+    const char *headers_json;
+    const char *body_json;
+    char   *trim_ptr;
+    size_t  tail_q;
 
     while ((rec_type = rec_get(qfile, buf, 0)) > 0) {
 	start = STR(buf);
@@ -266,18 +271,20 @@ static void postqueue_scan_report_message_json(VSTREAM *out, const char *queue_n
 	    break;
 	default:
 	    if (in_message && TEXT_RECORD(rec_type)) {
+		size_t  text_len = strnlen(start, VSTRING_LEN(buf));
+
 		if (in_body == 0
 		    && prev_type != REC_TYPE_CONT
 		    && !(is_header(start) || IS_SPACE_TAB(start[0])))
 		    in_body = 1;
 		if (in_body) {
 		    if (include_body) {
-			vstring_memcat(body_buf, start, VSTRING_LEN(buf));
+			vstring_memcat(body_buf, start, text_len);
 			if (rec_type == REC_TYPE_NORM)
 			    VSTRING_ADDCH(body_buf, '\n');
 		    }
 		} else if (include_headers) {
-		    vstring_memcat(headers_buf, start, VSTRING_LEN(buf));
+		    vstring_memcat(headers_buf, start, text_len);
 		    if (rec_type == REC_TYPE_NORM)
 			VSTRING_ADDCH(headers_buf, '\n');
 		}
@@ -311,12 +318,20 @@ static void postqueue_scan_report_message_json(VSTREAM *out, const char *queue_n
 	}
     }
     if (include_headers) {
+	headers_json = QUOTE_JSON(quote_buf, STR(headers_buf));
+	for (tail_q = strlen(headers_json); tail_q > 0 && headers_json[tail_q - 1] == '?'; tail_q--)
+	     /* void */ ;
+	(trim_ptr = STR(quote_buf))[tail_q] = 0;
 	vstream_fprintf(out, ", \"headers\": \"%s\"",
-			QUOTE_JSON(quote_buf, STR(headers_buf)));
+			STR(quote_buf));
     }
     if (include_body) {
+	body_json = QUOTE_JSON(quote_buf, STR(body_buf));
+	for (tail_q = strlen(body_json); tail_q > 0 && body_json[tail_q - 1] == '?'; tail_q--)
+	     /* void */ ;
+	(trim_ptr = STR(quote_buf))[tail_q] = 0;
 	vstream_fprintf(out, ", \"body\": \"%s\"",
-			QUOTE_JSON(quote_buf, STR(body_buf)));
+			STR(quote_buf));
     }
     vstream_fprintf(out, "}\n");
     if (vstream_fflush(out) && errno != EPIPE)
