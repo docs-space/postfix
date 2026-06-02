@@ -190,27 +190,32 @@ cleanup:
     vstring_free(quote_buf);
 }
 
-int
-postqueue_scan_queue_json(VSTREAM *out, const char *queue_name,
-			  const char *empty_addr, int dup_filter_limit)
+static char *(*postqueue_scan_next(const char *queue_name)) (SCAN_DIR *)
+{
+    if (strcmp(queue_name, MAIL_QUEUE_MAILDROP) == 0)
+	return (scan_dir_next);
+    if (strcmp(queue_name, MAIL_QUEUE_ACTIVE) == 0
+	|| strcmp(queue_name, MAIL_QUEUE_INCOMING) == 0
+	|| strcmp(queue_name, MAIL_QUEUE_DEFERRED) == 0
+	|| strcmp(queue_name, MAIL_QUEUE_HOLD) == 0)
+	return (mail_scan_dir_next);
+    return (0);
+}
+
+static int postqueue_scan_queue_one_json(VSTREAM *out, const char *queue_name,
+					 const char *empty_addr,
+					 int dup_filter_limit,
+					 const char *target_id,
+					 int *match_count)
 {
     SCAN_DIR *scan;
-    char   *(*scan_next) (SCAN_DIR *) = 0;
+    char   *(*scan_next) (SCAN_DIR *);
     char   *id;
     char   *saved_id = 0;
 
-    if (empty_addr == 0 || *empty_addr == 0)
-	empty_addr = "MAILER-DAEMON";
-    if (strcmp(queue_name, MAIL_QUEUE_MAILDROP) == 0)
-	scan_next = scan_dir_next;
-    else if (strcmp(queue_name, MAIL_QUEUE_ACTIVE) == 0
-	     || strcmp(queue_name, MAIL_QUEUE_INCOMING) == 0
-	     || strcmp(queue_name, MAIL_QUEUE_DEFERRED) == 0
-	     || strcmp(queue_name, MAIL_QUEUE_HOLD) == 0)
-	scan_next = mail_scan_dir_next;
-    else
+    scan_next = postqueue_scan_next(queue_name);
+    if (scan_next == 0)
 	return (0);
-
     scan = scan_dir_open(queue_name);
     if (scan == 0)
 	return (-1);
@@ -229,6 +234,8 @@ postqueue_scan_queue_json(VSTREAM *out, const char *queue_name,
 	    myfree(saved_id);
 	}
 	saved_id = mystrdup(id);
+	if (target_id != 0 && strcmp(target_id, id) != 0)
+	    continue;
 	status = mail_open_ok(queue_name, id, &st, &path);
 	(void) path;
 	if (status != MAIL_OPEN_YES)
@@ -239,9 +246,21 @@ postqueue_scan_queue_json(VSTREAM *out, const char *queue_name,
 		msg_warn("open %s %s: %m", queue_name, id);
 	    continue;
 	}
-	postqueue_scan_report_json(out, queue_name, id, qfile,
-				   (long) st.st_size, st.st_mtime, st.st_mode,
-				   empty_addr, dup_filter_limit);
+	if (target_id != 0 && match_count != 0) {
+	    if (*match_count > 0) {
+		(*match_count)++;
+		(void) vstream_fclose(qfile);
+		break;
+	    }
+	    postqueue_scan_report_json(out, queue_name, id, qfile,
+				       (long) st.st_size, st.st_mtime, st.st_mode,
+				       empty_addr, dup_filter_limit);
+	    (*match_count)++;
+	} else {
+	    postqueue_scan_report_json(out, queue_name, id, qfile,
+				       (long) st.st_size, st.st_mtime, st.st_mode,
+				       empty_addr, dup_filter_limit);
+	}
 	if (vstream_fclose(qfile))
 	    msg_warn("close file %s %s: %m", queue_name, id);
     }
@@ -249,4 +268,45 @@ postqueue_scan_queue_json(VSTREAM *out, const char *queue_name,
 	myfree(saved_id);
     scan_dir_close(scan);
     return (0);
+}
+
+int
+postqueue_scan_queue_json(VSTREAM *out, const char *queue_name,
+			  const char *empty_addr, int dup_filter_limit)
+{
+    if (empty_addr == 0 || *empty_addr == 0)
+	empty_addr = "MAILER-DAEMON";
+    return (postqueue_scan_queue_one_json(out, queue_name, empty_addr,
+					  dup_filter_limit, 0, 0));
+}
+
+int
+postqueue_scan_queue_json_by_id(VSTREAM *out, const char *queue_id,
+				const char *empty_addr, int dup_filter_limit)
+{
+    static const char *queue_names[] = {
+	MAIL_QUEUE_MAILDROP,
+	MAIL_QUEUE_ACTIVE,
+	MAIL_QUEUE_INCOMING,
+	MAIL_QUEUE_DEFERRED,
+	MAIL_QUEUE_HOLD,
+	0,
+    };
+    const char **queue_name;
+    int     match_count = 0;
+
+    if (queue_id == 0 || *queue_id == 0)
+	return (POSTQUEUE_ID_LOOKUP_NOT_FOUND);
+    if (empty_addr == 0 || *empty_addr == 0)
+	empty_addr = "MAILER-DAEMON";
+    for (queue_name = queue_names; *queue_name != 0; queue_name++) {
+	if (postqueue_scan_queue_one_json(out, *queue_name, empty_addr,
+					  dup_filter_limit, queue_id,
+					  &match_count) < 0)
+	    return (POSTQUEUE_ID_LOOKUP_ERROR);
+	if (match_count > 1)
+	    return (POSTQUEUE_ID_LOOKUP_DUPLICATE);
+    }
+    return (match_count > 0 ? POSTQUEUE_ID_LOOKUP_FOUND :
+	    POSTQUEUE_ID_LOOKUP_NOT_FOUND);
 }

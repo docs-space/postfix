@@ -24,11 +24,19 @@ extern void showq_json_fp(VSTREAM *, VSTREAM *);
   */
 extern int postqueue_list_json(VSTREAM *);
 extern int postqueue_list_json_by_queue(VSTREAM *, const char *);
+extern int postqueue_list_json_by_id(VSTREAM *, const char *);
 
  /*
   * postqueue_queue_scan.c
   */
 extern int postqueue_scan_queue_json(VSTREAM *, const char *, const char *, int);
+extern int postqueue_scan_queue_json_by_id(VSTREAM *, const char *, const char *,
+				           int);
+
+#define POSTQUEUE_ID_LOOKUP_NOT_FOUND	0
+#define POSTQUEUE_ID_LOOKUP_FOUND	1
+#define POSTQUEUE_ID_LOOKUP_DUPLICATE	2
+#define POSTQUEUE_ID_LOOKUP_ERROR	-1
 
 /* LICENSE
 /* .ad

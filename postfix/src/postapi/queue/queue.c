@@ -20,7 +20,7 @@
 #include "postapi_dispatch.h"
 #include "queue.h"
 
- /* queue_dispatch - GET /api/v1/Queue/All (empty action is not found) */
+ /* queue_dispatch - Queue endpoints */
 
 POSTAPI_RESP *
 queue_dispatch(int authorized, const char *method, const char *action,
@@ -29,13 +29,75 @@ queue_dispatch(int authorized, const char *method, const char *action,
     VSTREAM *mem;
     VSTRING *buf;
 
-    (void) query;
     (void) body;
 
     if (!authorized)
 	return (postapi_resp_json(401,
 				 json_pack("{s:s}", "error", "unauthorized")));
-    if (strcmp(action, "All") == 0) {
+    if (*action == 0) {
+	const json_t *id_value;
+	const char *queue_id;
+	int     lookup_status;
+
+	if (strcmp(method, "GET") != 0)
+	    return (postapi_resp_json(405,
+				      json_pack("{s:s}", "error", "method_not_allowed")));
+	if (query == 0 || !json_is_object(query))
+	    return (postapi_resp_json(400,
+				      json_pack("{s:s}", "error", "missing_id")));
+	id_value = json_object_get(query, "id");
+	if (id_value == 0 || !json_is_string(id_value))
+	    return (postapi_resp_json(400,
+				      json_pack("{s:s}", "error", "missing_id")));
+	queue_id = json_string_value(id_value);
+	if (queue_id == 0 || *queue_id == 0)
+	    return (postapi_resp_json(400,
+				      json_pack("{s:s}", "error", "missing_id")));
+	buf = vstring_alloc(256);
+	if ((mem = vstream_memopen(buf, O_WRONLY)) == 0) {
+	    vstring_free(buf);
+	    return (postapi_resp_json(503,
+				      json_pack("{s:s}", "error", "service_unavailable")));
+	}
+	lookup_status = postqueue_list_json_by_id(mem, queue_id);
+	if (lookup_status == POSTQUEUE_ID_LOOKUP_ERROR) {
+	    (void) vstream_fclose(mem);
+	    vstring_free(buf);
+	    return (postapi_resp_json(503,
+				      json_pack("{s:s}", "error", "service_unavailable")));
+	}
+	if (vstream_fclose(mem) != 0) {
+	    vstring_free(buf);
+	    return (postapi_resp_json(503,
+				      json_pack("{s:s}", "error", "service_unavailable")));
+	}
+	if (lookup_status == POSTQUEUE_ID_LOOKUP_DUPLICATE) {
+	    vstring_free(buf);
+	    return (postapi_resp_json(409,
+				      json_pack("{s:s}", "error", "duplicate_queue_id")));
+	}
+	if (lookup_status == POSTQUEUE_ID_LOOKUP_NOT_FOUND) {
+	    vstring_free(buf);
+	    return (postapi_resp_ndjson(204, vstring_alloc(1)));
+	}
+	{
+	    json_t *arr;
+	    json_t *item;
+
+	    arr = postapi_ndjson_to_json_array(vstring_str(buf), VSTRING_LEN(buf));
+	    vstring_free(buf);
+	    if (arr == 0 || json_array_size(arr) != 1) {
+		if (arr)
+		    json_decref(arr);
+		return (postapi_resp_json(503,
+					  json_pack("{s:s}", "error",
+						    "invalid_queue_json")));
+	    }
+	    item = json_incref(json_array_get(arr, 0));
+	    json_decref(arr);
+	    return (postapi_resp_json(200, item));
+	}
+    } else if (strcmp(action, "All") == 0) {
 	if (strcmp(method, "GET") != 0)
 	    return (postapi_resp_json(405,
 				      json_pack("{s:s}", "error", "method_not_allowed")));
