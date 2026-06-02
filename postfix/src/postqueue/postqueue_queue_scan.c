@@ -315,11 +315,11 @@ static void postqueue_scan_report_message_json(VSTREAM *out, const char *queue_n
     }
     if (include_headers) {
 	vstream_fprintf(out, ", \"headers\": \"%s\"",
-			QUOTE_JSON(quote_buf, STR(headers_buf)));
+			quote_for_json(quote_buf, STR(headers_buf), -1));
     }
     if (include_body) {
 	vstream_fprintf(out, ", \"body\": \"%s\"",
-			QUOTE_JSON(quote_buf, STR(body_buf)));
+			quote_for_json(quote_buf, STR(body_buf), -1));
     }
     vstream_fprintf(out, "}\n");
     if (vstream_fflush(out) && errno != EPIPE)
