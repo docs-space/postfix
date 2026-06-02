@@ -47,6 +47,13 @@ extern int postqueue_scan_message_json_by_id(VSTREAM *, const char *,
 #define POSTQUEUE_MESSAGE_LOOKUP_DUPLICATE	2
 #define POSTQUEUE_MESSAGE_LOOKUP_ERROR		-1
 
+#define POSTQUEUE_DELETE_DELETED		1
+#define POSTQUEUE_DELETE_NOT_FOUND		0
+#define POSTQUEUE_DELETE_INVALID		-1
+#define POSTQUEUE_DELETE_ERROR			-2
+
+extern int postqueue_delete_by_id(const char *);
+
 /* LICENSE
 /* .ad
 /* .fi

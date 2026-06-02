@@ -317,7 +317,8 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
      */
     is_mutating = (strcmp(method, "POST") == 0
 		   || strcmp(method, "PUT") == 0
-		   || strcmp(method, "PATCH") == 0);
+		   || strcmp(method, "PATCH") == 0
+		   || strcmp(method, "DELETE") == 0);
     if (is_mutating) {
 	ctype = MHD_lookup_connection_value(connection, MHD_HEADER_KIND,
 					    "Content-Type");
