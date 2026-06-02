@@ -20,10 +20,19 @@
 
 #include <postqueue.h>
 
+int     var_dup_filter_limit;
+char   *var_empty_addr;
+
 extern char *var_showq_acl;
+
+static const CONFIG_INT_TABLE int_table[] = {
+    VAR_DUP_FILTER_LIMIT, DEF_DUP_FILTER_LIMIT, &var_dup_filter_limit, 0, 0,
+    0,
+};
 
 static const CONFIG_STR_TABLE str_table[] = {
     VAR_SHOWQ_ACL, DEF_SHOWQ_ACL, &var_showq_acl, 0, 0,
+    VAR_EMPTY_ADDR, DEF_EMPTY_ADDR, &var_empty_addr, 1, 0,
     0,
 };
 
@@ -49,6 +58,7 @@ postqueue_list_json(VSTREAM *fp)
     uid_t   uid = getuid();
 
     mail_conf_read();
+    get_mail_conf_int_table(int_table);
     get_mail_conf_str_table(str_table);
     if (uid != 0 && uid != var_owner_uid
 	&& (errstr = check_user_acl_byuid(VAR_SHOWQ_ACL, var_showq_acl,
@@ -79,6 +89,7 @@ postqueue_list_json_by_queue(VSTREAM *fp, const char *queue_name)
     if (queue_name == 0 || *queue_name == 0)
 	return (0);
     mail_conf_read();
+    get_mail_conf_int_table(int_table);
     get_mail_conf_str_table(str_table);
     if (uid != 0 && uid != var_owner_uid
 	&& (errstr = check_user_acl_byuid(VAR_SHOWQ_ACL, var_showq_acl,
