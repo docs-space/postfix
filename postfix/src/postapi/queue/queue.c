@@ -20,6 +20,33 @@
 #include "postapi_dispatch.h"
 #include "queue.h"
 
+static int queue_query_parse_bool(json_t *query, const char *key, int defval,
+			          int *out)
+{
+    const json_t *value;
+    const char *text;
+
+    value = query ? json_object_get(query, key) : 0;
+    if (value == 0) {
+	*out = defval;
+	return (0);
+    }
+    if (!json_is_string(value))
+	return (-1);
+    text = json_string_value(value);
+    if (text == 0)
+	return (-1);
+    if (strcmp(text, "true") == 0) {
+	*out = 1;
+	return (0);
+    }
+    if (strcmp(text, "false") == 0) {
+	*out = 0;
+	return (0);
+    }
+    return (-1);
+}
+
  /* queue_dispatch - Queue endpoints */
 
 POSTAPI_RESP *
@@ -34,9 +61,12 @@ queue_dispatch(int authorized, const char *method, const char *action,
     if (!authorized)
 	return (postapi_resp_json(401,
 				 json_pack("{s:s}", "error", "unauthorized")));
-    if (*action == 0) {
+    if (strcmp(action, "Message") == 0) {
 	const json_t *id_value;
 	const char *queue_id;
+	int     include_envelope;
+	int     include_headers;
+	int     include_body;
 	int     lookup_status;
 
 	if (strcmp(method, "GET") != 0)
@@ -53,14 +83,25 @@ queue_dispatch(int authorized, const char *method, const char *action,
 	if (queue_id == 0 || *queue_id == 0)
 	    return (postapi_resp_json(400,
 				      json_pack("{s:s}", "error", "missing_id")));
+	if (queue_query_parse_bool(query, "include_envelope", 1,
+				   &include_envelope) < 0
+	    || queue_query_parse_bool(query, "include_headers", 1,
+				      &include_headers) < 0
+	    || queue_query_parse_bool(query, "include_body", 1,
+				      &include_body) < 0)
+	    return (postapi_resp_json(400,
+				      json_pack("{s:s}", "error", "invalid_query")));
 	buf = vstring_alloc(256);
 	if ((mem = vstream_memopen(buf, O_WRONLY)) == 0) {
 	    vstring_free(buf);
 	    return (postapi_resp_json(503,
 				      json_pack("{s:s}", "error", "service_unavailable")));
 	}
-	lookup_status = postqueue_list_json_by_id(mem, queue_id);
-	if (lookup_status == POSTQUEUE_ID_LOOKUP_ERROR) {
+	lookup_status = postqueue_message_json_by_id(mem, queue_id,
+						     include_envelope,
+						     include_headers,
+						     include_body);
+	if (lookup_status == POSTQUEUE_MESSAGE_LOOKUP_ERROR) {
 	    (void) vstream_fclose(mem);
 	    vstring_free(buf);
 	    return (postapi_resp_json(503,
@@ -71,12 +112,12 @@ queue_dispatch(int authorized, const char *method, const char *action,
 	    return (postapi_resp_json(503,
 				      json_pack("{s:s}", "error", "service_unavailable")));
 	}
-	if (lookup_status == POSTQUEUE_ID_LOOKUP_DUPLICATE) {
+	if (lookup_status == POSTQUEUE_MESSAGE_LOOKUP_DUPLICATE) {
 	    vstring_free(buf);
 	    return (postapi_resp_json(409,
 				      json_pack("{s:s}", "error", "duplicate_queue_id")));
 	}
-	if (lookup_status == POSTQUEUE_ID_LOOKUP_NOT_FOUND) {
+	if (lookup_status == POSTQUEUE_MESSAGE_LOOKUP_NOT_FOUND) {
 	    vstring_free(buf);
 	    return (postapi_resp_ndjson(204, vstring_alloc(1)));
 	}

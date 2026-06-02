@@ -20,6 +20,7 @@
 #include <mail_params.h>
 #include <record.h>
 #include <rec_type.h>
+#include <is_header.h>
 #include <quote_822_local.h>
 #include <bounce_log.h>
 
@@ -190,6 +191,151 @@ cleanup:
     vstring_free(quote_buf);
 }
 
+static void postqueue_scan_report_message_json(VSTREAM *out, const char *queue_name,
+					       const char *queue_id, VSTREAM *qfile,
+					       time_t mtime, const char *empty_addr,
+					       int include_envelope,
+					       int include_headers, int include_body)
+{
+    VSTRING *buf = vstring_alloc(100);
+    VSTRING *printable_quoted_addr = vstring_alloc(100);
+    VSTRING *orcpt_buf = vstring_alloc(100);
+    VSTRING *queue_q = vstring_alloc(100);
+    VSTRING *id_q = vstring_alloc(100);
+    VSTRING *sender_q = vstring_alloc(100);
+    VSTRING *quote_buf = vstring_alloc(100);
+    VSTRING *recipients_buf = vstring_alloc(256);
+    VSTRING *headers_buf = vstring_alloc(256);
+    VSTRING *body_buf = vstring_alloc(256);
+    int     rec_type;
+    int     prev_type = 0;
+    char   *start;
+    time_t  arrival_time = 0;
+    const char *have_orcpt = 0;
+    int     rcpt_count = 0;
+    int     sender_seen = 0;
+    int     in_message = 0;
+    int     in_body = 0;
+#define QUOTE_JSON(res, src) printable(quote_for_json((res), (src), -1), '?')
+#define TEXT_RECORD(type) ((type) == REC_TYPE_CONT || (type) == REC_TYPE_NORM)
+
+    while ((rec_type = rec_get(qfile, buf, 0)) > 0) {
+	start = STR(buf);
+	switch (rec_type) {
+	case REC_TYPE_TIME:
+	    if (arrival_time == 0)
+		arrival_time = atol(start);
+	    break;
+	case REC_TYPE_FROM:
+	    if (*start == 0)
+		start = (char *) empty_addr;
+	    quote_822_local(printable_quoted_addr, start);
+	    printable(STR(printable_quoted_addr), '?');
+	    if (sender_seen++ == 0)
+		vstring_strcpy(sender_q, STR(printable_quoted_addr));
+	    break;
+	case REC_TYPE_ORCP:
+	    quote_822_local(orcpt_buf, start);
+	    have_orcpt = printable(STR(orcpt_buf), '?');
+	    break;
+	case REC_TYPE_RCPT:
+	    if (*start == 0)
+		start = (char *) empty_addr;
+	    quote_822_local(printable_quoted_addr, start);
+	    printable(STR(printable_quoted_addr), '?');
+	    if (have_orcpt == 0)
+		have_orcpt = STR(vstring_strcpy(orcpt_buf, STR(printable_quoted_addr)));
+	    if (include_envelope) {
+		if (rcpt_count > 0)
+		    vstring_strcat(recipients_buf, ", ");
+		vstring_sprintf_append(recipients_buf,
+				       "{\"orig_address\": \"%s\", \"address\": \"%s\"}",
+				       QUOTE_JSON(quote_buf, have_orcpt),
+				       QUOTE_JSON(quote_buf, STR(printable_quoted_addr)));
+		rcpt_count++;
+	    }
+	    have_orcpt = 0;
+	    break;
+	case REC_TYPE_MESG:
+	    in_message = 1;
+	    in_body = 0;
+	    break;
+	case REC_TYPE_XTRA:
+	case REC_TYPE_END:
+	    in_message = 0;
+	    break;
+	default:
+	    if (in_message && TEXT_RECORD(rec_type)) {
+		if (in_body == 0
+		    && prev_type != REC_TYPE_CONT
+		    && !(is_header(start) || IS_SPACE_TAB(start[0])))
+		    in_body = 1;
+		if (in_body) {
+		    if (include_body) {
+			vstring_memcat(body_buf, start, VSTRING_LEN(buf));
+			if (rec_type == REC_TYPE_NORM)
+			    VSTRING_ADDCH(body_buf, '\n');
+		    }
+		} else if (include_headers) {
+		    vstring_memcat(headers_buf, start, VSTRING_LEN(buf));
+		    if (rec_type == REC_TYPE_NORM)
+			VSTRING_ADDCH(headers_buf, '\n');
+		}
+	    }
+	    break;
+	}
+	prev_type = rec_type;
+    }
+    vstream_fprintf(out, "{");
+    vstream_fprintf(out, "\"queue_name\": \"%s\", ",
+		    QUOTE_JSON(queue_q, queue_name));
+    vstream_fprintf(out, "\"queue_id\": \"%s\", ",
+		    QUOTE_JSON(id_q, queue_id));
+    vstream_fprintf(out, "\"arrival_time\": %ld",
+		    (long) (arrival_time > 0 ? arrival_time : mtime));
+    if (include_envelope) {
+	if (rcpt_count == 0) {
+	    vstream_fprintf(out, ", \"envelope\": {");
+	    vstream_fprintf(out, "\"sender\": \"%s\", ",
+			    QUOTE_JSON(quote_buf,
+				       sender_seen > 0 ? STR(sender_q) : empty_addr));
+	    vstream_fprintf(out, "\"recipients\": [%s]}",
+			    STR(recipients_buf));
+	} else {
+	    vstream_fprintf(out, ", \"envelope\": {");
+	    vstream_fprintf(out, "\"sender\": \"%s\", ",
+			    QUOTE_JSON(quote_buf,
+				       sender_seen > 0 ? STR(sender_q) : empty_addr));
+	    vstream_fprintf(out, "\"recipients\": [%s]}",
+			    STR(recipients_buf));
+	}
+    }
+    if (include_headers) {
+	vstream_fprintf(out, ", \"headers\": \"%s\"",
+			QUOTE_JSON(quote_buf, STR(headers_buf)));
+    }
+    if (include_body) {
+	vstream_fprintf(out, ", \"body\": \"%s\"",
+			QUOTE_JSON(quote_buf, STR(body_buf)));
+    }
+    vstream_fprintf(out, "}\n");
+    if (vstream_fflush(out) && errno != EPIPE)
+	msg_warn("output write error: %m");
+
+#undef TEXT_RECORD
+#undef QUOTE_JSON
+    vstring_free(buf);
+    vstring_free(printable_quoted_addr);
+    vstring_free(orcpt_buf);
+    vstring_free(queue_q);
+    vstring_free(id_q);
+    vstring_free(sender_q);
+    vstring_free(quote_buf);
+    vstring_free(recipients_buf);
+    vstring_free(headers_buf);
+    vstring_free(body_buf);
+}
+
 static char *(*postqueue_scan_next(const char *queue_name)) (SCAN_DIR *)
 {
     if (strcmp(queue_name, MAIL_QUEUE_MAILDROP) == 0)
@@ -309,4 +455,88 @@ postqueue_scan_queue_json_by_id(VSTREAM *out, const char *queue_id,
     }
     return (match_count > 0 ? POSTQUEUE_ID_LOOKUP_FOUND :
 	    POSTQUEUE_ID_LOOKUP_NOT_FOUND);
+}
+
+int
+postqueue_scan_message_json_by_id(VSTREAM *out, const char *queue_id,
+				  const char *empty_addr, int dup_filter_limit,
+				  int include_envelope, int include_headers,
+				  int include_body)
+{
+    static const char *queue_names[] = {
+	MAIL_QUEUE_MAILDROP,
+	MAIL_QUEUE_ACTIVE,
+	MAIL_QUEUE_INCOMING,
+	MAIL_QUEUE_DEFERRED,
+	MAIL_QUEUE_HOLD,
+	0,
+    };
+    const char **queue_name;
+    int     match_count = 0;
+
+    (void) dup_filter_limit;
+    if (queue_id == 0 || *queue_id == 0)
+	return (POSTQUEUE_MESSAGE_LOOKUP_NOT_FOUND);
+    if (empty_addr == 0 || *empty_addr == 0)
+	empty_addr = "MAILER-DAEMON";
+    for (queue_name = queue_names; *queue_name != 0; queue_name++) {
+	SCAN_DIR *scan;
+	char   *(*scan_next) (SCAN_DIR *);
+	char   *id;
+	char   *saved_id = 0;
+
+	scan_next = postqueue_scan_next(*queue_name);
+	if (scan_next == 0)
+	    continue;
+	scan = scan_dir_open(*queue_name);
+	if (scan == 0)
+	    return (POSTQUEUE_MESSAGE_LOOKUP_ERROR);
+	while ((id = scan_next(scan)) != 0) {
+	    struct stat st;
+	    const char *path;
+	    int     status;
+	    VSTREAM *qfile;
+
+	    if (saved_id) {
+		if (strcmp(saved_id, id) == 0) {
+		    msg_warn("readdir loop on queue %s id %s", *queue_name, id);
+		    break;
+		}
+		myfree(saved_id);
+	    }
+	    saved_id = mystrdup(id);
+	    if (strcmp(queue_id, id) != 0)
+		continue;
+	    status = mail_open_ok(*queue_name, id, &st, &path);
+	    (void) path;
+	    if (status != MAIL_OPEN_YES)
+		continue;
+	    qfile = mail_queue_open(*queue_name, id, O_RDONLY, 0);
+	    if (qfile == 0) {
+		if (errno != ENOENT)
+		    msg_warn("open %s %s: %m", *queue_name, id);
+		continue;
+	    }
+	    if (match_count > 0) {
+		match_count++;
+		(void) vstream_fclose(qfile);
+		break;
+	    }
+	    postqueue_scan_report_message_json(out, *queue_name, id, qfile,
+					       st.st_mtime, empty_addr,
+					       include_envelope,
+					       include_headers,
+					       include_body);
+	    match_count++;
+	    if (vstream_fclose(qfile))
+		msg_warn("close file %s %s: %m", *queue_name, id);
+	}
+	if (saved_id)
+	    myfree(saved_id);
+	scan_dir_close(scan);
+	if (match_count > 1)
+	    return (POSTQUEUE_MESSAGE_LOOKUP_DUPLICATE);
+    }
+    return (match_count > 0 ? POSTQUEUE_MESSAGE_LOOKUP_FOUND :
+	    POSTQUEUE_MESSAGE_LOOKUP_NOT_FOUND);
 }
