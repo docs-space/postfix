@@ -142,6 +142,57 @@ queue_clear_queues(json_t *body)
     return (postapi_resp_json(200, cleared));
 }
 
+ /* queue_patch_messages - PATCH body: JSON array of queue ids */
+
+static POSTAPI_RESP *
+queue_patch_messages(json_t *body, int (*apply)(const char *))
+{
+    json_t *done;
+    size_t  n;
+    size_t  count;
+    int     status;
+
+    if (body == 0 || !json_is_array(body))
+	return (postapi_resp_json(400,
+				  json_pack("{s:s}", "error", "invalid_body")));
+    done = json_array();
+    if (done == 0)
+	return (postapi_resp_json(503,
+				  json_pack("{s:s}", "error",
+					    "service_unavailable")));
+    count = json_array_size(body);
+    for (n = 0; n < count; n++) {
+	json_t *entry = json_array_get(body, n);
+	const char *queue_id;
+
+	if (!json_is_string(entry)) {
+	    json_decref(done);
+	    return (postapi_resp_json(400,
+				      json_pack("{s:s}", "error",
+						"invalid_body")));
+	}
+	queue_id = json_string_value(entry);
+	if (queue_id == 0 || *queue_id == 0)
+	    continue;
+	status = apply(queue_id);
+	if (status == POSTQUEUE_HOLD_ERROR || status == POSTQUEUE_RELEASE_ERROR) {
+	    json_decref(done);
+	    return (postapi_resp_json(503,
+				      json_pack("{s:s}", "error",
+						"service_unavailable")));
+	}
+	if (status != POSTQUEUE_HOLD_OK && status != POSTQUEUE_RELEASE_OK)
+	    continue;
+	if (json_array_append_new(done, json_string(queue_id)) < 0) {
+	    json_decref(done);
+	    return (postapi_resp_json(503,
+				      json_pack("{s:s}", "error",
+						"service_unavailable")));
+	}
+    }
+    return (postapi_resp_json(200, done));
+}
+
  /* queue_dispatch - Queue endpoints */
 
 POSTAPI_RESP *
@@ -219,6 +270,16 @@ queue_dispatch(int authorized, const char *method, const char *action,
 	    json_decref(arr);
 	    return (postapi_resp_json(200, item));
 	}
+    } else if (strcmp(action, "Message/Hold") == 0) {
+	if (strcmp(method, "PATCH") != 0)
+	    return (postapi_resp_json(405,
+				      json_pack("{s:s}", "error", "method_not_allowed")));
+	return (queue_patch_messages(body, postqueue_hold_by_id));
+    } else if (strcmp(action, "Message/UnHold") == 0) {
+	if (strcmp(method, "PATCH") != 0)
+	    return (postapi_resp_json(405,
+				      json_pack("{s:s}", "error", "method_not_allowed")));
+	return (queue_patch_messages(body, postqueue_release_by_id));
     } else if (strcmp(action, "Message") == 0) {
 	const json_t *id_value;
 	const char *queue_id;

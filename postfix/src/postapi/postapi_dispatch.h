@@ -10,8 +10,9 @@
 /*	#include <postapi_dispatch.h>
 /* DESCRIPTION
 /*	Route /api/v1/<Controller> or /api/v1/<Controller>/<Action> to
-/*	controller handlers (no action segment yields an empty \fIaction\fR
-/*	string). Send JSON or raw NDJSON HTTP responses via libmicrohttpd.
+/*	controller handlers (\fIaction\fR may contain slashes, e.g.
+/*	Message/Hold). An empty action string means no action segment.
+/*	Send JSON or raw NDJSON HTTP responses via libmicrohttpd.
 /*	Controller code that calls msg_fatal() or msg_panic() is trapped
 /*	and turned into a 503/500 JSON error instead of killing postapi.
 /*
