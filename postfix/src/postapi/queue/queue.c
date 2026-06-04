@@ -95,6 +95,53 @@ queue_delete_messages(json_t *body)
     return (postapi_resp_json(200, deleted));
 }
 
+ /* queue_clear_queues - DELETE body: JSON array of queue names to clear */
+
+static POSTAPI_RESP *
+queue_clear_queues(json_t *body)
+{
+    json_t *cleared;
+    size_t  n;
+    size_t  count;
+    int     status;
+
+    if (body == 0 || !json_is_array(body))
+	return (postapi_resp_json(400,
+				  json_pack("{s:s}", "error", "invalid_body")));
+    cleared = json_array();
+    if (cleared == 0)
+	return (postapi_resp_json(503,
+				  json_pack("{s:s}", "error",
+					    "service_unavailable")));
+    count = json_array_size(body);
+    for (n = 0; n < count; n++) {
+	json_t *entry = json_array_get(body, n);
+	const char *queue_name;
+
+	if (!json_is_string(entry))
+	    continue;
+	queue_name = json_string_value(entry);
+	if (queue_name == 0 || *queue_name == 0)
+	    continue;
+	status = postqueue_clear_queue(queue_name);
+	if (status == POSTQUEUE_CLEAR_INVALID)
+	    continue;
+	if (status == POSTQUEUE_CLEAR_ERROR) {
+	    json_decref(cleared);
+	    return (postapi_resp_json(503,
+				      json_pack("{s:s}", "error",
+						"service_unavailable")));
+	}
+	if (json_array_append_new(cleared, json_string(queue_name)) < 0) {
+	    json_decref(cleared);
+	    return (postapi_resp_json(503,
+				      json_pack("{s:s}", "error",
+						"service_unavailable")));
+	}
+    }
+    return (postapi_resp_json(200, cleared));
+}
+
  /* queue_dispatch - Queue endpoints */
 
 POSTAPI_RESP *
@@ -112,6 +159,8 @@ queue_dispatch(int authorized, const char *method, const char *action,
 	const char *queue_id;
 	int     lookup_status;
 
+	if (strcmp(method, "DELETE") == 0)
+	    return (queue_clear_queues(body));
 	if (strcmp(method, "GET") != 0)
 	    return (postapi_resp_json(405,
 				      json_pack("{s:s}", "error", "method_not_allowed")));
