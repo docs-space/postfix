@@ -15,6 +15,7 @@
 #include <vstream.h>
 #include <vstring.h>
 #include <mymalloc.h>
+#include <mail_queue.h>
 #include <postqueue.h>
 
 #include "postapi_dispatch.h"
@@ -331,6 +332,132 @@ queue_force_delivery_queues(json_t *body)
     return (postapi_resp_json(200, done));
 }
 
+ /* queue_requeue_messages - POST body: JSON array of queue ids */
+
+static POSTAPI_RESP *
+queue_requeue_messages(json_t *body)
+{
+    json_t *done;
+    size_t  n;
+    size_t  count;
+    int     status;
+
+    if (body == 0 || !json_is_array(body))
+	return (postapi_resp_json(400,
+				  json_pack("{s:s}", "error", "invalid_body")));
+    done = json_array();
+    if (done == 0)
+	return (postapi_resp_json(503,
+				  json_pack("{s:s}", "error",
+					    "service_unavailable")));
+    count = json_array_size(body);
+    for (n = 0; n < count; n++) {
+	json_t *entry = json_array_get(body, n);
+	const char *queue_id;
+
+	if (!json_is_string(entry)) {
+	    json_decref(done);
+	    return (postapi_resp_json(400,
+				      json_pack("{s:s}", "error",
+						"invalid_body")));
+	}
+	queue_id = json_string_value(entry);
+	if (queue_id == 0 || *queue_id == 0)
+	    continue;
+	status = postqueue_requeue_by_id(queue_id);
+	if (status == POSTQUEUE_REQUEUE_ERROR) {
+	    json_decref(done);
+	    return (postapi_resp_json(503,
+				      json_pack("{s:s}", "error",
+						"service_unavailable")));
+	}
+	if (status != POSTQUEUE_REQUEUE_OK)
+	    continue;
+	if (json_array_append_new(done, json_string(queue_id)) < 0) {
+	    json_decref(done);
+	    return (postapi_resp_json(503,
+				      json_pack("{s:s}", "error",
+						"service_unavailable")));
+	}
+    }
+    return (postapi_resp_json(200, done));
+}
+
+ /* queue_requeue_queues - POST body: JSON array of queue names or [] */
+
+static POSTAPI_RESP *
+queue_requeue_queues(json_t *body)
+{
+    static const char *all_requeue_queues[] = {
+	MAIL_QUEUE_INCOMING,
+	MAIL_QUEUE_ACTIVE,
+	MAIL_QUEUE_DEFERRED,
+	MAIL_QUEUE_HOLD,
+	0,
+    };
+    json_t *done;
+    size_t  n;
+    size_t  count;
+    int     status;
+    const char **qpp;
+
+    if (body == 0 || !json_is_array(body))
+	return (postapi_resp_json(400,
+				  json_pack("{s:s}", "error", "invalid_body")));
+    done = json_array();
+    if (done == 0)
+	return (postapi_resp_json(503,
+				  json_pack("{s:s}", "error",
+					    "service_unavailable")));
+    count = json_array_size(body);
+    if (count == 0) {
+	for (qpp = all_requeue_queues; *qpp != 0; qpp++) {
+	    status = postqueue_requeue_queue(*qpp);
+	    if (status == POSTQUEUE_REQUEUE_QUEUE_ERROR) {
+		json_decref(done);
+		return (postapi_resp_json(503,
+					  json_pack("{s:s}", "error",
+						    "service_unavailable")));
+	    }
+	    if (status != POSTQUEUE_REQUEUE_QUEUE_OK)
+		continue;
+	    if (json_array_append_new(done, json_string(*qpp)) < 0) {
+		json_decref(done);
+		return (postapi_resp_json(503,
+					  json_pack("{s:s}", "error",
+						    "service_unavailable")));
+	    }
+	}
+	return (postapi_resp_json(200, done));
+    }
+    for (n = 0; n < count; n++) {
+	json_t *entry = json_array_get(body, n);
+	const char *queue_name;
+
+	if (!json_is_string(entry))
+	    continue;
+	queue_name = json_string_value(entry);
+	if (queue_name == 0 || *queue_name == 0)
+	    continue;
+	status = postqueue_requeue_queue(queue_name);
+	if (status == POSTQUEUE_REQUEUE_QUEUE_INVALID)
+	    continue;
+	if (status == POSTQUEUE_REQUEUE_QUEUE_ERROR) {
+	    json_decref(done);
+	    return (postapi_resp_json(503,
+				      json_pack("{s:s}", "error",
+						"service_unavailable")));
+	}
+	if (json_array_append_new(done, json_string(queue_name)) < 0) {
+	    json_decref(done);
+	    return (postapi_resp_json(503,
+				      json_pack("{s:s}", "error",
+						"service_unavailable")));
+	}
+    }
+    return (postapi_resp_json(200, done));
+}
+
  /* queue_dispatch - Queue endpoints */
 
 POSTAPI_RESP *
@@ -408,6 +535,16 @@ queue_dispatch(int authorized, const char *method, const char *action,
 	    json_decref(arr);
 	    return (postapi_resp_json(200, item));
 	}
+    } else if (strcmp(action, "Requeuing") == 0) {
+	if (strcmp(method, "POST") != 0)
+	    return (postapi_resp_json(405,
+				      json_pack("{s:s}", "error", "method_not_allowed")));
+	return (queue_requeue_queues(body));
+    } else if (strcmp(action, "Message/Requeuing") == 0) {
+	if (strcmp(method, "POST") != 0)
+	    return (postapi_resp_json(405,
+				      json_pack("{s:s}", "error", "method_not_allowed")));
+	return (queue_requeue_messages(body));
     } else if (strcmp(action, "ForceDelivery") == 0) {
 	if (strcmp(method, "PATCH") != 0)
 	    return (postapi_resp_json(405,

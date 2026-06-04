@@ -78,6 +78,15 @@ extern int postqueue_scan_message_json_by_id(VSTREAM *, const char *,
 #define POSTQUEUE_TRIGGER_OK			0
 #define POSTQUEUE_TRIGGER_ERROR			-2
 
+#define POSTQUEUE_REQUEUE_OK			1
+#define POSTQUEUE_REQUEUE_NOT_FOUND		0
+#define POSTQUEUE_REQUEUE_INVALID		-1
+#define POSTQUEUE_REQUEUE_ERROR			-2
+
+#define POSTQUEUE_REQUEUE_QUEUE_OK		0
+#define POSTQUEUE_REQUEUE_QUEUE_INVALID		-1
+#define POSTQUEUE_REQUEUE_QUEUE_ERROR		-2
+
 extern int postqueue_delete_by_id(const char *);
 extern int postqueue_clear_queue(const char *);
 extern int postqueue_hold_by_id(const char *);
@@ -85,6 +94,8 @@ extern int postqueue_release_by_id(const char *);
 extern int postqueue_flush_by_id(const char *);
 extern int postqueue_force_delivery_queue(const char *);
 extern int postqueue_trigger_delivery(void);
+extern int postqueue_requeue_by_id(const char *);
+extern int postqueue_requeue_queue(const char *);
 
 /* LICENSE
 /* .ad
