@@ -56,8 +56,20 @@ extern int postqueue_scan_message_json_by_id(VSTREAM *, const char *,
 #define POSTQUEUE_CLEAR_INVALID			-1
 #define POSTQUEUE_CLEAR_ERROR			-2
 
+#define POSTQUEUE_HOLD_OK			1
+#define POSTQUEUE_HOLD_NOT_FOUND		0
+#define POSTQUEUE_HOLD_INVALID			-1
+#define POSTQUEUE_HOLD_ERROR			-2
+
+#define POSTQUEUE_RELEASE_OK			1
+#define POSTQUEUE_RELEASE_NOT_FOUND		0
+#define POSTQUEUE_RELEASE_INVALID		-1
+#define POSTQUEUE_RELEASE_ERROR			-2
+
 extern int postqueue_delete_by_id(const char *);
 extern int postqueue_clear_queue(const char *);
+extern int postqueue_hold_by_id(const char *);
+extern int postqueue_release_by_id(const char *);
 
 /* LICENSE
 /* .ad

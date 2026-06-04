@@ -114,11 +114,13 @@ postapi_route_parse_path(const char *url, VSTRING *path_buf,
 	*action = "";
 	return (1);
     }
-    if (slash[1] == 0 || strchr(slash + 1, '/') != 0)
+    if (slash[1] == 0)
 	return (0);
     *controller = path;
     *controller_len = (size_t) (slash - path);
     *action = slash + 1;
+    if (*action == 0)
+	return (0);
     return (1);
 }
 

@@ -1,7 +1,7 @@
 SHELL	= /bin/sh
 SRCS	= postapi.c auth_key.c postapi_dispatch.c \
 	queue/queue.c postconf/postconf.c service/service.c \
-	../postqueue/postqueue_api.c ../postqueue/postqueue_delete.c ../postqueue/postqueue_queue_scan.c ../postqueue/showq_json.c \
+	../postqueue/postqueue_api.c ../postqueue/postqueue_delete.c ../postqueue/postqueue_hold.c ../postqueue/postqueue_queue_scan.c ../postqueue/showq_json.c \
 	../postconf/postconf_api.c ../postconf/postconf_builtin.c \
 	../postconf/postconf_edit.c ../postconf/postconf_main.c \
 	../postconf/postconf_master.c ../postconf/postconf_misc.c \
@@ -12,7 +12,7 @@ SRCS	= postapi.c auth_key.c postapi_dispatch.c \
 	../postconf/postconf_print.c
 OBJS	= postapi.o auth_key.o postapi_dispatch.o \
 	queue/queue.o postconf/postconf.o service/service.o \
-	../postqueue/postqueue_api.o ../postqueue/postqueue_delete.o ../postqueue/postqueue_queue_scan.o ../postqueue/showq_json.o \
+	../postqueue/postqueue_api.o ../postqueue/postqueue_delete.o ../postqueue/postqueue_hold.o ../postqueue/postqueue_queue_scan.o ../postqueue/showq_json.o \
 	../postconf/postconf_api.o ../postconf/postconf_builtin.o \
 	../postconf/postconf_edit.o ../postconf/postconf_main.o \
 	../postconf/postconf_master.o ../postconf/postconf_misc.o \
@@ -89,7 +89,7 @@ update: ../../libexec/$(PROG)
 
 clean:
 	rm -f *.o queue/*.o postconf/*.o service/*.o \
-	../postqueue/postqueue_api.o ../postqueue/postqueue_delete.o ../postqueue/postqueue_queue_scan.o ../postqueue/showq_json.o \
+	../postqueue/postqueue_api.o ../postqueue/postqueue_delete.o ../postqueue/postqueue_hold.o ../postqueue/postqueue_queue_scan.o ../postqueue/showq_json.o \
 	../postconf/postconf_api.o ../postconf/postconf_builtin.o \
 	../postconf/postconf_edit.o ../postconf/postconf_main.o \
 	../postconf/postconf_master.o ../postconf/postconf_misc.o \
