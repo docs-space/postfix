@@ -6,7 +6,6 @@
 #include <msg.h>
 #include <scan_dir.h>
 #include <mymalloc.h>
-#include <events.h>
 
 #include <mail_conf.h>
 #include <mail_proto.h>
@@ -149,6 +148,10 @@ postqueue_trigger_delivery(void)
 	return (POSTQUEUE_TRIGGER_ERROR);
     if (mail_flush_maildrop() < 0)
 	return (POSTQUEUE_TRIGGER_ERROR);
-    event_drain(2);
+    /*
+     * Do not call event_drain() here: postapi runs inside libmicrohttpd
+     * (MHD_run) and event_loop() would panic with "recursive call".
+     * Short-lived postqueue(1) still drains after mail_flush in flush_queue().
+     */
     return (POSTQUEUE_TRIGGER_OK);
 }
