@@ -244,6 +244,5 @@ postconf_list_json(VSTREAM *fp)
 	pcf_register_user_parameters(0);
 	postconf_api_initialized = 1;
     }
-    pcf_show_parameters(fp, PCF_SHOW_JSON | PCF_SHOW_DEFS | PCF_SHOW_NONDEF,
-			PCF_PARAM_MASK_CLASS, names);
+    pcf_show_parameters(fp, PCF_SHOW_JSON, PCF_PARAM_MASK_CLASS, names);
 }
