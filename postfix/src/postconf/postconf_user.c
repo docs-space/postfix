@@ -348,6 +348,8 @@ static void pcf_scan_default_parameter_values(HTABLE *valid_params,
     myfree((void *) list);
 }
 
+void    pcf_register_postapi_master_parameters(void);
+
 /* pcf_register_user_parameters - add parameters with user-defined names */
 
 void    pcf_register_user_parameters(int mode)
@@ -424,4 +426,83 @@ void    pcf_register_user_parameters(int mode)
      * Scan the explicit name=value entries in the global name space.
      */
     pcf_scan_user_parameter_namespace(mode, CONFIG_DICT, (PCF_MASTER_ENT *) 0);
+
+    /*
+     * PostAPI-specific master.cf -o parameters.
+     */
+    pcf_register_postapi_master_parameters();
+}
+
+/* pcf_register_known_user_parameter - register explicit main.cf name */
+
+void    pcf_register_known_user_parameter(const char *name)
+{
+    if (pcf_param_table == 0)
+	msg_panic("pcf_register_known_user_parameter: global parameter table is not initialized");
+    if (name == 0 || *name == 0)
+	return;
+    if (PCF_PARAM_TABLE_LOCATE(pcf_param_table, name) == 0)
+	PCF_PARAM_TABLE_ENTER(pcf_param_table, name, PCF_PARAM_FLAG_USER,
+			      PCF_PARAM_NO_DATA, pcf_convert_user_parameter);
+}
+
+/* pcf_register_known_master_parameter - register explicit master.cf -o name */
+
+static void pcf_register_known_master_parameter(PCF_MASTER_ENT *masterp,
+					                const char *name)
+{
+    if (masterp == 0 || masterp->valid_names == 0)
+	return;
+    if (name == 0 || *name == 0)
+	return;
+    if (PCF_PARAM_TABLE_LOCATE(masterp->valid_names, name) == 0)
+	PCF_PARAM_TABLE_ENTER(masterp->valid_names, name, PCF_PARAM_FLAG_USER,
+			      PCF_PARAM_NO_DATA, pcf_convert_user_parameter);
+}
+
+/* pcf_register_postapi_parameters - register postapi(8) main.cf parameters */
+
+void    pcf_register_postapi_parameters(void)
+{
+    static const char *postapi_params[] = {
+	"postapi_access_token_maps",
+	"postapi_access_salt_maps",
+	"postapi_access_config",
+	"postapi_tls_cert_file",
+	"postapi_tls_key_file",
+	"postapi_tls_security_level",
+	"postapi_tls_loglevel",
+	"postapi_tls_session_cache_database",
+	"postapi_tls_session_cache_timeout",
+	"postapi_starttls_timeout",
+	0,
+    };
+    const char **namep;
+
+    for (namep = postapi_params; *namep != 0; namep++)
+	pcf_register_known_user_parameter(*namep);
+}
+
+/* pcf_register_postapi_master_parameters - register postapi(8) master.cf -o */
+
+void    pcf_register_postapi_master_parameters(void)
+{
+    static const char *postapi_master_params[] = {
+	"postapi_tls_security_level",
+	0,
+    };
+    PCF_MASTER_ENT *masterp;
+    ARGV   *argv;
+    const char **namep;
+
+    if (pcf_master_table == 0)
+	return;
+    for (masterp = pcf_master_table; (argv = masterp->argv) != 0; masterp++) {
+	if (argv->argc <= PCF_MASTER_FLD_CMD)
+	    continue;
+	if (strcmp(argv->argv[PCF_MASTER_FLD_CMD], "postapi") != 0)
+	    continue;
+	for (namep = postapi_master_params; *namep != 0; namep++)
+	    pcf_register_known_master_parameter(masterp, *namep);
+    }
 }

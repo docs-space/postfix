@@ -71,6 +71,7 @@ static void postconf_validate_setup(ARGV *pairs)
     if (pairs != 0 && pairs->argc > 0)
 	pcf_set_parameters(pairs->argv);
     pcf_register_builtin_parameters("postapi", getpid());
+    pcf_register_postapi_parameters();
     pcf_read_master(PCF_WARN_ON_OPEN_ERROR);
     pcf_register_service_parameters();
     pcf_register_user_parameters(0);
@@ -237,10 +238,12 @@ postconf_list_json(VSTREAM *fp)
 	mail_conf_read();
 	pcf_read_parameters();
 	pcf_register_builtin_parameters("postapi", getpid());
+	pcf_register_postapi_parameters();
 	pcf_read_master(PCF_WARN_ON_OPEN_ERROR);
 	pcf_register_service_parameters();
 	pcf_register_user_parameters(0);
 	postconf_api_initialized = 1;
     }
-    pcf_show_parameters(fp, PCF_SHOW_JSON, PCF_PARAM_MASK_CLASS, names);
+    pcf_show_parameters(fp, PCF_SHOW_JSON | PCF_SHOW_DEFS | PCF_SHOW_NONDEF,
+			PCF_PARAM_MASK_CLASS, names);
 }
