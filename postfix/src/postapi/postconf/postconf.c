@@ -169,7 +169,7 @@ postconf_dispatch(int authorized, const char *method, const char *action,
 				 json_pack("{s:s}", "error", "unauthorized")));
 
     if (*action == 0) {
-	if (strcmp(method, "POST") == 0)
+	if (strcmp(method, "PATCH") == 0)
 	    return (postconf_update_config(body));
 	return (postapi_resp_json(405,
 				  json_pack("{s:s}", "error",
