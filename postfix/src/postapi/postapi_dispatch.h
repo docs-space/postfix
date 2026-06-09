@@ -50,4 +50,9 @@ extern json_t *postapi_ndjson_to_json_array(const char *data, ssize_t len);
 extern enum MHD_Result postapi_send_response(struct MHD_Connection *connection,
 				             POSTAPI_RESP *resp);
 
+extern void postapi_log_request(const char *method, const char *url,
+			                json_t *query, json_t *body);
+extern void postapi_log_response(unsigned int code, const char *body);
+extern void postapi_log_response_obj(POSTAPI_RESP *resp);
+
 #endif

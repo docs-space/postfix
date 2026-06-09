@@ -165,6 +165,7 @@ postapi_json_reply(struct MHD_Connection *connection, unsigned int code,
     if (obj == 0)
 	return MHD_NO;
     dump = json_dumps(obj, JSON_COMPACT);
+    postapi_log_response(code, dump != 0 ? dump : "<json_encode_error>");
     json_decref(obj);
     if (dump == 0)
 	return MHD_NO;
@@ -369,6 +370,7 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
 	return postapi_json_reply(connection, 500,
 				  json_pack("{s:s}", "error", "out_of_memory"));
     }
+    postapi_log_request(method, url, query_json, body_json);
     resp = postapi_dispatch(url, method, authorized, query_json, body_json);
     postapi_query_free(query_json);
     if (body_json)
@@ -377,13 +379,18 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
 	int     reload_pending = postconf_take_reload_pending();
 	enum MHD_Result q;
 
+	postapi_log_response_obj(resp);
 	q = postapi_send_response(connection, resp);
 	if (q == MHD_YES && reload_pending) {
 	    VSTRING *reload_err = vstring_alloc(256);
 
-	    if (postfix_reload_config(reload_err) < 0)
-		msg_warn("postapi: postfix reload after PostConf update failed: %s",
-			 vstring_str(reload_err));
+		if (msg_verbose)
+		    msg_info("postapi: PostConf: reload start");
+		if (postfix_reload_config(reload_err) < 0)
+		    msg_warn("postapi: postfix reload after PostConf update failed: %s",
+			     vstring_str(reload_err));
+		else if (msg_verbose)
+		    msg_info("postapi: PostConf: reload ok");
 	    vstring_free(reload_err);
 	}
 	return (q);

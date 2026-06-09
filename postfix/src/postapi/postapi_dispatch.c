@@ -24,6 +24,113 @@
 
 #define POSTAPI_API_PREFIX	"/api/v1"
 #define POSTAPI_API_PREFIX_LEN	(sizeof(POSTAPI_API_PREFIX) - 1)
+#define POSTAPI_LOG_MAX		8192
+
+ /* postapi_log_truncate - copy string for logging with size limit */
+
+static char *postapi_log_truncate(const char *text)
+{
+    VSTRING *buf;
+    size_t  len;
+
+    if (text == 0)
+	return mystrdup("");
+    len = strlen(text);
+    if (len <= POSTAPI_LOG_MAX)
+	return mystrdup(text);
+    buf = vstring_alloc(POSTAPI_LOG_MAX + 16);
+    vstring_strncpy(buf, text, POSTAPI_LOG_MAX);
+    vstring_strcat(buf, "...<truncated>");
+    return (vstring_export(buf));
+}
+
+ /* postapi_json_log_str - compact JSON string for logging */
+
+static char *postapi_json_log_str(const json_t *obj)
+{
+    char   *dump;
+
+    if (obj == 0)
+	return mystrdup("null");
+    dump = json_dumps(obj, JSON_COMPACT);
+    if (dump == 0)
+	return mystrdup("<json_encode_error>");
+    if (strlen(dump) <= POSTAPI_LOG_MAX)
+	return dump;
+    {
+	char   *trunc = postapi_log_truncate(dump);
+
+	myfree(dump);
+	return (trunc);
+    }
+}
+
+ /* postapi_log_request - log incoming HTTP API call */
+
+void
+postapi_log_request(const char *method, const char *url,
+		            json_t *query, json_t *body)
+{
+    char   *query_str;
+    char   *body_str;
+
+    query_str = postapi_json_log_str(query);
+    body_str = postapi_json_log_str(body);
+    msg_info("postapi: request: %s %s query=%s body=%s",
+	     method != 0 ? method : "",
+	     url != 0 ? url : "",
+	     query_str, body_str);
+    myfree(query_str);
+    myfree(body_str);
+}
+
+ /* postapi_log_response - log outgoing HTTP status and body */
+
+void
+postapi_log_response(unsigned int code, const char *body)
+{
+    char   *body_str;
+
+    body_str = postapi_log_truncate(body != 0 ? body : "");
+    msg_info("postapi: response: %u %s", code, body_str);
+    myfree(body_str);
+}
+
+ /* postapi_log_response_obj - log POSTAPI_RESP before send */
+
+void
+postapi_log_response_obj(POSTAPI_RESP *resp)
+{
+    char   *dump;
+    char   *body_str;
+
+    if (resp == 0) {
+	msg_info("postapi: response: <null>");
+	return;
+    }
+    if (resp->is_ndjson) {
+	if (resp->ndjson == 0)
+	    body_str = mystrdup("");
+	else
+	    body_str = postapi_log_truncate(vstring_str(resp->ndjson));
+	postapi_log_response(resp->http_code, body_str);
+	myfree(body_str);
+	return;
+    }
+    if (resp->json == 0) {
+	postapi_log_response(resp->http_code, "");
+	return;
+    }
+    dump = json_dumps(resp->json, JSON_COMPACT);
+    if (dump == 0) {
+	postapi_log_response(resp->http_code, "<json_encode_error>");
+	return;
+    }
+    body_str = postapi_log_truncate(dump);
+    myfree(dump);
+    postapi_log_response(resp->http_code, body_str);
+    myfree(body_str);
+}
 
 typedef POSTAPI_RESP *(*POSTAPI_CTRL_FN) (int, const char *, const char *,
 			                           json_t *, json_t *);
@@ -47,6 +154,10 @@ postapi_call_controller(const char *controller, POSTAPI_CTRL_FN fn,
     POSTAPI_RESP *resp;
     int     except;
 
+    if (msg_verbose)
+	msg_info("postapi: controller %s: %s action=%s authorized=%s",
+		 controller, method, action != 0 ? action : "",
+		 authorized ? "yes" : "no");
     msg_set_longjmp_action(postapi_ctrl_longjmp);
     except = setjmp(postapi_ctrl_jmp_buf);
     if (except == 0) {
@@ -58,6 +169,9 @@ postapi_call_controller(const char *controller, POSTAPI_CTRL_FN fn,
 				      json_pack("{s:s}", "error",
 						"internal_server_error")));
 	}
+	if (msg_verbose)
+	    msg_info("postapi: controller %s done: http=%u",
+		     controller, resp->http_code);
 	return (resp);
     }
     msg_set_longjmp_action(0);
@@ -345,6 +459,16 @@ postapi_dispatch(const char *url, const char *method, int authorized,
     if (!postapi_route_lookup(controller, ctrl_len, &fn, &ctrl_name)) {
 	vstring_free(path_buf);
 	return (postapi_resp_json(404, json_pack("{s:s}", "error", "not_found")));
+    }
+    if (msg_verbose) {
+	char   *ctrl;
+
+	ctrl = (char *) mymalloc(ctrl_len + 1);
+	memcpy(ctrl, controller, ctrl_len);
+	ctrl[ctrl_len] = 0;
+	msg_info("postapi: dispatch: %s %s controller=%s action=%s",
+		 method, url, ctrl, action != 0 ? action : "");
+	myfree(ctrl);
     }
     resp = postapi_call_controller(ctrl_name, fn, authorized, method, action,
 				  query, body);

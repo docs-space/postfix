@@ -11,6 +11,7 @@
 #include <jansson.h>
 
 #include <argv.h>
+#include <msg.h>
 #include <mymalloc.h>
 #include <vstream.h>
 #include <vstring.h>
@@ -111,9 +112,14 @@ postconf_update_config(json_t *body)
 	iter = json_object_iter_next(body, iter);
     }
 
+    if (msg_verbose)
+	msg_info("postapi: PostConf: validate start");
     if (postconf_validate_overrides(pairs, err) < 0) {
 	POSTAPI_RESP *resp;
 
+	if (msg_verbose)
+	    msg_info("postapi: PostConf: validate failed: %s",
+		     vstring_str(err));
 	resp = postapi_resp_json(400,
 				 json_pack("{s:s,s:s}", "error",
 					   "configuration_check_failed",
@@ -124,7 +130,13 @@ postconf_update_config(json_t *body)
 	vstring_free(err);
 	return (resp);
     }
+    if (msg_verbose)
+	msg_info("postapi: PostConf: validate ok");
+    if (msg_verbose)
+	msg_info("postapi: PostConf: apply start");
     if (postconf_apply_overrides(pairs) < 0) {
+	if (msg_verbose)
+	    msg_info("postapi: PostConf: apply failed");
 	json_decref(applied);
 	argv_free(pairs);
 	vstring_free(value_buf);
@@ -133,6 +145,8 @@ postconf_update_config(json_t *body)
 				  json_pack("{s:s}", "error",
 					    "service_unavailable")));
     }
+    if (msg_verbose)
+	msg_info("postapi: PostConf: apply ok, reload scheduled");
     postconf_request_reload();
 
     argv_free(pairs);
