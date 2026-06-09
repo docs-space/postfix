@@ -60,6 +60,7 @@ postconf_api_reset(void)
 	myfree((void *) pcf_master_table);
 	pcf_master_table = 0;
     }
+    pcf_cleanup_user_parameters();
     postconf_api_initialized = 0;
 }
 

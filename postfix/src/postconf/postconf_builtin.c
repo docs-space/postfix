@@ -488,67 +488,46 @@ void    pcf_validate_parameter_value(const char *name)
 	msg_fatal("parameter \"%s\" is read-only", name);
     if (node->convert_fn == pcf_conv_int_parameter) {
 	CONFIG_INT_TABLE *t = (CONFIG_INT_TABLE *) node->param_data;
-	int     scratch;
 
-	CONFIG_INT_TABLE one = {t->name, t->defval, &scratch, t->min, t->max};
-
-	get_mail_conf_int_table(&one);
+	(void) get_mail_conf_int(t->name, t->defval, t->min, t->max);
     } else if (node->convert_fn == pcf_conv_long_parameter) {
 	CONFIG_LONG_TABLE *t = (CONFIG_LONG_TABLE *) node->param_data;
-	long    scratch;
 
-	CONFIG_LONG_TABLE one = {t->name, t->defval, &scratch, t->min, t->max};
-
-	get_mail_conf_long_table(&one);
+	(void) get_mail_conf_long(t->name, t->defval, t->min, t->max);
     } else if (node->convert_fn == pcf_conv_time_parameter) {
 	CONFIG_TIME_TABLE *t = (CONFIG_TIME_TABLE *) node->param_data;
-	int     scratch;
 
-	CONFIG_TIME_TABLE one = {t->name, t->defval, &scratch, t->min, t->max};
-
-	get_mail_conf_time_table(&one);
+	(void) get_mail_conf_time(t->name, t->defval, t->min, t->max);
     } else if (node->convert_fn == pcf_conv_bool_parameter) {
 	CONFIG_BOOL_TABLE *t = (CONFIG_BOOL_TABLE *) node->param_data;
-	bool    scratch;
 
-	CONFIG_BOOL_TABLE one = {t->name, t->defval, &scratch};
-
-	get_mail_conf_bool_table(&one);
+	(void) get_mail_conf_bool(t->name, t->defval);
     } else if (node->convert_fn == pcf_conv_nint_parameter) {
 	CONFIG_NINT_TABLE *t = (CONFIG_NINT_TABLE *) node->param_data;
-	int     scratch;
 
-	CONFIG_NINT_TABLE one = {t->name, t->defval, &scratch, t->min, t->max};
-
-	get_mail_conf_nint_table(&one);
+	(void) get_mail_conf_nint(t->name, t->defval, t->min, t->max);
     } else if (node->convert_fn == pcf_conv_nbool_parameter) {
 	CONFIG_NBOOL_TABLE *t = (CONFIG_NBOOL_TABLE *) node->param_data;
-	bool    scratch;
 
-	CONFIG_NBOOL_TABLE one = {t->name, t->defval, &scratch};
-
-	get_mail_conf_nbool_table(&one);
+	(void) get_mail_conf_nbool(t->name, t->defval);
     } else if (node->convert_fn == pcf_conv_str_parameter) {
 	CONFIG_STR_TABLE *t = (CONFIG_STR_TABLE *) node->param_data;
-	char   *scratch = 0;
+	char   *scratch;
 
-	CONFIG_STR_TABLE one = {t->name, t->defval, &scratch, t->min, t->max};
-
-	get_mail_conf_str_table(&one);
+	scratch = get_mail_conf_str(t->name, t->defval, t->min, t->max);
+	myfree(scratch);
     } else if (node->convert_fn == pcf_conv_raw_parameter) {
 	CONFIG_RAW_TABLE *t = (CONFIG_RAW_TABLE *) node->param_data;
-	char   *scratch = 0;
+	char   *scratch;
 
-	CONFIG_RAW_TABLE one = {t->name, t->defval, &scratch, t->min, t->max};
-
-	get_mail_conf_raw_table(&one);
+	scratch = get_mail_conf_raw(t->name, t->defval, t->min, t->max);
+	myfree(scratch);
     } else if (node->convert_fn == pcf_conv_str_fn_parameter) {
 	CONFIG_STR_FN_TABLE *t = (CONFIG_STR_FN_TABLE *) node->param_data;
-	char   *scratch = 0;
+	char   *scratch;
 
-	CONFIG_STR_FN_TABLE one = {t->name, t->defval, &scratch, t->min, t->max};
-
-	get_mail_conf_str_fn_table(&one);
+	scratch = get_mail_conf_str_fn(t->name, t->defval, t->min, t->max);
+	myfree(scratch);
     } else if (dict_lookup(CONFIG_DICT, name) == 0) {
 	msg_fatal("parameter \"%s\" is not set", name);
     }

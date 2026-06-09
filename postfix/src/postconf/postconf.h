@@ -281,6 +281,7 @@ typedef struct {
   * postconf_user.c.
   */
 extern void pcf_register_user_parameters(int);
+extern void pcf_cleanup_user_parameters(void);
 extern void pcf_register_known_user_parameter(const char *);
 extern void pcf_register_postapi_parameters(void);
 extern void pcf_register_postapi_master_parameters(void);

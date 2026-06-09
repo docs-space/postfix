@@ -350,6 +350,16 @@ static void pcf_scan_default_parameter_values(HTABLE *valid_params,
 
 void    pcf_register_postapi_master_parameters(void);
 
+/* pcf_cleanup_user_parameters - release user-parameter scan state */
+
+void    pcf_cleanup_user_parameters(void)
+{
+    if (pcf_rest_class_table != 0) {
+	htable_free(pcf_rest_class_table, (void (*) (void *)) 0);
+	pcf_rest_class_table = 0;
+    }
+}
+
 /* pcf_register_user_parameters - add parameters with user-defined names */
 
 void    pcf_register_user_parameters(int mode)
