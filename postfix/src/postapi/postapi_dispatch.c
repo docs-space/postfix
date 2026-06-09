@@ -49,20 +49,16 @@ static char *postapi_log_truncate(const char *text)
 static char *postapi_json_log_str(const json_t *obj)
 {
     char   *dump;
+    char   *result;
 
     if (obj == 0)
 	return mystrdup("null");
     dump = json_dumps(obj, JSON_COMPACT);
     if (dump == 0)
 	return mystrdup("<json_encode_error>");
-    if (strlen(dump) <= POSTAPI_LOG_MAX)
-	return dump;
-    {
-	char   *trunc = postapi_log_truncate(dump);
-
-	myfree(dump);
-	return (trunc);
-    }
+    result = postapi_log_truncate(dump);
+    free(dump);
+    return (result);
 }
 
  /* postapi_log_request - log incoming HTTP API call */
@@ -82,6 +78,8 @@ postapi_log_request(const char *method, const char *url,
 	     query_str, body_str);
     myfree(query_str);
     myfree(body_str);
+    if (msg_verbose)
+	msg_info("postapi: debug: request log ok");
 }
 
  /* postapi_log_response - log outgoing HTTP status and body */
@@ -127,7 +125,7 @@ postapi_log_response_obj(POSTAPI_RESP *resp)
 	return;
     }
     body_str = postapi_log_truncate(dump);
-    myfree(dump);
+    free(dump);
     postapi_log_response(resp->http_code, body_str);
     myfree(body_str);
 }
