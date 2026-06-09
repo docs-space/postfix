@@ -52,6 +52,12 @@ postconf_update_config(json_t *body)
     VSTRING *err;
     VSTRING *value_buf;
     void   *iter;
+    char   *pair;
+
+    // #region agent log
+    msg_info("postapi: dbg[H1]: postconf_update_config enter body_size=%zu",
+	     body != 0 && json_is_object(body) ? json_object_size(body) : 0);
+    // #endregion
 
     if (!postapi_config_allowlist_configured())
 	return (postapi_resp_json(503,
@@ -98,8 +104,9 @@ postconf_update_config(json_t *body)
 						"invalid_parameter_value",
 						"parameter", key)));
 	}
-	argv_add(pairs, concatenate(key, "=", vstring_str(value_buf), (char *) 0),
-		 (char *) 0);
+	pair = concatenate(key, "=", vstring_str(value_buf), (char *) 0);
+	argv_add(pairs, pair, (char *) 0);
+	myfree(pair);
 	if (json_object_set_new(applied, key, json_string(vstring_str(value_buf))) < 0) {
 	    json_decref(applied);
 	    argv_free(pairs);
@@ -112,6 +119,9 @@ postconf_update_config(json_t *body)
 	iter = json_object_iter_next(body, iter);
     }
 
+    // #region agent log
+    msg_info("postapi: dbg[H2]: before validate argc=%d", pairs->argc);
+    // #endregion
     if (msg_verbose)
 	msg_info("postapi: PostConf: validate start");
     if (postconf_validate_overrides(pairs, err) < 0) {

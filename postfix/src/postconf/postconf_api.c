@@ -46,30 +46,52 @@ static void postconf_api_free_param_node(void *ptr)
     myfree(ptr);
 }
 
+/* postconf_api_free_master_table - release master.cf table (array storage) */
+
+static void postconf_api_free_master_table(void)
+{
+    PCF_MASTER_ENT *masterp;
+
+    if (pcf_master_table == 0)
+	return;
+    for (masterp = pcf_master_table; masterp->argv != 0; masterp++) {
+	myfree(masterp->name_space);
+	argv_free(masterp->argv);
+	if (masterp->valid_names)
+	    htable_free(masterp->valid_names, myfree);
+	if (masterp->ro_params)
+	    dict_close(masterp->ro_params);
+	if (masterp->all_params)
+	    dict_close(masterp->all_params);
+    }
+    myfree((void *) pcf_master_table);
+    pcf_master_table = 0;
+}
+
 /* postconf_api_reset - tear down postconf in-memory state */
 
 void
 postconf_api_reset(void)
 {
-    PCF_MASTER_ENT *masterp;
-
     if (pcf_param_table != 0) {
 	htable_free(pcf_param_table, postconf_api_free_param_node);
 	pcf_param_table = 0;
     }
-    if (pcf_master_table != 0) {
-	for (masterp = pcf_master_table; masterp->argv != 0; masterp++)
-	    pcf_free_master_entry(masterp);
-	myfree((void *) pcf_master_table);
-	pcf_master_table = 0;
-    }
+    postconf_api_free_master_table();
     pcf_cleanup_user_parameters();
     postconf_api_initialized = 0;
 }
 
 static void postconf_validate_setup(ARGV *pairs)
 {
+    // #region agent log
+    msg_info("postapi: dbg[H3]: validate_setup enter argc=%d",
+	     pairs != 0 ? pairs->argc : -1);
+    // #endregion
     postconf_api_reset();
+    // #region agent log
+    msg_info("postapi: dbg[H3]: validate_setup after reset");
+    // #endregion
     mail_conf_flush();
     pcf_read_parameters();
     if (pairs != 0 && pairs->argc > 0)
@@ -79,6 +101,9 @@ static void postconf_validate_setup(ARGV *pairs)
     pcf_read_master(PCF_WARN_ON_OPEN_ERROR);
     pcf_register_service_parameters();
     pcf_register_user_parameters(0);
+    // #region agent log
+    msg_info("postapi: dbg[H3]: validate_setup done");
+    // #endregion
 }
 
 static void postconf_restore_runtime_config(void)
@@ -100,6 +125,9 @@ static void postconf_validate_pairs(ARGV *pairs)
 	junk = mystrdup(*cpp);
 	if ((err = split_nameval(junk, &name, &value)) != 0)
 	    msg_fatal("%s: \"%s\"", err, junk);
+	// #region agent log
+	msg_info("postapi: dbg[H4]: validate param=%s", name);
+	// #endregion
 	pcf_validate_parameter_value(name);
 	myfree(junk);
     }
