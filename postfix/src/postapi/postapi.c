@@ -378,7 +378,9 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
 	json_decref(body_json);
     {
 	int     reload_pending = postconf_take_reload_pending();
+	ARGV   *apply_pairs = postconf_take_apply_pairs();
 	enum MHD_Result q;
+	int     apply_ok = 0;
 
 	postapi_log_response_obj(resp);
 	// #region agent log
@@ -389,12 +391,27 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
 	// #region agent log
 	msg_info("postapi: dbg[H11]: after send_response q=%d", (int) q);
 	// #endregion
-	if (q == MHD_YES && reload_pending) {
+	if (apply_pairs != 0) {
+	    if (q == MHD_YES) {
+		// #region agent log
+		msg_info("postapi: dbg[H12]: apply start");
+		// #endregion
+		apply_ok = (postconf_apply_overrides(apply_pairs) >= 0);
+		if (!apply_ok)
+		    msg_warn("postapi: PostConf apply failed after HTTP 200");
+		else
+		    // #region agent log
+		    msg_info("postapi: dbg[H12done]: apply ok");
+		    // #endregion
+	    }
+	    argv_free(apply_pairs);
+	}
+	if (q == MHD_YES && reload_pending && apply_ok) {
 	    VSTRING *reload_err = vstring_alloc(256);
 	    int     reload_st;
 
 	    // #region agent log
-	    msg_info("postapi: dbg[H12]: reload start");
+	    msg_info("postapi: dbg[H13]: reload start");
 	    // #endregion
 	    reload_st = postfix_reload_config(reload_err);
 	    if (reload_st < 0)
@@ -402,7 +419,7 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
 			 vstring_str(reload_err));
 	    else
 		// #region agent log
-		msg_info("postapi: dbg[H13]: reload ok, exiting");
+		msg_info("postapi: dbg[H14]: reload ok, exiting");
 		// #endregion
 	    vstring_free(reload_err);
 	    /*

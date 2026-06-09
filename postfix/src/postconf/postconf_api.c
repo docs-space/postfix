@@ -34,6 +34,7 @@ int     pcf_cmd_mode = PCF_DEF_MODE;
 
 static int postconf_api_initialized;
 static int postconf_reload_pending;
+static ARGV *postconf_apply_pairs;
 static jmp_buf postconf_validate_jmp;
 
 static NORETURN postconf_validate_longjmp(int code)
@@ -199,6 +200,25 @@ postconf_take_reload_pending(void)
 
     postconf_reload_pending = 0;
     return (pending);
+}
+
+/* postconf_request_apply - defer main.cf write until after HTTP response */
+
+void
+postconf_request_apply(ARGV *pairs)
+{
+    postconf_apply_pairs = pairs;
+}
+
+/* postconf_take_apply_pairs - take deferred apply list */
+
+ARGV *
+postconf_take_apply_pairs(void)
+{
+    ARGV   *pairs = postconf_apply_pairs;
+
+    postconf_apply_pairs = 0;
+    return (pairs);
 }
 
 /* postconf_apply_overrides - write updates to main.cf */

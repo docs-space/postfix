@@ -184,28 +184,12 @@ postconf_update_config(json_t *body)
     }
     if (msg_verbose)
 	msg_info("postapi: PostConf: validate ok");
-    if (msg_verbose)
-	msg_info("postapi: PostConf: apply start");
-    if (postconf_apply_overrides(pairs) < 0) {
-	if (msg_verbose)
-	    msg_info("postapi: PostConf: apply failed");
-	json_decref(applied);
-	argv_free(pairs);
-	vstring_free(value_buf);
-	vstring_free(pair_buf);
-	vstring_free(err);
-	return (postapi_resp_json(503,
-				  json_pack("{s:s}", "error",
-					    "service_unavailable")));
-    }
-    if (msg_verbose)
-	msg_info("postapi: PostConf: apply ok, reload scheduled");
     postconf_request_reload();
+    postconf_request_apply(pairs);
 
     // #region agent log
-    msg_info("postapi: dbg[H5]: apply ok");
+    msg_info("postapi: dbg[H5]: validate ok apply deferred");
     // #endregion
-    argv_free(pairs);
     vstring_free(value_buf);
     vstring_free(pair_buf);
     vstring_free(err);

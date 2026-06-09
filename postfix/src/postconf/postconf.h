@@ -332,6 +332,8 @@ extern int postconf_validate_overrides(ARGV *, VSTRING *);
 extern int postconf_apply_overrides(ARGV *);
 extern void postconf_request_reload(void);
 extern int postconf_take_reload_pending(void);
+extern void postconf_request_apply(ARGV *);
+extern ARGV *postconf_take_apply_pairs(void);
 extern int postfix_reload_config(VSTRING *);
 
 /* LICENSE
