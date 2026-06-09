@@ -51,8 +51,9 @@ postconf_update_config(json_t *body)
     ARGV   *pairs;
     VSTRING *err;
     VSTRING *value_buf;
+    VSTRING *pair_buf;
     void   *iter;
-    char   *pair;
+    json_t *applied_val;
 
     // #region agent log
     msg_info("postapi: dbg[H1]: postconf_update_config enter body_size=%lu",
@@ -76,11 +77,13 @@ postconf_update_config(json_t *body)
     // #endregion
     pairs = argv_alloc(10);
     value_buf = vstring_alloc(64);
+    pair_buf = vstring_alloc(128);
     applied = json_object();
     err = vstring_alloc(256);
     if (applied == 0) {
 	argv_free(pairs);
 	vstring_free(value_buf);
+	vstring_free(pair_buf);
 	vstring_free(err);
 	return (postapi_resp_json(503,
 				  json_pack("{s:s}", "error",
@@ -103,6 +106,7 @@ postconf_update_config(json_t *body)
 	    json_decref(applied);
 	    argv_free(pairs);
 	    vstring_free(value_buf);
+	    vstring_free(pair_buf);
 	    vstring_free(err);
 		return (postapi_resp_json(400,
 				      json_pack("{s:s,s:s}", "error",
@@ -114,6 +118,7 @@ postconf_update_config(json_t *body)
 	    json_decref(applied);
 	    argv_free(pairs);
 	    vstring_free(value_buf);
+	    vstring_free(pair_buf);
 	    vstring_free(err);
 	    return (postapi_resp_json(400,
 				      json_pack("{s:s,s:s}", "error",
@@ -124,18 +129,34 @@ postconf_update_config(json_t *body)
 	// #region agent log
 	msg_info("postapi: dbg[H1e]: value=%s", vstring_str(value_buf));
 	// #endregion
-	pair = concatenate(key, "=", vstring_str(value_buf), (char *) 0);
-	argv_add(pairs, pair, (char *) 0);
-	myfree(pair);
-	if (json_object_set_new(applied, key, json_string(vstring_str(value_buf))) < 0) {
+	vstring_sprintf(pair_buf, "%s=%s", key, vstring_str(value_buf));
+	// #region agent log
+	msg_info("postapi: dbg[H1f]: pair=%s", vstring_str(pair_buf));
+	// #endregion
+	argv_add(pairs, vstring_str(pair_buf), (char *) 0);
+	// #region agent log
+	msg_info("postapi: dbg[H1g]: argv argc=%d", pairs->argc);
+	// #endregion
+	applied_val = json_string(vstring_str(value_buf));
+	// #region agent log
+	msg_info("postapi: dbg[H1h]: applied_val=%p", (void *) applied_val);
+	// #endregion
+	if (applied_val == 0
+	    || json_object_set_new(applied, key, applied_val) < 0) {
+	    if (applied_val != 0)
+		json_decref(applied_val);
 	    json_decref(applied);
 	    argv_free(pairs);
 	    vstring_free(value_buf);
+	    vstring_free(pair_buf);
 	    vstring_free(err);
 	    return (postapi_resp_json(503,
 				      json_pack("{s:s}", "error",
 						"service_unavailable")));
 	}
+	// #region agent log
+	msg_info("postapi: dbg[H1i]: applied set ok");
+	// #endregion
 	iter = json_object_iter_next(body, iter);
     }
 
@@ -157,6 +178,7 @@ postconf_update_config(json_t *body)
 	json_decref(applied);
 	argv_free(pairs);
 	vstring_free(value_buf);
+	vstring_free(pair_buf);
 	vstring_free(err);
 	return (resp);
     }
@@ -170,6 +192,7 @@ postconf_update_config(json_t *body)
 	json_decref(applied);
 	argv_free(pairs);
 	vstring_free(value_buf);
+	vstring_free(pair_buf);
 	vstring_free(err);
 	return (postapi_resp_json(503,
 				  json_pack("{s:s}", "error",
@@ -181,6 +204,7 @@ postconf_update_config(json_t *body)
 
     argv_free(pairs);
     vstring_free(value_buf);
+    vstring_free(pair_buf);
     vstring_free(err);
     return (postapi_resp_json(200, applied));
 }
