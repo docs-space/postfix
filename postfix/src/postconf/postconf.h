@@ -328,6 +328,8 @@ extern void pcf_show_tls(const char *);
   */
 extern void postconf_list_json(VSTREAM *);
 extern void postconf_api_reset(void);
+extern void postconf_api_set_skip_restore_after_validate(int);
+extern void postconf_api_finish_validate_restore(void);
 extern int postconf_validate_overrides(ARGV *, VSTRING *);
 extern int postconf_apply_overrides(ARGV *);
 extern void postconf_request_reload(void);

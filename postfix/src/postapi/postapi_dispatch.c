@@ -160,6 +160,10 @@ postapi_call_controller(const char *controller, POSTAPI_CTRL_FN fn,
     except = setjmp(postapi_ctrl_jmp_buf);
     if (except == 0) {
 	resp = fn(authorized, method, action, query, body);
+	// #region agent log
+	msg_info("postapi: dbg[H6]: controller fn done code=%u ptr=%p",
+		 resp != 0 ? resp->http_code : 0, (void *) resp);
+	// #endregion
 	msg_set_longjmp_action(0);
 	if (resp == 0) {
 	    msg_warn("postapi: controller %s returned no response", controller);
@@ -470,6 +474,9 @@ postapi_dispatch(const char *url, const char *method, int authorized,
     }
     resp = postapi_call_controller(ctrl_name, fn, authorized, method, action,
 				  query, body);
+    // #region agent log
+    msg_info("postapi: dbg[H7]: dispatch done");
+    // #endregion
     vstring_free(path_buf);
     return (resp);
 }

@@ -373,15 +373,32 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
     }
     postapi_log_request(method, url, query_json, body_json);
     resp = postapi_dispatch(url, method, authorized, query_json, body_json);
+    // #region agent log
+    msg_info("postapi: dbg[H8]: after dispatch ptr=%p", (void *) resp);
+    // #endregion
+    postconf_api_finish_validate_restore();
+    // #region agent log
+    msg_info("postapi: dbg[H8b]: after validate restore");
+    // #endregion
     postapi_query_free(query_json);
+    // #region agent log
+    msg_info("postapi: dbg[H9]: after query free");
+    // #endregion
     if (body_json)
 	json_decref(body_json);
+    // #region agent log
+    msg_info("postapi: dbg[H9b]: after body decref");
+    // #endregion
     {
 	int     reload_pending = postconf_take_reload_pending();
 	ARGV   *apply_pairs = postconf_take_apply_pairs();
 	enum MHD_Result q;
 	int     apply_ok = 0;
 
+	// #region agent log
+	msg_info("postapi: dbg[H9c]: before log_response reload=%d apply=%p",
+		 reload_pending, (void *) apply_pairs);
+	// #endregion
 	postapi_log_response_obj(resp);
 	// #region agent log
 	msg_info("postapi: dbg[H10]: before send_response reload_pending=%d",
@@ -477,6 +494,7 @@ static void postapi_post_init(char *unused_name, char **unused_argv)
     (void) unused_argv;
 
     postapi_config_allowlist_init();
+    postconf_api_set_skip_restore_after_validate(1);
 
 #ifdef USE_TLS
     {

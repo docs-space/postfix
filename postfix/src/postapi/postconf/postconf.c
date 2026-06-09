@@ -190,10 +190,31 @@ postconf_update_config(json_t *body)
     // #region agent log
     msg_info("postapi: dbg[H5]: validate ok apply deferred");
     // #endregion
-    vstring_free(value_buf);
-    vstring_free(pair_buf);
-    vstring_free(err);
-    return (postapi_resp_json(200, applied));
+    {
+	POSTAPI_RESP *resp;
+
+	// #region agent log
+	msg_info("postapi: dbg[H5a]: free value_buf");
+	// #endregion
+	vstring_free(value_buf);
+	// #region agent log
+	msg_info("postapi: dbg[H5b]: free pair_buf");
+	// #endregion
+	vstring_free(pair_buf);
+	// #region agent log
+	msg_info("postapi: dbg[H5c]: free err");
+	// #endregion
+	vstring_free(err);
+	// #region agent log
+	msg_info("postapi: dbg[H5d]: postapi_resp_json");
+	// #endregion
+	resp = postapi_resp_json(200, applied);
+	// #region agent log
+	msg_info("postapi: dbg[H5e]: resp ok code=%u ptr=%p",
+		 resp != 0 ? resp->http_code : 0, (void *) resp);
+	// #endregion
+	return (resp);
+    }
 }
 
  /* postconf_dispatch - PostConf endpoints */
@@ -210,8 +231,14 @@ postconf_dispatch(int authorized, const char *method, const char *action,
 				 json_pack("{s:s}", "error", "unauthorized")));
 
     if (*action == 0) {
-	if (strcmp(method, "POST") == 0)
-	    return (postconf_update_config(body));
+	if (strcmp(method, "POST") == 0) {
+	    POSTAPI_RESP *resp = postconf_update_config(body);
+
+	    // #region agent log
+	    msg_info("postapi: dbg[H5f]: postconf_dispatch return update_config");
+	    // #endregion
+	    return (resp);
+	}
 	return (postapi_resp_json(405,
 				  json_pack("{s:s}", "error",
 					    "method_not_allowed")));

@@ -35,6 +35,7 @@ int     pcf_cmd_mode = PCF_DEF_MODE;
 static int postconf_api_initialized;
 static int postconf_reload_pending;
 static ARGV *postconf_apply_pairs;
+static int postconf_skip_restore_after_validate;
 static jmp_buf postconf_validate_jmp;
 
 static NORETURN postconf_validate_longjmp(int code)
@@ -114,6 +115,25 @@ static void postconf_restore_runtime_config(void)
     mail_conf_read();
 }
 
+/* postconf_api_set_skip_restore_after_validate - defer restore until HTTP response */
+
+void
+postconf_api_set_skip_restore_after_validate(int on)
+{
+    postconf_skip_restore_after_validate = on;
+}
+
+/* postconf_api_finish_validate_restore - run deferred restore after controller */
+
+void
+postconf_api_finish_validate_restore(void)
+{
+    if (postconf_skip_restore_after_validate) {
+	postconf_skip_restore_after_validate = 0;
+	postconf_restore_runtime_config();
+    }
+}
+
 static void postconf_validate_pairs(ARGV *pairs)
 {
     char  **cpp;
@@ -168,7 +188,12 @@ postconf_validate_overrides(ARGV *pairs, VSTRING *err)
 	msg_set_longjmp_action(saved_action);
 	(void) vstream_fclose(msg_stream);
 	vstring_free(msg_buf);
-	postconf_restore_runtime_config();
+	if (!postconf_skip_restore_after_validate)
+	    postconf_restore_runtime_config();
+	else
+	    // #region agent log
+	    msg_info("postapi: dbg[H4r]: validate restore deferred");
+	// #endregion
 	return (0);
     }
     msg_set_longjmp_action(saved_action);
