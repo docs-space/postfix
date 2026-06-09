@@ -134,7 +134,7 @@ postconf_validate_overrides(ARGV *pairs, VSTRING *err)
     }
     msg_set_longjmp_action(0);
     (void) vstream_fclose(msg_stream);
-    trimblanks(vstring_str(msg_buf), TRIM_RIGHT);
+    trimblanks(vstring_str(msg_buf), 0)[0] = 0;
     if (VSTRING_LEN(msg_buf) > 0)
 	vstring_strcpy(err, vstring_str(msg_buf));
     else
