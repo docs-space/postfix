@@ -89,6 +89,8 @@ static int postapi_use_tls;
 static MAPS *postapi_token_maps;
 static MAPS *postapi_salt_maps;
 static struct MHD_Daemon *postapi_mhd;
+static int postapi_postconf_work_pending;
+static ARGV *postapi_postconf_apply_pairs;
 
 #ifdef USE_TLS
 static gnutls_datum_t postapi_tls_key_pem;
@@ -393,7 +395,6 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
 	int     reload_pending = postconf_take_reload_pending();
 	ARGV   *apply_pairs = postconf_take_apply_pairs();
 	enum MHD_Result q;
-	int     apply_ok = 0;
 
 	// #region agent log
 	msg_info("postapi: dbg[H9c]: before log_response reload=%d apply=%p",
@@ -408,44 +409,14 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
 	// #region agent log
 	msg_info("postapi: dbg[H11]: after send_response q=%d", (int) q);
 	// #endregion
-	if (apply_pairs != 0) {
-	    if (q == MHD_YES) {
-		// #region agent log
-		msg_info("postapi: dbg[H12]: apply start");
-		// #endregion
-		apply_ok = (postconf_apply_overrides(apply_pairs) >= 0);
-		if (!apply_ok)
-		    msg_warn("postapi: PostConf apply failed after HTTP 200");
-		else
-		    // #region agent log
-		    msg_info("postapi: dbg[H12done]: apply ok");
-		    // #endregion
-	    }
+	if (q == MHD_YES && reload_pending && apply_pairs != 0) {
+	    postapi_postconf_work_pending = 1;
+	    postapi_postconf_apply_pairs = apply_pairs;
+	    apply_pairs = 0;
+	}
+	if (apply_pairs != 0)
 	    argv_free(apply_pairs);
-	}
-	if (q == MHD_YES && reload_pending && apply_ok) {
-	    VSTRING *reload_err = vstring_alloc(256);
-	    int     reload_st;
-
-	    // #region agent log
-	    msg_info("postapi: dbg[H13]: reload start");
-	    // #endregion
-	    reload_st = postfix_reload_config(reload_err);
-	    if (reload_st < 0)
-		msg_warn("postapi: postfix reload after PostConf update failed: %s",
-			 vstring_str(reload_err));
-	    else
-		// #region agent log
-		msg_info("postapi: dbg[H14]: reload ok, exiting");
-		// #endregion
-	    vstring_free(reload_err);
-	    /*
-	     * main.cf changed and master got SIGHUP. Exit before MHD_run or
-	     * proxymap I/O touches state torn down during reload (SIGSEGV).
-	     */
-	    if (reload_st >= 0)
-		exit(0);
-	}
+	(void) apply_ok;
 	return (q);
     }
 }
@@ -578,8 +549,53 @@ static void postapi_post_init(char *unused_name, char **unused_argv)
 				       postapi_mhd_notify, 0,
 				       MHD_OPTION_END);
     }
-    if (postapi_mhd == 0)
+	if (postapi_mhd == 0)
 	msg_fatal("cannot start libmicrohttpd daemon for postapi");
+}
+
+ /* postapi_finish_postconf_work - apply main.cf after HTTP response is sent */
+
+static void postapi_finish_postconf_work(void)
+{
+    VSTRING *reload_err;
+    int     apply_ok;
+    int     reload_st;
+
+    if (!postapi_postconf_work_pending)
+	return;
+    postapi_postconf_work_pending = 0;
+    apply_ok = 0;
+    if (postapi_postconf_apply_pairs != 0) {
+	// #region agent log
+	msg_info("postapi: dbg[H12]: apply start");
+	// #endregion
+	apply_ok = (postconf_apply_overrides(postapi_postconf_apply_pairs) >= 0);
+	if (!apply_ok)
+	    msg_warn("postapi: PostConf apply failed after HTTP 200");
+	else
+	    // #region agent log
+	    msg_info("postapi: dbg[H12done]: apply ok");
+	// #endregion
+	argv_free(postapi_postconf_apply_pairs);
+	postapi_postconf_apply_pairs = 0;
+    }
+    if (!apply_ok)
+	return;
+    reload_err = vstring_alloc(256);
+    // #region agent log
+    msg_info("postapi: dbg[H13]: reload start");
+    // #endregion
+    reload_st = postfix_reload_config(reload_err);
+    if (reload_st < 0)
+	msg_warn("postapi: postfix reload after PostConf update failed: %s",
+		 vstring_str(reload_err));
+    else
+	// #region agent log
+	msg_info("postapi: dbg[H14]: reload ok, exiting");
+    // #endregion
+    vstring_free(reload_err);
+    if (reload_st >= 0)
+	exit(0);
 }
 
 static void postapi_service(VSTREAM *client_stream, char *service, char **argv)
@@ -631,6 +647,10 @@ static void postapi_service(VSTREAM *client_stream, char *service, char **argv)
 	    break;
 	}
     }
+    // #region agent log
+    msg_info("postapi: dbg[H15]: mhd response sent, connections drained");
+    // #endregion
+    postapi_finish_postconf_work();
 }
 
  /* postapi_get_instance_name - multi_instance_name for API responses */
