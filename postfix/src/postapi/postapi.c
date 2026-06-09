@@ -38,6 +38,9 @@
 #include <mymalloc.h>
 #include <dict.h>
 #include <maps.h>
+#include <htable.h>
+#include <argv.h>
+#include <mail_parm_split.h>
 #include <vstream.h>
 #include <vstring.h>
 
@@ -62,6 +65,7 @@ static const char postapi_tls_scache_timeout_param[] = "postapi_tls_session_cach
 static const char postapi_starttls_timeout_param[] = "postapi_starttls_timeout";
 static const char postapi_access_token_maps_param[] = "postapi_access_token_maps";
 static const char postapi_access_salt_maps_param[] = "postapi_access_salt_maps";
+static const char postapi_access_config_param[] = "postapi_access_config";
 static const char multi_instance_name_param[] = "multi_instance_name";
 
 static char *var_postapi_tls_cert_file;
@@ -73,7 +77,10 @@ static int var_postapi_tls_scache_timeout;
 static int var_postapi_starttls_tmout;
 static char *var_postapi_access_token_maps;
 static char *var_postapi_access_salt_maps;
+static char *var_postapi_access_config;
 static char *var_multi_instance_name;
+
+static HTABLE *postapi_config_allowlist;
 
 static int postapi_use_tls;
 static MAPS *postapi_token_maps;
@@ -93,6 +100,7 @@ static const CONFIG_STR_TABLE str_table[] = {
     postapi_tls_scache_db_param, "btree:${data_directory}/postapi_scache", &var_postapi_tls_scache_db, 0, 0,
     postapi_access_token_maps_param, "", &var_postapi_access_token_maps, 0, 0,
     postapi_access_salt_maps_param, "", &var_postapi_access_salt_maps, 0, 0,
+    postapi_access_config_param, "", &var_postapi_access_config, 0, 0,
     multi_instance_name_param, "", &var_multi_instance_name, 0, 0,
     0,
 };
@@ -377,12 +385,36 @@ static void postapi_pre_accept(char *unused_name, char **unused_argv)
     }
 }
 
+ /* postapi_config_allowlist_init - parse postapi_access_config */
+
+static void postapi_config_allowlist_init(void)
+{
+    ARGV   *split;
+    ssize_t n;
+    char   *marker = "";
+
+    if (postapi_config_allowlist != 0)
+	return;
+    postapi_config_allowlist = htable_create(16);
+    if (var_postapi_access_config == 0 || *var_postapi_access_config == 0)
+	return;
+    split = mail_parm_split(postapi_access_config_param, var_postapi_access_config);
+    for (n = 0; n < split->argc; n++) {
+	if (split->argv[n] == 0 || *split->argv[n] == 0)
+	    continue;
+	htable_enter(postapi_config_allowlist, split->argv[n], marker);
+    }
+    argv_free(split);
+}
+
 static void postapi_post_init(char *unused_name, char **unused_argv)
 {
     uint64_t mhd_flags = (uint64_t) MHD_USE_NO_LISTEN_SOCKET;
 
     (void) unused_name;
     (void) unused_argv;
+
+    postapi_config_allowlist_init();
 
 #ifdef USE_TLS
     {
@@ -529,6 +561,32 @@ postapi_get_instance_name(void)
     if (var_multi_instance_name == 0)
 	return ("");
     return (var_multi_instance_name);
+}
+
+ /* postapi_config_allowed - parameter name in postapi_access_config */
+
+int
+postapi_config_allowed(const char *name)
+{
+    if (name == 0 || *name == 0)
+	return (0);
+    if (postapi_config_allowlist == 0)
+	postapi_config_allowlist_init();
+    if (postapi_config_allowlist == 0)
+	return (0);
+    return (htable_find(postapi_config_allowlist, name) != 0);
+}
+
+ /* postapi_config_allowlist_configured - non-empty postapi_access_config */
+
+int
+postapi_config_allowlist_configured(void)
+{
+    if (postapi_config_allowlist == 0)
+	postapi_config_allowlist_init();
+    if (postapi_config_allowlist == 0)
+	return (0);
+    return (postapi_config_allowlist->used > 0);
 }
 
 MAIL_VERSION_STAMP_DECLARE;

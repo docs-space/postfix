@@ -9,5 +9,7 @@
 /*--*/
 
 const char *postapi_get_instance_name(void);
+int     postapi_config_allowed(const char *name);
+int     postapi_config_allowlist_configured(void);
 
 #endif

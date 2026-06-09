@@ -262,6 +262,7 @@ extern NAME_CODE pcf_field_name_offset[];
   * postconf_builtin.c.
   */
 extern void pcf_register_builtin_parameters(const char *, pid_t);
+extern void pcf_validate_parameter_value(const char *);
 
  /*
   * postconf_service.c.
@@ -322,6 +323,10 @@ extern void pcf_show_tls(const char *);
   * postconf_api.c
   */
 extern void postconf_list_json(VSTREAM *);
+extern void postconf_api_reset(void);
+extern int postconf_validate_overrides(ARGV *, VSTRING *);
+extern int postconf_apply_overrides(ARGV *);
+extern int postfix_reload_config(VSTRING *);
 
 /* LICENSE
 /* .ad
