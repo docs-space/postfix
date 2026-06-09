@@ -416,7 +416,6 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
 	}
 	if (apply_pairs != 0)
 	    argv_free(apply_pairs);
-	(void) apply_ok;
 	return (q);
     }
 }
