@@ -262,6 +262,7 @@ extern NAME_CODE pcf_field_name_offset[];
   * postconf_builtin.c.
   */
 extern void pcf_register_builtin_parameters(const char *, pid_t);
+extern void pcf_validate_parameter_value(const char *);
 
  /*
   * postconf_service.c.
@@ -280,6 +281,10 @@ typedef struct {
   * postconf_user.c.
   */
 extern void pcf_register_user_parameters(int);
+extern void pcf_cleanup_user_parameters(void);
+extern void pcf_register_known_user_parameter(const char *);
+extern void pcf_register_postapi_parameters(void);
+extern void pcf_register_postapi_master_parameters(void);
 
  /*
   * postconf_dbms.c
@@ -322,6 +327,16 @@ extern void pcf_show_tls(const char *);
   * postconf_api.c
   */
 extern void postconf_list_json(VSTREAM *);
+extern void postconf_api_reset(void);
+extern void postconf_api_set_skip_restore_after_validate(int);
+extern void postconf_api_finish_validate_restore(void);
+extern int postconf_validate_overrides(ARGV *, VSTRING *);
+extern int postconf_apply_overrides(ARGV *);
+extern void postconf_request_reload(void);
+extern int postconf_take_reload_pending(void);
+extern void postconf_request_apply(ARGV *);
+extern ARGV *postconf_take_apply_pairs(void);
+extern int postfix_reload_config(VSTRING *);
 
 /* LICENSE
 /* .ad

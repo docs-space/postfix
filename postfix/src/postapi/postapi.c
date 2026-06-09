@@ -38,8 +38,14 @@
 #include <mymalloc.h>
 #include <dict.h>
 #include <maps.h>
+#include <htable.h>
+#include <argv.h>
+#include <stringops.h>
+#include <mail_parm_split.h>
 #include <vstream.h>
 #include <vstring.h>
+
+#include <postconf.h>
 
 #include "auth_key.h"
 #include "postapi_dispatch.h"
@@ -62,6 +68,7 @@ static const char postapi_tls_scache_timeout_param[] = "postapi_tls_session_cach
 static const char postapi_starttls_timeout_param[] = "postapi_starttls_timeout";
 static const char postapi_access_token_maps_param[] = "postapi_access_token_maps";
 static const char postapi_access_salt_maps_param[] = "postapi_access_salt_maps";
+static const char postapi_access_config_param[] = "postapi_access_config";
 static const char multi_instance_name_param[] = "multi_instance_name";
 
 static char *var_postapi_tls_cert_file;
@@ -73,12 +80,17 @@ static int var_postapi_tls_scache_timeout;
 static int var_postapi_starttls_tmout;
 static char *var_postapi_access_token_maps;
 static char *var_postapi_access_salt_maps;
+static char *var_postapi_access_config;
 static char *var_multi_instance_name;
+
+static HTABLE *postapi_config_allowlist;
 
 static int postapi_use_tls;
 static MAPS *postapi_token_maps;
 static MAPS *postapi_salt_maps;
 static struct MHD_Daemon *postapi_mhd;
+static int postapi_postconf_work_pending;
+static ARGV *postapi_postconf_apply_pairs;
 
 #ifdef USE_TLS
 static gnutls_datum_t postapi_tls_key_pem;
@@ -93,6 +105,7 @@ static const CONFIG_STR_TABLE str_table[] = {
     postapi_tls_scache_db_param, "btree:${data_directory}/postapi_scache", &var_postapi_tls_scache_db, 0, 0,
     postapi_access_token_maps_param, "", &var_postapi_access_token_maps, 0, 0,
     postapi_access_salt_maps_param, "", &var_postapi_access_salt_maps, 0, 0,
+    postapi_access_config_param, "", &var_postapi_access_config, 0, 0,
     multi_instance_name_param, "", &var_multi_instance_name, 0, 0,
     0,
 };
@@ -155,6 +168,7 @@ postapi_json_reply(struct MHD_Connection *connection, unsigned int code,
     if (obj == 0)
 	return MHD_NO;
     dump = json_dumps(obj, JSON_COMPACT);
+    postapi_log_response(code, dump != 0 ? dump : "<json_encode_error>");
     json_decref(obj);
     if (dump == 0)
 	return MHD_NO;
@@ -359,11 +373,28 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
 	return postapi_json_reply(connection, 500,
 				  json_pack("{s:s}", "error", "out_of_memory"));
     }
+    postapi_log_request(method, url, query_json, body_json);
     resp = postapi_dispatch(url, method, authorized, query_json, body_json);
+    postconf_api_finish_validate_restore();
     postapi_query_free(query_json);
     if (body_json)
 	json_decref(body_json);
-    return postapi_send_response(connection, resp);
+    {
+	int     reload_pending = postconf_take_reload_pending();
+	ARGV   *apply_pairs = postconf_take_apply_pairs();
+	enum MHD_Result q;
+
+	postapi_log_response_obj(resp);
+	q = postapi_send_response(connection, resp);
+	if (q == MHD_YES && reload_pending && apply_pairs != 0) {
+	    postapi_postconf_work_pending = 1;
+	    postapi_postconf_apply_pairs = apply_pairs;
+	    apply_pairs = 0;
+	}
+	if (apply_pairs != 0)
+	    argv_free(apply_pairs);
+	return (q);
+    }
 }
 
 static void postapi_pre_accept(char *unused_name, char **unused_argv)
@@ -377,12 +408,40 @@ static void postapi_pre_accept(char *unused_name, char **unused_argv)
     }
 }
 
+ /* postapi_config_allowlist_init - parse postapi_access_config */
+
+static void postapi_config_allowlist_init(void)
+{
+    ARGV   *split;
+    ssize_t n;
+    char   *marker = "";
+
+    if (postapi_config_allowlist != 0)
+	return;
+    postapi_config_allowlist = htable_create(16);
+    if (var_postapi_access_config == 0 || *var_postapi_access_config == 0)
+	return;
+    split = mail_parm_split(postapi_access_config_param, var_postapi_access_config);
+    for (n = 0; n < split->argc; n++) {
+	if (split->argv[n] == 0 || *split->argv[n] == 0)
+	    continue;
+	trimblanks(split->argv[n], 0);
+	if (*split->argv[n] == 0)
+	    continue;
+	htable_enter(postapi_config_allowlist, split->argv[n], marker);
+    }
+    argv_free(split);
+}
+
 static void postapi_post_init(char *unused_name, char **unused_argv)
 {
     uint64_t mhd_flags = (uint64_t) MHD_USE_NO_LISTEN_SOCKET;
 
     (void) unused_name;
     (void) unused_argv;
+
+    postapi_config_allowlist_init();
+    postconf_api_set_skip_restore_after_validate(1);
 
 #ifdef USE_TLS
     {
@@ -470,6 +529,37 @@ static void postapi_post_init(char *unused_name, char **unused_argv)
 	msg_fatal("cannot start libmicrohttpd daemon for postapi");
 }
 
+ /* postapi_finish_postconf_work - apply main.cf after HTTP response is sent */
+
+static void postapi_finish_postconf_work(void)
+{
+    VSTRING *reload_err;
+    int     apply_ok;
+    int     reload_st;
+
+    if (!postapi_postconf_work_pending)
+	return;
+    postapi_postconf_work_pending = 0;
+    apply_ok = 0;
+    if (postapi_postconf_apply_pairs != 0) {
+	apply_ok = (postconf_apply_overrides(postapi_postconf_apply_pairs) >= 0);
+	if (!apply_ok)
+	    msg_warn("postapi: PostConf apply failed after HTTP 200");
+	argv_free(postapi_postconf_apply_pairs);
+	postapi_postconf_apply_pairs = 0;
+    }
+    if (!apply_ok)
+	return;
+    reload_err = vstring_alloc(256);
+    reload_st = postfix_reload_config(reload_err);
+    if (reload_st < 0)
+	msg_warn("postapi: postfix reload after PostConf update failed: %s",
+		 vstring_str(reload_err));
+    vstring_free(reload_err);
+    if (reload_st >= 0)
+	exit(0);
+}
+
 static void postapi_service(VSTREAM *client_stream, char *service, char **argv)
 {
     int     base_fd;
@@ -519,6 +609,7 @@ static void postapi_service(VSTREAM *client_stream, char *service, char **argv)
 	    break;
 	}
     }
+    postapi_finish_postconf_work();
 }
 
  /* postapi_get_instance_name - multi_instance_name for API responses */
@@ -529,6 +620,32 @@ postapi_get_instance_name(void)
     if (var_multi_instance_name == 0)
 	return ("");
     return (var_multi_instance_name);
+}
+
+ /* postapi_config_allowed - parameter name in postapi_access_config */
+
+int
+postapi_config_allowed(const char *name)
+{
+    if (name == 0 || *name == 0)
+	return (0);
+    if (postapi_config_allowlist == 0)
+	postapi_config_allowlist_init();
+    if (postapi_config_allowlist == 0)
+	return (0);
+    return (htable_find(postapi_config_allowlist, name) != 0);
+}
+
+ /* postapi_config_allowlist_configured - non-empty postapi_access_config */
+
+int
+postapi_config_allowlist_configured(void)
+{
+    if (postapi_config_allowlist == 0)
+	postapi_config_allowlist_init();
+    if (postapi_config_allowlist == 0)
+	return (0);
+    return (postapi_config_allowlist->used > 0);
 }
 
 MAIL_VERSION_STAMP_DECLARE;

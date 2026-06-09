@@ -475,3 +475,60 @@ void    pcf_register_builtin_parameters(const char *procname, pid_t pid)
 			  PCF_PARAM_FLAG_BUILTIN | PCF_PARAM_FLAG_READONLY,
 			  (void *) &pcf_adhoc_pid, pcf_conv_int_parameter);
 }
+
+/* pcf_validate_parameter_value - validate one main.cf parameter value */
+
+void    pcf_validate_parameter_value(const char *name)
+{
+    PCF_PARAM_NODE *node;
+
+    if ((node = PCF_PARAM_TABLE_FIND(pcf_param_table, name)) == 0)
+	msg_fatal("unknown parameter \"%s\"", name);
+    if (PCF_READONLY_PARAMETER(node))
+	msg_fatal("parameter \"%s\" is read-only", name);
+    if (node->convert_fn == pcf_conv_int_parameter) {
+	CONFIG_INT_TABLE *t = (CONFIG_INT_TABLE *) node->param_data;
+
+	(void) get_mail_conf_int(t->name, t->defval, t->min, t->max);
+    } else if (node->convert_fn == pcf_conv_long_parameter) {
+	CONFIG_LONG_TABLE *t = (CONFIG_LONG_TABLE *) node->param_data;
+
+	(void) get_mail_conf_long(t->name, t->defval, t->min, t->max);
+    } else if (node->convert_fn == pcf_conv_time_parameter) {
+	CONFIG_TIME_TABLE *t = (CONFIG_TIME_TABLE *) node->param_data;
+
+	(void) get_mail_conf_time(t->name, t->defval, t->min, t->max);
+    } else if (node->convert_fn == pcf_conv_bool_parameter) {
+	CONFIG_BOOL_TABLE *t = (CONFIG_BOOL_TABLE *) node->param_data;
+
+	(void) get_mail_conf_bool(t->name, t->defval);
+    } else if (node->convert_fn == pcf_conv_nint_parameter) {
+	CONFIG_NINT_TABLE *t = (CONFIG_NINT_TABLE *) node->param_data;
+
+	(void) get_mail_conf_nint(t->name, t->defval, t->min, t->max);
+    } else if (node->convert_fn == pcf_conv_nbool_parameter) {
+	CONFIG_NBOOL_TABLE *t = (CONFIG_NBOOL_TABLE *) node->param_data;
+
+	(void) get_mail_conf_nbool(t->name, t->defval);
+    } else if (node->convert_fn == pcf_conv_str_parameter) {
+	CONFIG_STR_TABLE *t = (CONFIG_STR_TABLE *) node->param_data;
+	char   *scratch;
+
+	scratch = get_mail_conf_str(t->name, t->defval, t->min, t->max);
+	myfree(scratch);
+    } else if (node->convert_fn == pcf_conv_raw_parameter) {
+	CONFIG_RAW_TABLE *t = (CONFIG_RAW_TABLE *) node->param_data;
+	char   *scratch;
+
+	scratch = get_mail_conf_raw(t->name, t->defval, t->min, t->max);
+	myfree(scratch);
+    } else if (node->convert_fn == pcf_conv_str_fn_parameter) {
+	CONFIG_STR_FN_TABLE *t = (CONFIG_STR_FN_TABLE *) node->param_data;
+	char   *scratch;
+
+	scratch = get_mail_conf_str_fn(t->name, t->defval, t->min, t->max);
+	myfree(scratch);
+    } else if (dict_lookup(CONFIG_DICT, name) == 0) {
+	msg_fatal("parameter \"%s\" is not set", name);
+    }
+}

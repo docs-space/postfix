@@ -32,6 +32,11 @@ compatibility_level = 3.11
 ###
 postapi_access_token_maps = proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/postapi/psql-postapi_access_token_maps.cf
 postapi_access_salt_maps = proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/postapi/psql-postapi_access_salt_maps.cf
+postapi_access_config = 
+    message_size_limit,
+    mailbox_size_limit,
+    smtpd_client_message_rate_limit,
+    smtpd_client_recipient_rate_limit
 postapi_tls_cert_file = {{ MAIL_MTA_CERT_CRT_FILE }}
 postapi_tls_key_file = {{ MAIL_MTA_CERT_KEY_FILE }}
 postapi_tls_security_level = encrypt
