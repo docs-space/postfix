@@ -55,8 +55,9 @@ postconf_update_config(json_t *body)
     char   *pair;
 
     // #region agent log
-    msg_info("postapi: dbg[H1]: postconf_update_config enter body_size=%zu",
-	     body != 0 && json_is_object(body) ? json_object_size(body) : 0);
+    msg_info("postapi: dbg[H1]: postconf_update_config enter body_size=%lu",
+	     body != 0 && json_is_object(body) ?
+	     (unsigned long) json_object_size(body) : 0UL);
     // #endregion
 
     if (!postapi_config_allowlist_configured())
