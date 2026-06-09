@@ -330,6 +330,8 @@ extern void postconf_list_json(VSTREAM *);
 extern void postconf_api_reset(void);
 extern int postconf_validate_overrides(ARGV *, VSTRING *);
 extern int postconf_apply_overrides(ARGV *);
+extern void postconf_request_reload(void);
+extern int postconf_take_reload_pending(void);
 extern int postfix_reload_config(VSTRING *);
 
 /* LICENSE

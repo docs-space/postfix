@@ -26,11 +26,14 @@
 
 #include <postconf.h>
 
+extern MSG_LONGJMP_ACTION msg_longjmp_action;
+
 PCF_PARAM_TABLE *pcf_param_table;
 PCF_MASTER_ENT *pcf_master_table;
 int     pcf_cmd_mode = PCF_DEF_MODE;
 
 static int postconf_api_initialized;
+static int postconf_reload_pending;
 static jmp_buf postconf_validate_jmp;
 
 static NORETURN postconf_validate_longjmp(int code)
@@ -109,6 +112,7 @@ postconf_validate_overrides(ARGV *pairs, VSTRING *err)
 {
     VSTRING *msg_buf;
     VSTREAM *msg_stream;
+    MSG_LONGJMP_ACTION saved_action;
     int     except;
 
     if (pairs == 0 || pairs->argc <= 0) {
@@ -123,19 +127,20 @@ postconf_validate_overrides(ARGV *pairs, VSTRING *err)
 	return (-1);
     }
     msg_vstream_init("postapi", msg_stream);
+    saved_action = msg_longjmp_action;
     msg_set_longjmp_action(postconf_validate_longjmp);
     except = setjmp(postconf_validate_jmp);
     if (except == 0) {
 	postconf_validate_setup(pairs);
 	postconf_validate_pairs(pairs);
-	msg_set_longjmp_action(0);
+	msg_set_longjmp_action(saved_action);
 	(void) vstream_fclose(msg_stream);
 	vstring_free(msg_buf);
 	postconf_restore_runtime_config();
 	return (0);
     }
-    msg_set_longjmp_action(0);
-    (void) vstream_fclose(msg_stream);
+    msg_set_longjmp_action(saved_action);
+	(void) vstream_fclose(msg_stream);
     trimblanks(vstring_str(msg_buf), 0)[0] = 0;
     if (VSTRING_LEN(msg_buf) > 0)
 	vstring_strcpy(err, vstring_str(msg_buf));
@@ -144,6 +149,25 @@ postconf_validate_overrides(ARGV *pairs, VSTRING *err)
     vstring_free(msg_buf);
     postconf_restore_runtime_config();
     return (-1);
+}
+
+/* postconf_request_reload - schedule postfix reload after HTTP response */
+
+void
+postconf_request_reload(void)
+{
+    postconf_reload_pending = 1;
+}
+
+/* postconf_take_reload_pending - test and clear reload schedule */
+
+int
+postconf_take_reload_pending(void)
+{
+    int     pending = postconf_reload_pending;
+
+    postconf_reload_pending = 0;
+    return (pending);
 }
 
 /* postconf_apply_overrides - write updates to main.cf */

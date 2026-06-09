@@ -133,19 +133,7 @@ postconf_update_config(json_t *body)
 				  json_pack("{s:s}", "error",
 					    "service_unavailable")));
     }
-    if (postfix_reload_config(err) < 0) {
-	POSTAPI_RESP *resp;
-
-	resp = postapi_resp_json(503,
-				 json_pack("{s:s,s:s}", "error",
-					   "reload_failed",
-					   "detail", vstring_str(err)));
-	json_decref(applied);
-	argv_free(pairs);
-	vstring_free(value_buf);
-	vstring_free(err);
-	return (resp);
-    }
+    postconf_request_reload();
 
     argv_free(pairs);
     vstring_free(value_buf);

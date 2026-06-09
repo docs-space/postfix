@@ -44,6 +44,8 @@
 #include <vstream.h>
 #include <vstring.h>
 
+#include <postconf.h>
+
 #include "auth_key.h"
 #include "postapi_dispatch.h"
 #include "postapi.h"
@@ -371,7 +373,21 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
     postapi_query_free(query_json);
     if (body_json)
 	json_decref(body_json);
-    return postapi_send_response(connection, resp);
+    {
+	int     reload_pending = postconf_take_reload_pending();
+	enum MHD_Result q;
+
+	q = postapi_send_response(connection, resp);
+	if (q == MHD_YES && reload_pending) {
+	    VSTRING *reload_err = vstring_alloc(256);
+
+	    if (postfix_reload_config(reload_err) < 0)
+		msg_warn("postapi: postfix reload after PostConf update failed: %s",
+			 vstring_str(reload_err));
+	    vstring_free(reload_err);
+	}
+	return (q);
+    }
 }
 
 static void postapi_pre_accept(char *unused_name, char **unused_argv)
