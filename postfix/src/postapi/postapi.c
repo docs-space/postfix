@@ -381,18 +381,36 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
 	enum MHD_Result q;
 
 	postapi_log_response_obj(resp);
+	// #region agent log
+	msg_info("postapi: dbg[H10]: before send_response reload_pending=%d",
+		 reload_pending);
+	// #endregion
 	q = postapi_send_response(connection, resp);
+	// #region agent log
+	msg_info("postapi: dbg[H11]: after send_response q=%d", (int) q);
+	// #endregion
 	if (q == MHD_YES && reload_pending) {
 	    VSTRING *reload_err = vstring_alloc(256);
+	    int     reload_st;
 
-		if (msg_verbose)
-		    msg_info("postapi: PostConf: reload start");
-		if (postfix_reload_config(reload_err) < 0)
-		    msg_warn("postapi: postfix reload after PostConf update failed: %s",
-			     vstring_str(reload_err));
-		else if (msg_verbose)
-		    msg_info("postapi: PostConf: reload ok");
+	    // #region agent log
+	    msg_info("postapi: dbg[H12]: reload start");
+	    // #endregion
+	    reload_st = postfix_reload_config(reload_err);
+	    if (reload_st < 0)
+		msg_warn("postapi: postfix reload after PostConf update failed: %s",
+			 vstring_str(reload_err));
+	    else
+		// #region agent log
+		msg_info("postapi: dbg[H13]: reload ok, exiting");
+		// #endregion
 	    vstring_free(reload_err);
+	    /*
+	     * main.cf changed and master got SIGHUP. Exit before MHD_run or
+	     * proxymap I/O touches state torn down during reload (SIGSEGV).
+	     */
+	    if (reload_st >= 0)
+		exit(0);
 	}
 	return (q);
     }

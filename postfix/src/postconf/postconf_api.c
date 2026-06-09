@@ -131,6 +131,9 @@ static void postconf_validate_pairs(ARGV *pairs)
 	pcf_validate_parameter_value(name);
 	myfree(junk);
     }
+    // #region agent log
+    msg_info("postapi: dbg[H4done]: validate pairs ok");
+    // #endregion
 }
 
 /* postconf_validate_overrides - check proposed main.cf updates */

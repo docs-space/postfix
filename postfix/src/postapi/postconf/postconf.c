@@ -202,6 +202,9 @@ postconf_update_config(json_t *body)
 	msg_info("postapi: PostConf: apply ok, reload scheduled");
     postconf_request_reload();
 
+    // #region agent log
+    msg_info("postapi: dbg[H5]: apply ok");
+    // #endregion
     argv_free(pairs);
     vstring_free(value_buf);
     vstring_free(pair_buf);
