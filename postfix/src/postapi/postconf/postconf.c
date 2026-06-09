@@ -182,6 +182,9 @@ postconf_update_config(json_t *body)
 	vstring_free(err);
 	return (resp);
     }
+    // #region agent log
+    msg_info("postapi: dbg[H4s]: validate returned to update_config");
+    // #endregion
     if (msg_verbose)
 	msg_info("postapi: PostConf: validate ok");
     postconf_request_reload();

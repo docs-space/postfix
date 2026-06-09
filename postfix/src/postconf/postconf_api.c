@@ -94,7 +94,12 @@ static void postconf_validate_setup(ARGV *pairs)
     // #region agent log
     msg_info("postapi: dbg[H3]: validate_setup after reset");
     // #endregion
-    mail_conf_flush();
+    if (!postconf_skip_restore_after_validate)
+	mail_conf_flush();
+    else
+	// #region agent log
+	msg_info("postapi: dbg[H3a]: validate_setup skip mail_conf_flush");
+    // #endregion
     pcf_read_parameters();
     if (pairs != 0 && pairs->argc > 0)
 	pcf_set_parameters(pairs->argv);
@@ -113,6 +118,13 @@ static void postconf_restore_runtime_config(void)
     postconf_api_reset();
     mail_conf_flush();
     mail_conf_read();
+}
+
+/* postconf_validate_restore_msg_sink - stop writing msg(3) to freed memstream */
+
+static void postconf_validate_restore_msg_sink(void)
+{
+    msg_vstream_init(var_procname, VSTREAM_ERR);
 }
 
 /* postconf_api_set_skip_restore_after_validate - defer restore until HTTP response */
@@ -188,11 +200,15 @@ postconf_validate_overrides(ARGV *pairs, VSTRING *err)
 	msg_set_longjmp_action(saved_action);
 	(void) vstream_fclose(msg_stream);
 	vstring_free(msg_buf);
+	postconf_validate_restore_msg_sink();
 	if (!postconf_skip_restore_after_validate)
 	    postconf_restore_runtime_config();
 	else
 	    // #region agent log
 	    msg_info("postapi: dbg[H4r]: validate restore deferred");
+	// #endregion
+	// #region agent log
+	msg_info("postapi: dbg[H4r2]: validate return ok");
 	// #endregion
 	return (0);
     }
@@ -204,6 +220,7 @@ postconf_validate_overrides(ARGV *pairs, VSTRING *err)
     else
 	vstring_strcpy(err, "configuration check failed");
     vstring_free(msg_buf);
+    postconf_validate_restore_msg_sink();
     postconf_restore_runtime_config();
     return (-1);
 }
