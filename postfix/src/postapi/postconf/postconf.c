@@ -64,10 +64,16 @@ postconf_update_config(json_t *body)
 	return (postapi_resp_json(503,
 				  json_pack("{s:s}", "error",
 					    "service_unavailable")));
+    // #region agent log
+    msg_info("postapi: dbg[H1a]: allowlist configured");
+    // #endregion
     if (body == 0 || !json_is_object(body) || json_object_size(body) == 0)
 	return (postapi_resp_json(400,
 				  json_pack("{s:s}", "error", "invalid_body")));
 
+    // #region agent log
+    msg_info("postapi: dbg[H1b]: body ok");
+    // #endregion
     pairs = argv_alloc(10);
     value_buf = vstring_alloc(64);
     applied = json_object();
@@ -81,19 +87,28 @@ postconf_update_config(json_t *body)
 					    "service_unavailable")));
     }
 
+    // #region agent log
+    msg_info("postapi: dbg[H1c]: alloc ok");
+    // #endregion
     iter = json_object_iter(body);
     while (iter) {
 	key = json_object_iter_key(iter);
 	value = json_object_iter_value(iter);
+	// #region agent log
+	msg_info("postapi: dbg[H1d]: key=%s allowed=%s",
+		 key != 0 ? key : "(null)",
+		 postapi_config_allowed(key) ? "yes" : "no");
+	// #endregion
 	if (!postapi_config_allowed(key)) {
 	    json_decref(applied);
 	    argv_free(pairs);
 	    vstring_free(value_buf);
 	    vstring_free(err);
-	    return (postapi_resp_json(400,
+		return (postapi_resp_json(400,
 				      json_pack("{s:s,s:s}", "error",
 						"forbidden_parameter",
-						"parameter", key)));
+						"parameter",
+						key != 0 ? key : "")));
 	}
 	if (postconf_json_value_to_string(value, value_buf) < 0) {
 	    json_decref(applied);
@@ -103,8 +118,12 @@ postconf_update_config(json_t *body)
 	    return (postapi_resp_json(400,
 				      json_pack("{s:s,s:s}", "error",
 						"invalid_parameter_value",
-						"parameter", key)));
+						"parameter",
+						key != 0 ? key : "")));
 	}
+	// #region agent log
+	msg_info("postapi: dbg[H1e]: value=%s", vstring_str(value_buf));
+	// #endregion
 	pair = concatenate(key, "=", vstring_str(value_buf), (char *) 0);
 	argv_add(pairs, pair, (char *) 0);
 	myfree(pair);

@@ -40,6 +40,7 @@
 #include <maps.h>
 #include <htable.h>
 #include <argv.h>
+#include <stringops.h>
 #include <mail_parm_split.h>
 #include <vstream.h>
 #include <vstring.h>
@@ -425,6 +426,9 @@ static void postapi_config_allowlist_init(void)
     for (n = 0; n < split->argc; n++) {
 	if (split->argv[n] == 0 || *split->argv[n] == 0)
 	    continue;
+	trimblanks(split->argv[n], 0);
+	if (*split->argv[n] == 0)
+	    continue;
 	htable_enter(postapi_config_allowlist, split->argv[n], marker);
     }
     argv_free(split);
@@ -605,10 +609,18 @@ postapi_config_allowed(const char *name)
 int
 postapi_config_allowlist_configured(void)
 {
+    // #region agent log
+    msg_info("postapi: dbg[H1cfg]: allowlist enter ptr=%p",
+	     (void *) postapi_config_allowlist);
+    // #endregion
     if (postapi_config_allowlist == 0)
 	postapi_config_allowlist_init();
     if (postapi_config_allowlist == 0)
 	return (0);
+    // #region agent log
+    msg_info("postapi: dbg[H1cfg]: allowlist used=%ld",
+	     (long) postapi_config_allowlist->used);
+    // #endregion
     return (postapi_config_allowlist->used > 0);
 }
 
