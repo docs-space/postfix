@@ -375,40 +375,17 @@ postapi_access_handler(void *cls, struct MHD_Connection *connection,
     }
     postapi_log_request(method, url, query_json, body_json);
     resp = postapi_dispatch(url, method, authorized, query_json, body_json);
-    // #region agent log
-    msg_info("postapi: dbg[H8]: after dispatch ptr=%p", (void *) resp);
-    // #endregion
     postconf_api_finish_validate_restore();
-    // #region agent log
-    msg_info("postapi: dbg[H8b]: after validate restore");
-    // #endregion
     postapi_query_free(query_json);
-    // #region agent log
-    msg_info("postapi: dbg[H9]: after query free");
-    // #endregion
     if (body_json)
 	json_decref(body_json);
-    // #region agent log
-    msg_info("postapi: dbg[H9b]: after body decref");
-    // #endregion
     {
 	int     reload_pending = postconf_take_reload_pending();
 	ARGV   *apply_pairs = postconf_take_apply_pairs();
 	enum MHD_Result q;
 
-	// #region agent log
-	msg_info("postapi: dbg[H9c]: before log_response reload=%d apply=%p",
-		 reload_pending, (void *) apply_pairs);
-	// #endregion
 	postapi_log_response_obj(resp);
-	// #region agent log
-	msg_info("postapi: dbg[H10]: before send_response reload_pending=%d",
-		 reload_pending);
-	// #endregion
 	q = postapi_send_response(connection, resp);
-	// #region agent log
-	msg_info("postapi: dbg[H11]: after send_response q=%d", (int) q);
-	// #endregion
 	if (q == MHD_YES && reload_pending && apply_pairs != 0) {
 	    postapi_postconf_work_pending = 1;
 	    postapi_postconf_apply_pairs = apply_pairs;
@@ -548,7 +525,7 @@ static void postapi_post_init(char *unused_name, char **unused_argv)
 				       postapi_mhd_notify, 0,
 				       MHD_OPTION_END);
     }
-	if (postapi_mhd == 0)
+    if (postapi_mhd == 0)
 	msg_fatal("cannot start libmicrohttpd daemon for postapi");
 }
 
@@ -565,33 +542,19 @@ static void postapi_finish_postconf_work(void)
     postapi_postconf_work_pending = 0;
     apply_ok = 0;
     if (postapi_postconf_apply_pairs != 0) {
-	// #region agent log
-	msg_info("postapi: dbg[H12]: apply start");
-	// #endregion
 	apply_ok = (postconf_apply_overrides(postapi_postconf_apply_pairs) >= 0);
 	if (!apply_ok)
 	    msg_warn("postapi: PostConf apply failed after HTTP 200");
-	else
-	    // #region agent log
-	    msg_info("postapi: dbg[H12done]: apply ok");
-	// #endregion
 	argv_free(postapi_postconf_apply_pairs);
 	postapi_postconf_apply_pairs = 0;
     }
     if (!apply_ok)
 	return;
     reload_err = vstring_alloc(256);
-    // #region agent log
-    msg_info("postapi: dbg[H13]: reload start");
-    // #endregion
     reload_st = postfix_reload_config(reload_err);
     if (reload_st < 0)
 	msg_warn("postapi: postfix reload after PostConf update failed: %s",
 		 vstring_str(reload_err));
-    else
-	// #region agent log
-	msg_info("postapi: dbg[H14]: reload ok, exiting");
-    // #endregion
     vstring_free(reload_err);
     if (reload_st >= 0)
 	exit(0);
@@ -646,9 +609,6 @@ static void postapi_service(VSTREAM *client_stream, char *service, char **argv)
 	    break;
 	}
     }
-    // #region agent log
-    msg_info("postapi: dbg[H15]: mhd response sent, connections drained");
-    // #endregion
     postapi_finish_postconf_work();
 }
 
@@ -681,18 +641,10 @@ postapi_config_allowed(const char *name)
 int
 postapi_config_allowlist_configured(void)
 {
-    // #region agent log
-    msg_info("postapi: dbg[H1cfg]: allowlist enter ptr=%p",
-	     (void *) postapi_config_allowlist);
-    // #endregion
     if (postapi_config_allowlist == 0)
 	postapi_config_allowlist_init();
     if (postapi_config_allowlist == 0)
 	return (0);
-    // #region agent log
-    msg_info("postapi: dbg[H1cfg]: allowlist used=%ld",
-	     (long) postapi_config_allowlist->used);
-    // #endregion
     return (postapi_config_allowlist->used > 0);
 }
 

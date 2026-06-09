@@ -86,20 +86,9 @@ postconf_api_reset(void)
 
 static void postconf_validate_setup(ARGV *pairs)
 {
-    // #region agent log
-    msg_info("postapi: dbg[H3]: validate_setup enter argc=%d",
-	     pairs != 0 ? pairs->argc : -1);
-    // #endregion
     postconf_api_reset();
-    // #region agent log
-    msg_info("postapi: dbg[H3]: validate_setup after reset");
-    // #endregion
     if (!postconf_skip_restore_after_validate)
 	mail_conf_flush();
-    else
-	// #region agent log
-	msg_info("postapi: dbg[H3a]: validate_setup skip mail_conf_flush");
-    // #endregion
     pcf_read_parameters();
     if (pairs != 0 && pairs->argc > 0)
 	pcf_set_parameters(pairs->argv);
@@ -108,9 +97,6 @@ static void postconf_validate_setup(ARGV *pairs)
     pcf_read_master(PCF_WARN_ON_OPEN_ERROR);
     pcf_register_service_parameters();
     pcf_register_user_parameters(0);
-    // #region agent log
-    msg_info("postapi: dbg[H3]: validate_setup done");
-    // #endregion
 }
 
 static void postconf_restore_runtime_config(void)
@@ -158,15 +144,9 @@ static void postconf_validate_pairs(ARGV *pairs)
 	junk = mystrdup(*cpp);
 	if ((err = split_nameval(junk, &name, &value)) != 0)
 	    msg_fatal("%s: \"%s\"", err, junk);
-	// #region agent log
-	msg_info("postapi: dbg[H4]: validate param=%s", name);
-	// #endregion
 	pcf_validate_parameter_value(name);
 	myfree(junk);
     }
-    // #region agent log
-    msg_info("postapi: dbg[H4done]: validate pairs ok");
-    // #endregion
 }
 
 /* postconf_validate_overrides - check proposed main.cf updates */
@@ -203,13 +183,6 @@ postconf_validate_overrides(ARGV *pairs, VSTRING *err)
 	postconf_validate_restore_msg_sink();
 	if (!postconf_skip_restore_after_validate)
 	    postconf_restore_runtime_config();
-	else
-	    // #region agent log
-	    msg_info("postapi: dbg[H4r]: validate restore deferred");
-	// #endregion
-	// #region agent log
-	msg_info("postapi: dbg[H4r2]: validate return ok");
-	// #endregion
 	return (0);
     }
     msg_set_longjmp_action(saved_action);

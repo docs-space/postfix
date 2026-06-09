@@ -55,26 +55,14 @@ postconf_update_config(json_t *body)
     void   *iter;
     json_t *applied_val;
 
-    // #region agent log
-    msg_info("postapi: dbg[H1]: postconf_update_config enter body_size=%lu",
-	     body != 0 && json_is_object(body) ?
-	     (unsigned long) json_object_size(body) : 0UL);
-    // #endregion
-
     if (!postapi_config_allowlist_configured())
 	return (postapi_resp_json(503,
 				  json_pack("{s:s}", "error",
 					    "service_unavailable")));
-    // #region agent log
-    msg_info("postapi: dbg[H1a]: allowlist configured");
-    // #endregion
     if (body == 0 || !json_is_object(body) || json_object_size(body) == 0)
 	return (postapi_resp_json(400,
 				  json_pack("{s:s}", "error", "invalid_body")));
 
-    // #region agent log
-    msg_info("postapi: dbg[H1b]: body ok");
-    // #endregion
     pairs = argv_alloc(10);
     value_buf = vstring_alloc(64);
     pair_buf = vstring_alloc(128);
@@ -90,18 +78,10 @@ postconf_update_config(json_t *body)
 					    "service_unavailable")));
     }
 
-    // #region agent log
-    msg_info("postapi: dbg[H1c]: alloc ok");
-    // #endregion
     iter = json_object_iter(body);
     while (iter) {
 	key = json_object_iter_key(iter);
 	value = json_object_iter_value(iter);
-	// #region agent log
-	msg_info("postapi: dbg[H1d]: key=%s allowed=%s",
-		 key != 0 ? key : "(null)",
-		 postapi_config_allowed(key) ? "yes" : "no");
-	// #endregion
 	if (!postapi_config_allowed(key)) {
 	    json_decref(applied);
 	    argv_free(pairs);
@@ -126,21 +106,9 @@ postconf_update_config(json_t *body)
 						"parameter",
 						key != 0 ? key : "")));
 	}
-	// #region agent log
-	msg_info("postapi: dbg[H1e]: value=%s", vstring_str(value_buf));
-	// #endregion
 	vstring_sprintf(pair_buf, "%s=%s", key, vstring_str(value_buf));
-	// #region agent log
-	msg_info("postapi: dbg[H1f]: pair=%s", vstring_str(pair_buf));
-	// #endregion
 	argv_add(pairs, vstring_str(pair_buf), (char *) 0);
-	// #region agent log
-	msg_info("postapi: dbg[H1g]: argv argc=%d", pairs->argc);
-	// #endregion
 	applied_val = json_string(vstring_str(value_buf));
-	// #region agent log
-	msg_info("postapi: dbg[H1h]: applied_val=%p", (void *) applied_val);
-	// #endregion
 	if (applied_val == 0
 	    || json_object_set_new(applied, key, applied_val) < 0) {
 	    if (applied_val != 0)
@@ -154,23 +122,13 @@ postconf_update_config(json_t *body)
 				      json_pack("{s:s}", "error",
 						"service_unavailable")));
 	}
-	// #region agent log
-	msg_info("postapi: dbg[H1i]: applied set ok");
-	// #endregion
 	iter = json_object_iter_next(body, iter);
     }
 
-    // #region agent log
-    msg_info("postapi: dbg[H2]: before validate argc=%d", pairs->argc);
-    // #endregion
-    if (msg_verbose)
-	msg_info("postapi: PostConf: validate start");
     if (postconf_validate_overrides(pairs, err) < 0) {
 	POSTAPI_RESP *resp;
 
-	if (msg_verbose)
-	    msg_info("postapi: PostConf: validate failed: %s",
-		     vstring_str(err));
+	msg_info("postapi: PostConf: validate failed: %s", vstring_str(err));
 	resp = postapi_resp_json(400,
 				 json_pack("{s:s,s:s}", "error",
 					   "configuration_check_failed",
@@ -182,40 +140,17 @@ postconf_update_config(json_t *body)
 	vstring_free(err);
 	return (resp);
     }
-    // #region agent log
-    msg_info("postapi: dbg[H4s]: validate returned to update_config");
-    // #endregion
-    if (msg_verbose)
-	msg_info("postapi: PostConf: validate ok");
+    msg_info("postapi: PostConf: validate ok");
     postconf_request_reload();
     postconf_request_apply(pairs);
 
-    // #region agent log
-    msg_info("postapi: dbg[H5]: validate ok apply deferred");
-    // #endregion
     {
 	POSTAPI_RESP *resp;
 
-	// #region agent log
-	msg_info("postapi: dbg[H5a]: free value_buf");
-	// #endregion
 	vstring_free(value_buf);
-	// #region agent log
-	msg_info("postapi: dbg[H5b]: free pair_buf");
-	// #endregion
 	vstring_free(pair_buf);
-	// #region agent log
-	msg_info("postapi: dbg[H5c]: free err");
-	// #endregion
 	vstring_free(err);
-	// #region agent log
-	msg_info("postapi: dbg[H5d]: postapi_resp_json");
-	// #endregion
 	resp = postapi_resp_json(200, applied);
-	// #region agent log
-	msg_info("postapi: dbg[H5e]: resp ok code=%u ptr=%p",
-		 resp != 0 ? resp->http_code : 0, (void *) resp);
-	// #endregion
 	return (resp);
     }
 }
@@ -234,14 +169,8 @@ postconf_dispatch(int authorized, const char *method, const char *action,
 				 json_pack("{s:s}", "error", "unauthorized")));
 
     if (*action == 0) {
-	if (strcmp(method, "POST") == 0) {
-	    POSTAPI_RESP *resp = postconf_update_config(body);
-
-	    // #region agent log
-	    msg_info("postapi: dbg[H5f]: postconf_dispatch return update_config");
-	    // #endregion
-	    return (resp);
-	}
+	if (strcmp(method, "POST") == 0)
+	    return (postconf_update_config(body));
 	return (postapi_resp_json(405,
 				  json_pack("{s:s}", "error",
 					    "method_not_allowed")));

@@ -78,8 +78,6 @@ postapi_log_request(const char *method, const char *url,
 	     query_str, body_str);
     myfree(query_str);
     myfree(body_str);
-    if (msg_verbose)
-	msg_info("postapi: debug: request log ok");
 }
 
  /* postapi_log_response - log outgoing HTTP status and body */
@@ -152,18 +150,10 @@ postapi_call_controller(const char *controller, POSTAPI_CTRL_FN fn,
     POSTAPI_RESP *resp;
     int     except;
 
-    if (msg_verbose)
-	msg_info("postapi: controller %s: %s action=%s authorized=%s",
-		 controller, method, action != 0 ? action : "",
-		 authorized ? "yes" : "no");
     msg_set_longjmp_action(postapi_ctrl_longjmp);
     except = setjmp(postapi_ctrl_jmp_buf);
     if (except == 0) {
 	resp = fn(authorized, method, action, query, body);
-	// #region agent log
-	msg_info("postapi: dbg[H6]: controller fn done code=%u ptr=%p",
-		 resp != 0 ? resp->http_code : 0, (void *) resp);
-	// #endregion
 	msg_set_longjmp_action(0);
 	if (resp == 0) {
 	    msg_warn("postapi: controller %s returned no response", controller);
@@ -171,9 +161,6 @@ postapi_call_controller(const char *controller, POSTAPI_CTRL_FN fn,
 				      json_pack("{s:s}", "error",
 						"internal_server_error")));
 	}
-	if (msg_verbose)
-	    msg_info("postapi: controller %s done: http=%u",
-		     controller, resp->http_code);
 	return (resp);
     }
     msg_set_longjmp_action(0);
@@ -462,21 +449,8 @@ postapi_dispatch(const char *url, const char *method, int authorized,
 	vstring_free(path_buf);
 	return (postapi_resp_json(404, json_pack("{s:s}", "error", "not_found")));
     }
-    if (msg_verbose) {
-	char   *ctrl;
-
-	ctrl = (char *) mymalloc(ctrl_len + 1);
-	memcpy(ctrl, controller, ctrl_len);
-	ctrl[ctrl_len] = 0;
-	msg_info("postapi: dispatch: %s %s controller=%s action=%s",
-		 method, url, ctrl, action != 0 ? action : "");
-	myfree(ctrl);
-    }
     resp = postapi_call_controller(ctrl_name, fn, authorized, method, action,
 				  query, body);
-    // #region agent log
-    msg_info("postapi: dbg[H7]: dispatch done");
-    // #endregion
     vstring_free(path_buf);
     return (resp);
 }
