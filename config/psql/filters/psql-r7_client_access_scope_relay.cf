@@ -1,0 +1,5 @@
+user = {MAIL_PSQL_USER}
+password = {MAIL_PSQL_PWD}
+hosts = {MAIL_PSQL_HOST}:{MAIL_PSQL_PORT}
+dbname = {MAIL_PSQL_DB}
+query = select check_relay_by_ip_access('%{multi_instance_name}'::text,'%s'::text);
