@@ -163,7 +163,7 @@ proxy_read_maps =
     proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_recipient_access_scope_recipient.cf,
     proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_relay.cf,
     proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/notify/psql-relocated_maps.cf,
-    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/postapi/psql-postapi_access_token_maps.cf
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/postapi/psql-postapi_access_token_maps.cf,
     proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/postapi/psql-postapi_access_salt_maps.cf
 
 
@@ -182,90 +182,67 @@ transport_maps = proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/virtu
 ###
 #Правила фильтрации
 ###
-#smtpd_relay_before_recipient_restrictions = no
+smtpd_relay_before_recipient_restrictions = yes
 #Для корректной работы access листов
 parent_domain_matches_subdomains = 
 #Для обработки списков на каждом уровне фильтрации
 smtpd_delay_reject = no
 #Р7-Классы проверок
 smtpd_restriction_classes = 
-    r7_client_access_scope_client, r7_client_access_scope_helo, r7_client_access_scope_sender, r7_client_access_scope_recipient, 
-    r7_helo_access_scope_helo, r7_helo_access_scope_sender, r7_helo_access_scope_recipient, 
-    r7_sender_access_scope_sender, r7_sender_access_scope_recipient,
-    r7_recipient_access_scope_recipient,
-    r7_relay_access_scope_relay, 
+    r7_client_access, 
+    r7_helo_access, 
+    r7_sender_access, 
+    r7_recipient_access,
+    r7_relay_access,
     r7_etrn_access,
     r7_data_access,
     r7_end_of_data_access
+    
 
 ### Описание Р7-Классов проверок
-r7_client_access_scope_client =
+r7_client_access = 
     check_client_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_client.cf
-r7_client_access_scope_helo =
-    check_client_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_helo.cf
-r7_client_access_scope_sender =
-    check_client_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_sender.cf
-r7_client_access_scope_recipient =
-    check_client_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_recipient.cf
-
-r7_helo_access_scope_helo =
+r7_helo_access = 
+    check_client_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_helo.cf,
     check_helo_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_helo_access_scope_helo.cf
-r7_helo_access_scope_sender =
-    check_helo_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_helo_access_scope_sender.cf
-r7_helo_access_scope_recipient =
-    check_helo_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_helo_access_scope_recipient.cf
-
-r7_etrn_access = permit
-
-r7_sender_access_scope_sender = 
+r7_etrn_access = 
+r7_sender_access = 
+    check_client_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_sender.cf,
+    check_helo_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_helo_access_scope_sender.cf,
     check_sender_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_sender_access_scope_sender.cf
-r7_sender_access_scope_recipient = 
-    check_sender_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_sender_access_scope_recipient.cf
-
-r7_recipient_access_scope_recipient = 
+r7_recipient_access =
+    check_client_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_recipient.cf,
+    check_helo_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_helo_access_scope_recipient.cf,
+    check_sender_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_sender_access_scope_recipient.cf,
     check_recipient_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_recipient_access_scope_recipient.cf,
     check_policy_service inet:{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }}
-
-r7_relay_access_scope_relay = 
+r7_relay_access = 
     check_client_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_relay.cf
+r7_data_access = 
+r7_end_of_data_access = 
 
-r7_data_access = permit
 
-r7_end_of_data_access = permit
 
 ### Рестрикшены
-smtpd_client_restrictions = 
-    permit_mynetworks,
-    r7_client_access_scope_client,
-    permit
+smtpd_client_restrictions = r7_client_access, permit
 
-smtpd_helo_restrictions = 
-    permit_mynetworks,
-    r7_client_access_scope_helo,
-    r7_helo_access_scope_helo,
-    permit
+smtpd_helo_restrictions = r7_helo_access, permit
 
-smtpd_sender_restrictions = 
-    permit_mynetworks,
-    r7_client_access_scope_sender,
-    r7_helo_access_scope_sender,
-    r7_sender_access_scope_sender,
-    permit
+smtpd_etrn_restrictions = r7_etrn_access, permit
 
-smtpd_recipient_restrictions =
-    permit_mynetworks,
-    r7_client_access_scope_recipient,
-    r7_helo_access_scope_recipient,
-    r7_sender_access_scope_recipient,
-    r7_recipient_access_scope_recipient,
-    permit_sasl_authenticated,
-    reject_unauth_destination
+smtpd_sender_restrictions = r7_sender_access, permit
 
 smtpd_relay_restrictions = 
     permit_mynetworks,
     permit_sasl_authenticated,
-    r7_relay_access_scope_relay,
-    defer_unauth_destination
+    r7_relay_access,
+    reject_unauth_destination
+
+smtpd_recipient_restrictions = r7_recipient_access, permit
+
+smtpd_data_restrictions = r7_data_access, permit
+
+smtpd_end_of_data_restrictions = r7_end_of_data_access, permit
 
 
 
