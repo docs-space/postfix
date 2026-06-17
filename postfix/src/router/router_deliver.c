@@ -21,7 +21,6 @@
 
 #include <mail_params.h>
 #include <mail_proto.h>
-#include <mail_connect.h>
 #include <deliver_request.h>
 #include <recipient_list.h>
 #include <dsb_scan.h>
