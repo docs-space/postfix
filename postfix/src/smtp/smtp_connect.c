@@ -458,7 +458,8 @@ static void smtp_cleanup_session(SMTP_STATE *state)
     /*
      * Clean up the lists with todo and dropped recipients.
      */
-    smtp_rcpt_cleanup(state);
+    if (state->rcpt_drop + state->rcpt_keep == state->rcpt_left)
+	smtp_rcpt_cleanup(state);
 
     /*
      * Reset profiling info.
@@ -1449,15 +1450,19 @@ int     smtp_connect(SMTP_STATE *state)
 	if ((request->flags & DEL_REQ_FLAG_ROUTER_NON_FINAL) == 0) {
 	    state->misc_flags |= SMTP_MISC_FLAG_FINAL_SERVER;	/* XXX */
 	    smtp_sess_fail(state);
+
+	    /*
+	     * Sanity check. Don't silently lose recipients.
+	     */
+	    smtp_rcpt_cleanup(state);
+	    if (SMTP_RCPT_LEFT(state) > 0)
+		msg_panic("smtp_connect: left-over recipients");
 	}
 
 	/*
-	 * Sanity check. Don't silently lose recipients.
+	 * Router non-final group: leave unmarked recipients on the
+	 * delivery request for the extended undelivered reply.
 	 */
-	smtp_rcpt_cleanup(state);
-	if (SMTP_RCPT_LEFT(state) > 0
-	    && (request->flags & DEL_REQ_FLAG_ROUTER_NON_FINAL) == 0)
-	    msg_panic("smtp_connect: left-over recipients");
     }
     return (state->status);
 }
