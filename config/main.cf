@@ -205,7 +205,7 @@ r7_client_access =
 r7_helo_access = 
     check_client_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_helo.cf,
     check_helo_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_helo_access_scope_helo.cf
-r7_etrn_access = 
+r7_etrn_access = permit
 r7_sender_access = 
     check_client_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_sender.cf,
     check_helo_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_helo_access_scope_sender.cf,
@@ -218,8 +218,8 @@ r7_recipient_access =
     check_policy_service inet:{{ MAIL_MTA_FILTER_HOST }}:{{ MAIL_MTA_FILTER_PORT }}
 r7_relay_access = 
     check_client_access proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/filters/psql-r7_client_access_scope_relay.cf
-r7_data_access = 
-r7_end_of_data_access = 
+r7_data_access = permit
+r7_end_of_data_access = permit
 
 
 
@@ -228,7 +228,7 @@ smtpd_client_restrictions = r7_client_access, permit
 
 smtpd_helo_restrictions = r7_helo_access, permit
 
-smtpd_etrn_restrictions = r7_etrn_access, permit
+smtpd_etrn_restrictions = r7_etrn_access
 
 smtpd_sender_restrictions = r7_sender_access, permit
 
@@ -240,9 +240,9 @@ smtpd_relay_restrictions =
 
 smtpd_recipient_restrictions = r7_recipient_access, permit
 
-smtpd_data_restrictions = r7_data_access, permit
+smtpd_data_restrictions = r7_data_access
 
-smtpd_end_of_data_restrictions = r7_end_of_data_access, permit
+smtpd_end_of_data_restrictions = r7_end_of_data_access
 
 
 
