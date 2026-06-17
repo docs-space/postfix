@@ -1305,10 +1305,13 @@ static void get_cli_attr(SMTP_CLI_ATTR *attr, char **argv)
 
 /* deliver_message - deliver message with extreme prejudice */
 
-static int deliver_message(const char *service, DELIVER_REQUEST *request)
+static int deliver_message(const char *service, DELIVER_REQUEST *request,
+			           RECIPIENT_LIST *undelivered_out)
 {
     SMTP_STATE *state;
+    RECIPIENT *rcpt;
     int     result;
+    int     nrcpt;
 
     if (msg_verbose)
 	msg_info("deliver_message: from %s", request->sender);
@@ -1394,6 +1397,19 @@ static int deliver_message(const char *service, DELIVER_REQUEST *request)
      */
     result = smtp_connect(state);
 
+    if (undelivered_out != 0) {
+	recipient_list_init(undelivered_out, RCPT_LIST_INIT_STATUS);
+	if (SMTP_RCPT_LEFT(state) > 0) {
+	    for (nrcpt = 0; nrcpt < SMTP_RCPT_LEFT(state); nrcpt++) {
+		rcpt = state->request->rcpt_list.info + nrcpt;
+		recipient_list_add(undelivered_out, rcpt->offset,
+				   rcpt->dsn_orcpt, rcpt->dsn_notify,
+				   rcpt->orig_addr, rcpt->address);
+	    }
+	    result = DEL_STAT_DEFER;
+	}
+    }
+
     /*
      * Clean up.
      */
@@ -1409,6 +1425,7 @@ static void smtp_service(VSTREAM *client_stream, char *service,
 {
     DELIVER_REQUEST *request;
     int     status;
+    RECIPIENT_LIST undelivered;
 
     /*
      * This routine runs whenever a client connects to the UNIX-domain socket
@@ -1419,8 +1436,15 @@ static void smtp_service(VSTREAM *client_stream, char *service,
      * the common code in single_server.c.
      */
     if ((request = deliver_request_read(client_stream)) != 0) {
-	status = deliver_message(service, request);
-	deliver_request_done(client_stream, request, status);
+	if (request->flags & DEL_REQ_FLAG_ROUTER_NON_FINAL) {
+	    status = deliver_message(service, request, &undelivered);
+	    deliver_request_done_ex(client_stream, request, status,
+				    &undelivered);
+	    recipient_list_free(&undelivered);
+	} else {
+	    status = deliver_message(service, request, 0);
+	    deliver_request_done(client_stream, request, status);
+	}
     }
 }
 

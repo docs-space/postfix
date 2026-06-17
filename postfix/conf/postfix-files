@@ -123,6 +123,7 @@ $daemon_directory/qmqpd:f:root:-:755
 $daemon_directory/scache:f:root:-:755
 $daemon_directory/showq:f:root:-:755
 $daemon_directory/smtp:f:root:-:755
+$daemon_directory/router:f:root:-:755
 $daemon_directory/smtpd:f:root:-:755
 $daemon_directory/spawn:f:root:-:755
 $daemon_directory/tlsproxy:f:root:-:755

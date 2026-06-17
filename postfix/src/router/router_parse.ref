@@ -1,0 +1,6 @@
+0: transport=lmtp nexthop=test1.ru:24
+1: transport=smtp nexthop=test1.ru:25,test2.ru:25
+parse failed
+0: transport=lmtp nexthop=[2001:db8::1]:24
+1: transport=smtp nexthop=host1,host2
+parse failed

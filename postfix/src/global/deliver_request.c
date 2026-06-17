@@ -130,6 +130,7 @@
 #include "dsn_print.h"
 #include "deliver_request.h"
 #include "rcpt_buf.h"
+#include "rcpt_print.h"
 
 /* deliver_request_initial - send initial status code */
 
@@ -157,13 +158,33 @@ static int deliver_request_initial(VSTREAM *stream)
 /* deliver_request_final - send final delivery request status */
 
 static int deliver_request_final(VSTREAM *stream, DELIVER_REQUEST *request,
-				         int status)
+				         int status,
+				         RECIPIENT_LIST *undelivered)
 {
     DSN    *hop_status;
+    RECIPIENT *rcpt;
     int     err;
 
     /* XXX This DSN structure initialization bypasses integrity checks. */
     static DSN dummy_dsn = {"", "", "", "", "", "", ""};
+
+    /*
+     * Optional undelivered recipient list for router non-final groups.
+     * When undelivered is non-null, always send the count (possibly zero).
+     */
+    if (undelivered != 0) {
+	attr_print(stream, ATTR_FLAG_NONE,
+		   SEND_ATTR_INT(MAIL_ATTR_UNDELIVERED_RCPT_COUNT,
+				 undelivered->len),
+		   ATTR_TYPE_END);
+	for (rcpt = undelivered->info;
+	     rcpt < undelivered->info + undelivered->len; rcpt++)
+	    attr_print(stream, ATTR_FLAG_NONE,
+		       SEND_ATTR_FUNC(rcpt_print, (const void *) rcpt),
+		       ATTR_TYPE_END);
+	if (vstream_fflush(stream) != 0)
+	    return (-1);
+    }
 
     /*
      * Send the status and the optional reason.
@@ -480,9 +501,17 @@ DELIVER_REQUEST *deliver_request_read(VSTREAM *stream)
 
 int     deliver_request_done(VSTREAM *stream, DELIVER_REQUEST *request, int status)
 {
+    return (deliver_request_done_ex(stream, request, status, 0));
+}
+
+/* deliver_request_done_ex - finish delivery request with optional undelivered */
+
+int     deliver_request_done_ex(VSTREAM *stream, DELIVER_REQUEST *request,
+				        int status, RECIPIENT_LIST *undelivered)
+{
     int     err;
 
-    err = deliver_request_final(stream, request, status);
+    err = deliver_request_final(stream, request, status, undelivered);
     deliver_request_free(request);
     return (err);
 }
