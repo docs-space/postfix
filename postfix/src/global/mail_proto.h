@@ -159,6 +159,7 @@ extern char *mail_pathname(const char *, const char *);
 #define MAIL_ATTR_QUEUEID	"queue_id"
 #define MAIL_ATTR_SENDER	"sender"
 #define MAIL_ATTR_RCPT_COUNT	"recipient_count"
+#define MAIL_ATTR_UNDELIVERED_RCPT_COUNT "undelivered_recipient_count"
 #define MAIL_ATTR_ORCPT		"original_recipient"
 #define MAIL_ATTR_RECIP		"recipient"
 #define MAIL_ATTR_WHY		"reason"

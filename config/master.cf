@@ -52,6 +52,10 @@ smtps      unix  -       -       n       -       -       smtp
         -o smtp_tls_security_level=encrypt
         -o smtp_tls_wrappermode=yes
 
+#ROUTER (multi-transport failover)
+router    unix  -       -       n       -       -       router
+        -o syslog_name=postfix/router
+
 #RELAY
 relay     unix  -       -       n       -       -       smtp
         -o syslog_name=postfix/smtp_client[RELAY]

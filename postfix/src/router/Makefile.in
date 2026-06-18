@@ -1,0 +1,51 @@
+SHELL	= /bin/sh
+
+ROUTER_SRCS = router.c router_deliver.c router_parse.c
+ROUTER_OBJS = router.o router_deliver.o router_parse.o
+OBJS	= $(ROUTER_OBJS)
+HDRS	= router.h
+TESTPROG= router_parse_test
+PROG	= router
+INC_DIR	= ../../include
+DEFS	= -I. -I$(INC_DIR) -D$(SYSTYPE)
+CFLAGS	= $(DEBUG) $(OPT) $(DEFS)
+LIBS	= ../../lib/lib$(LIB_PREFIX)master$(LIB_SUFFIX) \
+	../../lib/lib$(LIB_PREFIX)global$(LIB_SUFFIX) \
+	../../lib/lib$(LIB_PREFIX)util$(LIB_SUFFIX)
+
+.c.o:;	$(CC) $(CFLAGS) -c $*.c
+
+$(PROG):	$(OBJS) $(LIBS)
+	$(CC) $(CFLAGS) $(SHLIB_RPATH) -o $@ $(OBJS) $(LIBS) $(SYSLIBS)
+
+$(OBJS): ../../conf/makedefs.out
+
+Makefile: Makefile.in
+	cat ../../conf/makedefs.out $? >$@
+
+test:	$(TESTPROG)
+
+tests: router_parse_test_run
+
+root_tests:
+
+update: ../../libexec/$(PROG)
+
+../../libexec/$(PROG): $(PROG)
+	cp $(PROG) ../../libexec
+
+router_parse_test: router_parse.c
+	$(CC) $(CFLAGS) -DTEST -o $@ router_parse.c $(LIBS) $(SYSLIBS)
+
+router_parse_test_run: router_parse_test router_parse.ref
+	./router_parse_test "lmtp:test1.ru:24;smtp:test1.ru:25,test2.ru:25" >router_parse.tmp
+	diff router_parse.ref router_parse.tmp
+	rm -f router_parse.tmp
+
+clean:
+	rm -f *.o *core $(PROG) $(TESTPROG) junk
+
+tidy:	clean
+
+depend:
+	@echo "run make depend from postfix top-level if needed"

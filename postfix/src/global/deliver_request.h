@@ -80,6 +80,7 @@ typedef struct DELIVER_REQUEST {
 #define DEL_REQ_FLAG_CONN_LOAD	(1<<11)	/* Consult opportunistic cache */
 #define DEL_REQ_FLAG_CONN_STORE	(1<<12)	/* Update opportunistic cache */
 #define DEL_REQ_FLAG_REC_DLY_SENT	(1<<13)	/* Record delayed delivery */
+#define DEL_REQ_FLAG_ROUTER_NON_FINAL	(1<<14)	/* router: more transport groups */
 
  /*
   * Cache Load and Store as value or mask. Use explicit _MASK for multi-bit
@@ -133,6 +134,8 @@ typedef struct DELIVER_REQUEST {
 typedef struct VSTREAM _deliver_vstream_;
 extern DELIVER_REQUEST *deliver_request_read(_deliver_vstream_ *);
 extern int deliver_request_done(_deliver_vstream_ *, DELIVER_REQUEST *, int);
+extern int deliver_request_done_ex(_deliver_vstream_ *, DELIVER_REQUEST *, int,
+			           RECIPIENT_LIST *);
 
 extern int PRINTFLIKE(4, 5) reject_deliver_request(const char *,
 		         DELIVER_REQUEST *, const char *, const char *,...);

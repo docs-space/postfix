@@ -458,7 +458,8 @@ static void smtp_cleanup_session(SMTP_STATE *state)
     /*
      * Clean up the lists with todo and dropped recipients.
      */
-    smtp_rcpt_cleanup(state);
+    if (state->rcpt_drop + state->rcpt_keep == state->rcpt_left)
+	smtp_rcpt_cleanup(state);
 
     /*
      * Reset profiling info.
@@ -911,7 +912,8 @@ static int smtp_reuse_session(SMTP_STATE *state, DNS_RR **addr_list,
 /* smtp_connect_inet - establish network connection */
 
 static void smtp_connect_inet(SMTP_STATE *state, const char *nexthop,
-			              char *def_service)
+			              char *def_service,
+			              int is_final_transport_group)
 {
     DELIVER_REQUEST *request = state->request;
     SMTP_ITERATOR *iter = state->iterator;
@@ -980,8 +982,10 @@ static void smtp_connect_inet(SMTP_STATE *state, const char *nexthop,
 	unsigned domain_best_pref;
 	MAI_HOSTADDR_STR hostaddr;
 
-	if (cpp[1] == 0)
+	if (cpp[1] == 0 && is_final_transport_group)
 	    state->misc_flags |= SMTP_MISC_FLAG_FINAL_NEXTHOP;
+	else
+	    state->misc_flags &= ~SMTP_MISC_FLAG_FINAL_NEXTHOP;
 
 	/*
 	 * Parse the destination. If no TCP port is specified, use the port
@@ -1095,14 +1099,14 @@ static void smtp_connect_inet(SMTP_STATE *state, const char *nexthop,
 					 why, &i_am_mx);
 	}
 	/* If we're MX host, don't connect to non-MX backups. */
-	if (i_am_mx)
+	if (i_am_mx && is_final_transport_group)
 	    state->misc_flags |= SMTP_MISC_FLAG_FINAL_NEXTHOP;
 
 	/*
 	 * Don't try fall-back hosts if mail loops to myself. That would just
 	 * make the problem worse.
 	 */
-	if (addr_list == 0 && SMTP_HAS_LOOP_DSN(why))
+	if (addr_list == 0 && SMTP_HAS_LOOP_DSN(why) && is_final_transport_group)
 	    state->misc_flags |= SMTP_MISC_FLAG_FINAL_NEXTHOP;
 
 	/*
@@ -1367,7 +1371,8 @@ static void smtp_connect_inet(SMTP_STATE *state, const char *nexthop,
 	     * Mail for the next-hop destination loops back to myself. Pass
 	     * the mail to the best_mx_transport or bounce it.
 	     */
-	    else if (smtp_mode && SMTP_HAS_LOOP_DSN(why) && *var_bestmx_transp) {
+	    else if (smtp_mode && SMTP_HAS_LOOP_DSN(why) && *var_bestmx_transp
+		     && is_final_transport_group) {
 		dsb_reset(why);			/* XXX */
 		state->status = deliver_pass_all(MAIL_CLASS_PRIVATE,
 						 var_bestmx_transp,
@@ -1391,6 +1396,8 @@ int     smtp_connect(SMTP_STATE *state)
 {
     DELIVER_REQUEST *request = state->request;
     char   *destination = request->nexthop;
+    int     is_final_group =
+	(state->request->flags & DEL_REQ_FLAG_ROUTER_NON_FINAL) == 0;
 
     /*
      * All deliveries proceed along the same lines, whether they are over TCP
@@ -1413,7 +1420,8 @@ int     smtp_connect(SMTP_STATE *state)
 	} else {
 	    if (strncmp(destination, "inet:", 5) == 0)
 		destination += 5;
-	    smtp_connect_inet(state, destination, var_smtp_tcp_port);
+	    smtp_connect_inet(state, destination, var_smtp_tcp_port,
+			      is_final_group);
 	}
     }
 
@@ -1423,7 +1431,8 @@ int     smtp_connect(SMTP_STATE *state)
      * Postfix configurations that have a host with such a name.
      */
     else {
-	smtp_connect_inet(state, destination, var_smtp_tcp_port);
+	smtp_connect_inet(state, destination, var_smtp_tcp_port,
+			  is_final_group);
     }
 
     /*
@@ -1438,15 +1447,22 @@ int     smtp_connect(SMTP_STATE *state)
      * defer logging only.
      */
     if (SMTP_RCPT_LEFT(state) > 0) {
-	state->misc_flags |= SMTP_MISC_FLAG_FINAL_SERVER;	/* XXX */
-	smtp_sess_fail(state);
+	if ((request->flags & DEL_REQ_FLAG_ROUTER_NON_FINAL) == 0) {
+	    state->misc_flags |= SMTP_MISC_FLAG_FINAL_SERVER;	/* XXX */
+	    smtp_sess_fail(state);
+
+	    /*
+	     * Sanity check. Don't silently lose recipients.
+	     */
+	    smtp_rcpt_cleanup(state);
+	    if (SMTP_RCPT_LEFT(state) > 0)
+		msg_panic("smtp_connect: left-over recipients");
+	}
 
 	/*
-	 * Sanity check. Don't silently lose recipients.
+	 * Router non-final group: leave unmarked recipients on the
+	 * delivery request for the extended undelivered reply.
 	 */
-	smtp_rcpt_cleanup(state);
-	if (SMTP_RCPT_LEFT(state) > 0)
-	    msg_panic("smtp_connect: left-over recipients");
     }
     return (state->status);
 }
