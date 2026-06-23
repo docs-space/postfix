@@ -2790,7 +2790,8 @@ static int mail_cmd(SMTPD_STATE *state, int argc, SMTPD_TOKEN *argv)
 	    }
 	    if (dsn_envid
 		|| xtext_unquote(state->dsn_buf, arg + 6) == 0
-		|| !allprint(STR(state->dsn_buf))) {
+		|| !all_isprint_tab(STR(state->dsn_buf))
+		|| strlen(STR(state->dsn_buf)) != LEN(state->dsn_buf)) {
 		state->error_mask |= MAIL_ERROR_PROTOCOL;
 		smtpd_chat_reply(state, "501 5.5.4 Bad ENVID parameter syntax");
 		return (-1);
@@ -3137,7 +3138,8 @@ static int rcpt_cmd(SMTPD_STATE *state, int argc, SMTPD_TOKEN *argv)
 		|| *(dsn_orcpt_type = STR(state->dsn_orcpt_buf)) == 0
 		|| (strcasecmp(dsn_orcpt_type, "utf-8") == 0 ?
 		    uxtext_unquote(state->dsn_buf, coded_addr) == 0 :
-		    xtext_unquote(state->dsn_buf, coded_addr) == 0)) {
+		    xtext_unquote(state->dsn_buf, coded_addr) == 0)
+		|| strlen(STR(state->dsn_buf)) != LEN(state->dsn_buf)) {
 		state->error_mask |= MAIL_ERROR_PROTOCOL;
 		smtpd_chat_reply(state,
 			     "501 5.5.4 Error: Bad ORCPT parameter syntax");
@@ -4035,6 +4037,21 @@ static int skip_bdat(SMTPD_STATE *state, off_t chunk_size,
     off_t   len;
 
     /*
+     * Skip inputs below 1.5 times the message size limit, staying in sync
+     * with the remote SMTP client. Otherwise, force a negative chunk_size
+     * value to disable reading and discarding input here, and to force a
+     * "lost connection" condition upon a later read operation.
+     */
+    if (ENFORCING_SIZE_LIMIT(var_message_limit)
+	&& state->act_size / 1.5 > var_message_limit - chunk_size / 1.5) {
+	chunk_size = -1;
+    } else if (state->act_size > OFF_T_MAX - chunk_size) {
+	state->act_size = OFF_T_MAX;
+    } else {
+	state->act_size += chunk_size;
+    }
+
+    /*
      * Read and discard content from the remote SMTP client. TODO: drop the
      * connection in case of overload.
      */
@@ -4050,6 +4067,16 @@ static int skip_bdat(SMTPD_STATE *state, off_t chunk_size,
     va_start(ap, format);
     vsmtpd_chat_reply(state, format, ap);
     va_end(ap);
+
+    /*
+     * Force a "lost connection" condition upon the next read operation.
+     */
+    if (chunk_size < 0) {
+	msg_warn("%s: too much BDAT content -- disabling further input from %s",
+		 state->queue_id ? state->queue_id : "NOQUEUE",
+		 state->namaddr);
+	shutdown(vstream_fileno(state->client), SHUT_RD);
+    }
 
     /*
      * Reset state, or drop subsequent BDAT payloads until BDAT LAST or RSET.
@@ -6098,7 +6125,12 @@ static void smtpd_proto(SMTPD_STATE *state)
 		break;
 	    }
 	    watchdog_pat();
-	    smtpd_chat_query(state);
+	    if (!smtpd_chat_query(state)) {
+                state->error_mask |= MAIL_ERROR_PROTOCOL;
+                smtpd_chat_reply(state, "500 5.5.2 %s Error: command too long",
+                                 var_myhostname);
+		continue;
+	    }
 	    if (IS_BARE_LF_REPLY_REJECT(smtp_got_bare_lf)) {
 		log_whatsup(state, "reject", "bare <LF> received");
 		state->error_mask |= MAIL_ERROR_PROTOCOL;
