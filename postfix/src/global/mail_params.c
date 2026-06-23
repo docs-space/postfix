@@ -405,6 +405,7 @@ char   *var_known_tcp_ports;
 char   *var_nbdb_level;
 char   *var_nbdb_service;
 char   *var_nbdb_cust_map;
+char   *var_access_salt_maps;
 bool    var_nbdb_log_redirect;
 
 const char null_format_string[1] = "";
@@ -878,6 +879,7 @@ void    mail_params_init()
 	VAR_NBDB_LEVEL, DEF_NBDB_LEVEL, &var_nbdb_level, 1, 0,
 	VAR_NBDB_SERVICE, DEF_NBDB_SERVICE, &var_nbdb_service, 0, 0,
 	VAR_NBDB_CUST_MAP, DEF_NBDB_CUST_MAP, &var_nbdb_cust_map, 0, 0,
+	VAR_ACCESS_SALT_MAPS, DEF_ACCESS_SALT_MAPS, &var_access_salt_maps, 0, 0,
 	0,
     };
     static const CONFIG_STR_FN_TABLE function_str_defaults_2[] = {

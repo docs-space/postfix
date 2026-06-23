@@ -441,6 +441,7 @@ void    pcf_register_user_parameters(int mode)
      * PostAPI-specific master.cf -o parameters.
      */
     pcf_register_postapi_master_parameters();
+    pcf_register_known_user_parameter("access_salt_maps");
 }
 
 /* pcf_register_known_user_parameter - register explicit main.cf name */
@@ -476,7 +477,6 @@ void    pcf_register_postapi_parameters(void)
 {
     static const char *postapi_params[] = {
 	"postapi_access_token_maps",
-	"postapi_access_salt_maps",
 	"postapi_access_config",
 	"postapi_tls_cert_file",
 	"postapi_tls_key_file",

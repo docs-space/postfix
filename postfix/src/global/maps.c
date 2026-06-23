@@ -119,6 +119,7 @@
 /* Global library. */
 
 #include "mail_conf.h"
+#include "cryptmaps.h"
 #include "maps.h"
 
 /* maps_create - initialize */
@@ -206,6 +207,10 @@ const char *maps_find(MAPS *maps, const char *name, int flags)
 		msg_info("%s: %s: %s: %s = %.100s%s", myname, maps->title,
 			 *map_name, name, expansion,
 			 strlen(expansion) > 100 ? "..." : "");
+	    if ((expansion = cryptmaps_expand(expansion)) == 0) {
+		maps->error = DICT_ERR_CONFIG;
+		return (0);
+	    }
 	    return (expansion);
 	} else if ((maps->error = dict->error) != 0) {
 	    msg_warn("%s:%s lookup error for \"%s\"",
@@ -275,7 +280,12 @@ const char *maps_file_find(MAPS *maps, const char *name, int flags)
 		maps->error = DICT_ERR_CONFIG;
 		return (0);
 	    }
-	    return (vstring_str(unb64));
+	    expansion = vstring_str(unb64);
+	    if ((expansion = cryptmaps_expand(expansion)) == 0) {
+		maps->error = DICT_ERR_CONFIG;
+		return (0);
+	    }
+	    return (expansion);
 	} else if ((maps->error = dict->error) != 0) {
 	    msg_warn("%s:%s lookup error for \"%s\"",
 		     dict->type, dict->name, name);

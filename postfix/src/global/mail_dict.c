@@ -55,7 +55,7 @@
 #include <dict_mongodb.h>
 #include <mail_dict.h>
 #include <mail_params.h>
-#include <mail_dict.h>
+#include <cryptmaps.h>
 
 static const DICT_OPEN_INFO dict_open_info[] = {
     DICT_TYPE_PROXY, dict_proxy_open, mkmap_proxy_open,
@@ -100,6 +100,7 @@ void    mail_dict_init(void)
 
     for (dp = dict_open_info; dp->type; dp++)
 	dict_open_register(dp);
+    cryptmaps_init();
 }
 
 #ifdef TEST
