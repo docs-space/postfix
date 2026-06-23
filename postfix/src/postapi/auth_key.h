@@ -9,28 +9,20 @@
 /* SYNOPSIS
 /*	#include "auth_key.h"
 /*
-/*	int	auth_key_validate(map_value, bearer_token, salt_maps)
+/*	int	auth_key_validate(map_value, bearer_token)
 /*	const char *map_value;
 /*	const char *bearer_token;
-/*	MAPS *salt_maps;
 /* DESCRIPTION
-/*	auth_key_validate() parses one or more credentials from a
-/*	Postfix maps lookup result.  Each credential has the form
-/*	\fB{algorithm}payload\fR.  Supported algorithms are PLAIN,
-/*	SHA1.HEX and AES-256-CBC (compatible with mail.admin.api).
-/*
-/*	The function returns AUTH_KEY_OK when any credential matches
-/*	the bearer token, AUTH_KEY_MISMATCH when none match, and
-/*	AUTH_KEY_FORMAT_ERR on parse failures.
+/*	auth_key_validate() compares a bearer token against one or more
+/*	credentials from a maps lookup result (after cryptmaps_expand).
+/*	Each comma-separated segment is either a plaintext credential or
+/*	a \fB{SHA1.HEX}\fR digest of the bearer token.
 /*--*/
-
-#include <maps.h>
 
 #define AUTH_KEY_OK		0
 #define AUTH_KEY_MISMATCH	1
 #define AUTH_KEY_FORMAT_ERR	2
 
-extern int auth_key_validate(const char *map_value, const char *bearer_token,
-			             MAPS *salt_maps);
+extern int auth_key_validate(const char *map_value, const char *bearer_token);
 
 #endif

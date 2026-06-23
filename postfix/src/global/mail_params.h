@@ -3823,6 +3823,10 @@ extern char *var_multi_wrapper;
 #define DEF_MULTI_NAME		""
 extern char *var_multi_name;
 
+#define VAR_ACCESS_SALT_MAPS	"access_salt_maps"
+#define DEF_ACCESS_SALT_MAPS	""
+extern char *var_access_salt_maps;
+
 #define VAR_MULTI_GROUP		"multi_instance_group"
 #define DEF_MULTI_GROUP		""
 extern char *var_multi_group;
