@@ -39,7 +39,7 @@
 
 static int auth_key_delim(int ch)
 {
-    return (ch == 0 || ch == ',' || ch == '\n' || ch == '\r' || ch == '\t'
+    return (ch == ',' || ch == '\n' || ch == '\r' || ch == '\t'
 	    || ch == ' ');
 }
 
@@ -129,7 +129,7 @@ int     auth_key_validate(const char *map_value, const char *bearer_token)
 
     cp = map_value;
     for (;;) {
-	while (auth_key_delim(*cp))
+	while (*cp && auth_key_delim(*cp))
 	    cp++;
 	if (*cp == 0)
 	    break;

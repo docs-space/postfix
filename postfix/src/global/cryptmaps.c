@@ -52,7 +52,7 @@ static VSTRING *cryptmaps_result;
 
 static int cryptmaps_delim(int ch)
 {
-    return (ch == 0 || ch == ',' || ch == '\n' || ch == '\r' || ch == '\t'
+    return (ch == ',' || ch == '\n' || ch == '\r' || ch == '\t'
 	    || ch == ' ');
 }
 
@@ -257,7 +257,7 @@ const char *cryptmaps_expand(const char *value)
 
     cp = value;
     for (;;) {
-	while (cryptmaps_delim(*cp))
+	while (*cp && cryptmaps_delim(*cp))
 	    vstring_strncat(cryptmaps_result, cp++, 1);
 	if (*cp == 0)
 	    break;
