@@ -36,7 +36,7 @@
 #include <openssl/err.h>
 #endif
 
-#define CRYPTMAPS_AES_SCHEME		"AES-256-CBC"
+#define CRYPTMAPS_AES_SCHEME		"AES-128-CBC.HEX"
 #define CRYPTMAPS_PLAIN_SCHEME		"PLAIN"
 #define CRYPTMAPS_SHA1_SCHEME		"SHA1.HEX"
 #define CRYPTMAPS_DERIV_ITERATIONS	1000
@@ -68,7 +68,7 @@ static void cryptmaps_trim_trailing_space(VSTRING *vp)
 
 #ifdef USE_TLS
 
- /* cryptmaps_decode_cipher - base64 with hex fallback */
+ /* cryptmaps_decode_cipher - hex payload only */
 
 static int cryptmaps_decode_cipher(const char *cipher_text, VSTRING *raw)
 {
@@ -78,12 +78,30 @@ static int cryptmaps_decode_cipher(const char *cipher_text, VSTRING *raw)
     if (cipher_text == 0 || *cipher_text == 0)
 	return (-1);
     len = (ssize_t) strlen(cipher_text);
-    if (base64_decode(raw, cipher_text, len) != 0 && LEN(raw) > 0)
-	return (0);
-    VSTRING_RESET(raw);
     if (hex_decode(raw, cipher_text, len) != 0 && LEN(raw) > 0)
 	return (0);
     return (-1);
+}
+
+ /* cryptmaps_decode_aeskey - base64 Configurations.AESKey to PBKDF2 passphrase */
+
+static char *cryptmaps_decode_aeskey(const char *stored_b64)
+{
+    VSTRING *decoded = vstring_alloc(64);
+    char   *result;
+
+    if (stored_b64 == 0 || *stored_b64 == 0) {
+	vstring_free(decoded);
+	return (0);
+    }
+    if (base64_decode(decoded, stored_b64, (ssize_t) strlen(stored_b64)) <= 0
+	|| LEN(decoded) == 0) {
+	vstring_free(decoded);
+	return (0);
+    }
+    result = mystrndup(STR(decoded), LEN(decoded));
+    vstring_free(decoded);
+    return (result);
 }
 
  /* cryptmaps_aes_decrypt - Rijndael-128 CBC, PBKDF2-SHA1 (mail.admin.api) */
@@ -191,7 +209,8 @@ static int cryptmaps_expand_segment(const char *scheme, const char *payload,
     }
 #ifdef USE_TLS
     if (strcasecmp(scheme, CRYPTMAPS_AES_SCHEME) == 0) {
-	const char *pass_phrase;
+	const char *pass_phrase_stored;
+	char   *pass_phrase;
 	VSTRING *plain = vstring_alloc(64);
 
 	if (payload_len <= 0) {
@@ -199,21 +218,30 @@ static int cryptmaps_expand_segment(const char *scheme, const char *payload,
 	    msg_warn("cryptmaps: empty %s payload", CRYPTMAPS_AES_SCHEME);
 	    return (-1);
 	}
-	pass_phrase = cryptmaps_salt_lookup(CRYPTMAPS_AES_SCHEME);
-	if (pass_phrase == 0) {
+	pass_phrase_stored = cryptmaps_salt_lookup(CRYPTMAPS_AES_SCHEME);
+	if (pass_phrase_stored == 0) {
 	    vstring_free(plain);
 	    msg_warn("cryptmaps: %s is not set or has no \"%s\" entry",
 		     VAR_ACCESS_SALT_MAPS, CRYPTMAPS_AES_SCHEME);
 	    return (-1);
 	}
+	pass_phrase = cryptmaps_decode_aeskey(pass_phrase_stored);
+	if (pass_phrase == 0) {
+	    vstring_free(plain);
+	    msg_warn("cryptmaps: %s AESKey is not valid base64",
+		     CRYPTMAPS_AES_SCHEME);
+	    return (-1);
+	}
 	payload_buf = mystrndup(payload, payload_len);
 	if (cryptmaps_aes_decrypt(pass_phrase, payload_buf, plain) != 0) {
 	    myfree(payload_buf);
+	    myfree(pass_phrase);
 	    vstring_free(plain);
 	    msg_warn("cryptmaps: %s decrypt failed", CRYPTMAPS_AES_SCHEME);
 	    return (-1);
 	}
 	myfree(payload_buf);
+	myfree(pass_phrase);
 	vstring_strncat(out, STR(plain), LEN(plain));
 	vstring_free(plain);
 	return (1);

@@ -11,7 +11,7 @@
 /*	validates \fBAuthorization: Bearer\fR tokens against Postfix
 /*	lookup tables (including \fBproxy:\fR dynamicmaps). The lookup key
 /*	is \fBmulti_instance_name\fR; the map value lists credentials as
-/*	\fB{algorithm}payload\fR entries (PLAIN, SHA1.HEX, AES-256-CBC).
+/*	\fB{algorithm}payload\fR entries (PLAIN, SHA1.HEX, AES-128-CBC.HEX).
 /*	AES decryption uses the global \fBaccess_salt_maps\fR via cryptmaps.
 /*	It exposes
 /*	\fB/api/v1\fR for GET, POST, PUT, PATCH and DELETE.
