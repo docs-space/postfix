@@ -16,7 +16,7 @@
 /* DESCRIPTION
 /*	cryptmaps_expand() scans a map lookup result for
 /*	\fB{scheme}payload\fR entries. PLAIN strips the macro,
-/*	registered crypttypes (AES-256-CBC) are decrypted using
+/*	registered crypttypes (AES-128-CBC.HEX) are decrypted using
 /*	\fBaccess_salt_maps\fR, and other schemes are copied unchanged.
 /*
 /*	The result is stored in memory that is overwritten upon
