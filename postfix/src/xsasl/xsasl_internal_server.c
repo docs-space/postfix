@@ -140,8 +140,8 @@ static char *xsasl_internal_build_mech_list(ARGV *mechanism_argv,
 	const char *name;
 	unsigned int sec_props;
     } mechs[] = {
-	{"PLAIN", SEC_PROPS_NOANONYMOUS},
-	{"LOGIN", SEC_PROPS_NOANONYMOUS},
+	{"PLAIN", SEC_PROPS_NOPLAINTEXT},
+	{"LOGIN", SEC_PROPS_NOPLAINTEXT},
 	{0, 0},
     };
     unsigned int pos_conf_props = (conf_props & SEC_PROPS_POS_MASK);
