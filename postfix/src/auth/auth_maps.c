@@ -20,7 +20,7 @@ static MAPS *auth_ldap_chain_maps;
 static AUTH_LDAP_ENTRY *auth_ldap_snapshot;
 static size_t auth_ldap_snapshot_count;
 
-static void auth_ldap_entry_free(AUTH_LDAP_ENTRY *entry)
+static void auth_ldap_entry_clear(AUTH_LDAP_ENTRY *entry)
 {
     if (entry == 0)
 	return;
@@ -36,6 +36,14 @@ static void auth_ldap_entry_free(AUTH_LDAP_ENTRY *entry)
     myfree(entry->referral_following);
     myfree(entry->user_login_mask);
     myfree(entry->default_pass_scheme);
+    memset((void *) entry, 0, sizeof(*entry));
+}
+
+static void auth_ldap_entry_free(AUTH_LDAP_ENTRY *entry)
+{
+    if (entry == 0)
+	return;
+    auth_ldap_entry_clear(entry);
     myfree(entry);
 }
 
@@ -43,8 +51,10 @@ void    auth_ldap_chain_free(AUTH_LDAP_ENTRY *entries, size_t count)
 {
     size_t i;
 
+    if (entries == 0)
+	return;
     for (i = 0; i < count; i++)
-	auth_ldap_entry_free(entries + i);
+	auth_ldap_entry_clear(entries + i);
     myfree(entries);
 }
 
