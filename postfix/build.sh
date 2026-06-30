@@ -94,7 +94,8 @@ make makefiles \
             -DDEF_SAMPLE_DIR=\\\"${BUILD_DIRECTORY}/etc/postfix/samples\\\" \
             -DHAS_PGSQL -I/usr/include/postgresql \
             -DUSE_SASL_AUTH \
-            -DDEF_SERVER_SASL_TYPE=\\\"dovecot\\\" \
+            -DUSE_INTERNAL_SASL \
+            -DDEF_SERVER_SASL_TYPE=\\\"internal\\\" \
             -DUSE_TLS \
             -DHAS_PCRE \
             -DHAS_UNBOUND \
@@ -109,6 +110,7 @@ make makefiles \
              -lpq \
              -lpcre \
              -lunbound \
+             -lldap -llber \
              -lz -llz4 -lzstd -lbz2 -llzma"
 
 

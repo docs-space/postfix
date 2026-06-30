@@ -231,6 +231,9 @@
 #include <xsasl.h>
 #include <xsasl_cyrus.h>
 #include <xsasl_dovecot.h>
+#ifdef USE_INTERNAL_SASL
+#include <xsasl_internal.h>
+#endif
 
  /*
   * Lookup table for available SASL server implementations.
@@ -246,6 +249,9 @@ static const XSASL_SERVER_IMPL_INFO server_impl_info[] = {
 #endif
 #ifdef XSASL_TYPE_DOVECOT
     {XSASL_TYPE_DOVECOT, xsasl_dovecot_server_init},
+#endif
+#ifdef USE_INTERNAL_SASL
+    {XSASL_TYPE_INTERNAL, xsasl_internal_server_init},
 #endif
     {0, 0}
 };

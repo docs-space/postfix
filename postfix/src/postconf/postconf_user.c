@@ -493,6 +493,22 @@ void    pcf_register_postapi_parameters(void)
 	pcf_register_known_user_parameter(*namep);
 }
 
+/* pcf_register_auth_parameters - register auth(8) main.cf parameters */
+
+void    pcf_register_auth_parameters(void)
+{
+    static const char *auth_params[] = {
+	"auth_authenticate_maps",
+	"auth_ldap_chain_maps",
+	"auth_cred_cache_ttl",
+	0,
+    };
+    const char **namep;
+
+    for (namep = auth_params; *namep != 0; namep++)
+	pcf_register_known_user_parameter(*namep);
+}
+
 /* pcf_register_postapi_master_parameters - register postapi(8) master.cf -o */
 
 void    pcf_register_postapi_master_parameters(void)

@@ -1,11 +1,11 @@
 SHELL	= /bin/sh
 SRCS	= xsasl_server.c xsasl_cyrus_server.c xsasl_cyrus_log.c \
 	xsasl_cyrus_security.c xsasl_client.c xsasl_cyrus_client.c \
-	xsasl_dovecot_server.c
+	xsasl_dovecot_server.c xsasl_internal_server.c
 OBJS	= xsasl_server.o xsasl_cyrus_server.o xsasl_cyrus_log.o \
 	xsasl_cyrus_security.o xsasl_client.o xsasl_cyrus_client.o \
-	xsasl_dovecot_server.o
-HDRS	= xsasl.h
+	xsasl_dovecot_server.o xsasl_internal_server.o
+HDRS	= xsasl.h xsasl_internal.h
 TESTSRC	= 
 DEFS	= -I. -I$(INC_DIR) -D$(SYSTYPE)
 CFLAGS	= $(DEBUG) $(OPT) $(DEFS)

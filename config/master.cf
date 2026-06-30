@@ -32,6 +32,10 @@ submissions     inet  n       -       y       -       -       smtpd
         -o syslog_name=postfix/postapi
         -o postapi_tls_security_level=encrypt
 
+#AUTH (SMTP SASL via internal XSASL)
+auth      unix  -       n       n       -       -       auth
+        -o syslog_name=postfix/auth
+
 ###
 # Исходящая почта
 ###
