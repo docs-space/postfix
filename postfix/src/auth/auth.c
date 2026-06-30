@@ -13,6 +13,7 @@
 #include <mail_server.h>
 #include <mail_params.h>
 #include <mail_dict.h>
+#include <cryptmaps.h>
 #include <signal.h>
 
 #include "auth.h"
@@ -32,7 +33,7 @@ static const CONFIG_STR_TABLE str_table[] = {
 };
 
 static const CONFIG_INT_TABLE int_table[] = {
-    auth_cred_cache_ttl_param, "300", &var_auth_cred_cache_ttl, 0, 86400,
+    auth_cred_cache_ttl_param, 300, &var_auth_cred_cache_ttl, 0, 86400,
     0,
 };
 
