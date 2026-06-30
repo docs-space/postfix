@@ -86,8 +86,10 @@ lmtp_tls_key_file = {{ MAIL_MTA_CERT_KEY_FILE }}
 
 
 # SMTP-AUTH (исходящая)
-#smtp_sasl_password_maps = hash:/opt/r7-mailserver/mtaserver/etc/postfix/sasl_passwd
-#smtp_sasl_auth_enable = yes
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/smtp/psql-smtp_sasl_password_maps.cf
+smtp_sasl_password_result_delimiter = ,
+smtp_sasl_security_options = noanonymous
 
 # SMTPD-AUTH (входящая): демон auth + XSASL internal
 smtpd_sasl_type = internal
@@ -166,7 +168,8 @@ proxy_read_maps =
     proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/postapi/psql-postapi_access_token_maps.cf,
     proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/general/psql-access_salt_maps.cf,
     proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/auth/psql-auth_authenticate_maps.cf,
-    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/auth/psql-auth_ldap_chain_maps.cf
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/auth/psql-auth_ldap_chain_maps.cf,
+    proxy:pgsql:/opt/r7-mailserver/mtaserver/etc/postfix/psql/smtp/psql-smtp_sasl_password_maps.cf
 
 
 ###
