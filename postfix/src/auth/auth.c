@@ -9,6 +9,7 @@
 #include <vstream.h>
 #include <split_at.h>
 #include <base64_code.h>
+#include <stringops.h>
 #include <mail_version.h>
 #include <mail_server.h>
 #include <mail_params.h>
@@ -159,14 +160,12 @@ static void auth_log_result(const char *login, const char *node, const char *rip
     const char *node_str = (node != 0 && *node != 0) ? node : "-";
     const char *rip_str = (rip != 0 && *rip != 0) ? rip : "-";
 
-    if (ok) {
-	if (msg_verbose)
-	    msg_info("auth: ok login=%s node=%s rip=%s (%s)",
-		     login, node_str, rip_str, detail);
-    } else {
+    if (ok)
+	msg_info("auth: ok login=%s node=%s rip=%s (%s)",
+		 login, node_str, rip_str, detail);
+    else
 	msg_info("auth: fail login=%s node=%s rip=%s (%s)",
 		 login, node_str, rip_str, detail);
-    }
 }
 
 static int auth_perform(const char *login, const char *plain,
@@ -216,10 +215,21 @@ static int auth_perform(const char *login, const char *plain,
     } else
 	auth_pg_result_free(&pg_result);
 
-    if (auth_ldap_authenticate(login, plain)) {
-	*auth_user = mystrdup(login);
-	auth_log_result(login, node, rip, 1, "ldap");
-	return (1);
+    {
+	char   *ldap_entry = 0;
+	char   *ldap_detail;
+
+	if (auth_ldap_authenticate(login, plain, &ldap_entry)) {
+	    *auth_user = mystrdup(login);
+	    if (ldap_entry != 0) {
+		ldap_detail = concatenate("ldap ", ldap_entry, (char *) 0);
+		myfree(ldap_entry);
+	    } else
+		ldap_detail = mystrdup("ldap");
+	    auth_log_result(login, node, rip, 1, ldap_detail);
+	    myfree(ldap_detail);
+	    return (1);
+	}
     }
     auth_log_result(login, node, rip, 0, "ldap and postgresql miss");
     return (0);

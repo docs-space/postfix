@@ -52,6 +52,7 @@ extern void auth_cred_cache_store(const char *login, const char *node,
 				          int success);
 extern void auth_cred_cache_flush(void);
 
-extern int auth_ldap_authenticate(const char *login, const char *plain);
+extern int auth_ldap_authenticate(const char *login, const char *plain,
+			          char **used_entry);
 
 #endif
