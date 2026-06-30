@@ -78,7 +78,7 @@ conf_general()
 conf_sasl()
 {
     echo "Configuring Postfix SASL Settings"
-    sed -i "s/^smtpd_sasl_path = .*/smtpd_sasl_path = inet:${MTA_SASL_HOST}/" $MTA_CONF_MAIN
+#    sed -i "s/^smtpd_sasl_path = .*/smtpd_sasl_path = inet:${MTA_SASL_HOST}/" $MTA_CONF_MAIN
 }
 
 conf_filter()
