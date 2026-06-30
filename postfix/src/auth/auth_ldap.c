@@ -106,16 +106,24 @@ static int auth_ldap_try_entry(const AUTH_LDAP_ENTRY *entry,
 
     rc = ldap_search_ext_s(ld, entry->base_dn, auth_ldap_scope(entry->scope),
 			   filter, attrs, 0, 0, 0, 0, 0, &res);
-    myfree(filter);
     if (rc != LDAP_SUCCESS || res == 0) {
+	if (msg_verbose)
+	    msg_info("%s: search failed base=%s filter=%s: %s", myname,
+		     entry->base_dn ? entry->base_dn : "",
+		     filter ? filter : "",
+		     ldap_err2string(rc));
+	myfree(filter);
 	if (res)
 	    ldap_msgfree(res);
 	ldap_unbind_ext_s(ld, 0, 0);
 	return (0);
     }
+    myfree(filter);
 
     entry_msg = ldap_first_entry(ld, res);
     if (entry_msg == 0) {
+	msg_info("%s: user not found base=%s login=%s", myname,
+		 entry->base_dn ? entry->base_dn : "", login);
 	ldap_msgfree(res);
 	ldap_unbind_ext_s(ld, 0, 0);
 	return (0);
@@ -134,6 +142,9 @@ static int auth_ldap_try_entry(const AUTH_LDAP_ENTRY *entry,
     ldap_memfree(user_dn);
     ldap_unbind_ext_s(ld, 0, 0);
 
+    if (rc != LDAP_SUCCESS)
+	msg_info("%s: bind failed login=%s: %s", myname, login,
+		 ldap_err2string(rc));
     return (rc == LDAP_SUCCESS);
 }
 

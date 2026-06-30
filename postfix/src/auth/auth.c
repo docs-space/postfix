@@ -197,26 +197,24 @@ static int auth_perform(const char *login, const char *plain,
 	return (0);
     }
     if (pg_st > 0) {
-	if (!auth_verify_password(pg_result.password, plain)) {
-	    auth_cred_cache_store(login, node, 0);
-	    auth_log_result(login, node, rip, 0, "password mismatch");
+	if (auth_verify_password(pg_result.password, plain)) {
+	    if (!auth_nets_permit(pg_result.allow_nets, rip)) {
+		auth_cred_cache_store(login, node, 0);
+		auth_log_result(login, node, rip, 0, "allow_nets denied");
+		auth_pg_result_free(&pg_result);
+		return (0);
+	    }
+	    ok = 1;
+	    *auth_user = mystrdup(login);
+	    auth_cred_cache_store(login, node, ok);
+	    auth_log_result(login, node, rip, 1, "postgresql");
 	    auth_pg_result_free(&pg_result);
-	    return (0);
+	    return (ok);
 	}
-	if (!auth_nets_permit(pg_result.allow_nets, rip)) {
-	    auth_cred_cache_store(login, node, 0);
-	    auth_log_result(login, node, rip, 0, "allow_nets denied");
-	    auth_pg_result_free(&pg_result);
-	    return (0);
-	}
-	ok = 1;
-	*auth_user = mystrdup(login);
-	auth_cred_cache_store(login, node, ok);
-	auth_log_result(login, node, rip, 1, "postgresql");
+	auth_log_result(login, node, rip, 0, "postgresql password mismatch, trying ldap");
 	auth_pg_result_free(&pg_result);
-	return (ok);
-    }
-    auth_pg_result_free(&pg_result);
+    } else
+	auth_pg_result_free(&pg_result);
 
     if (auth_ldap_authenticate(login, plain)) {
 	*auth_user = mystrdup(login);
