@@ -12,7 +12,6 @@
 #include <mail_version.h>
 #include <mail_server.h>
 #include <mail_params.h>
-#include <mail_dict.h>
 #include <cryptmaps.h>
 #include <signal.h>
 
@@ -154,30 +153,66 @@ static int auth_parse_plain_credentials(const char *b64, char **user, char **pas
     return (1);
 }
 
+static void auth_log_result(const char *login, const char *node, const char *rip,
+			            int ok, const char *detail)
+{
+    const char *node_str = (node != 0 && *node != 0) ? node : "-";
+    const char *rip_str = (rip != 0 && *rip != 0) ? rip : "-";
+
+    if (ok) {
+	if (msg_verbose)
+	    msg_info("auth: ok login=%s node=%s rip=%s (%s)",
+		     login, node_str, rip_str, detail);
+    } else {
+	msg_info("auth: fail login=%s node=%s rip=%s (%s)",
+		 login, node_str, rip_str, detail);
+    }
+}
+
 static int auth_perform(const char *login, const char *plain,
 		         const char *node, const char *rip, char **auth_user)
 {
     AUTH_PG_RESULT pg_result;
     int     cached_success;
+    int     pg_st;
     int     ok = 0;
 
     *auth_user = 0;
 
     if (auth_cred_cache_lookup(login, node, &cached_success)) {
-	if (!cached_success)
+	if (!cached_success) {
+	    auth_log_result(login, node, rip, 0, "cred cache negative");
 	    return (0);
+	}
 	*auth_user = mystrdup(login);
+	auth_log_result(login, node, rip, 1, "cred cache positive");
 	return (1);
     }
 
     memset((void *) &pg_result, 0, sizeof(pg_result));
-    if (auth_pg_lookup(login, node, &pg_result) > 0) {
-	if (auth_verify_password(pg_result.password, plain)
-	    && auth_nets_permit(pg_result.allow_nets, rip)) {
-	    ok = 1;
-	    *auth_user = mystrdup(login);
+    pg_st = auth_pg_lookup(login, node, &pg_result);
+    if (pg_st < 0) {
+	msg_warn("auth: authenticate map error for login=%s", login);
+	auth_pg_result_free(&pg_result);
+	return (0);
+    }
+    if (pg_st > 0) {
+	if (!auth_verify_password(pg_result.password, plain)) {
+	    auth_cred_cache_store(login, node, 0);
+	    auth_log_result(login, node, rip, 0, "password mismatch");
+	    auth_pg_result_free(&pg_result);
+	    return (0);
 	}
+	if (!auth_nets_permit(pg_result.allow_nets, rip)) {
+	    auth_cred_cache_store(login, node, 0);
+	    auth_log_result(login, node, rip, 0, "allow_nets denied");
+	    auth_pg_result_free(&pg_result);
+	    return (0);
+	}
+	ok = 1;
+	*auth_user = mystrdup(login);
 	auth_cred_cache_store(login, node, ok);
+	auth_log_result(login, node, rip, 1, "postgresql");
 	auth_pg_result_free(&pg_result);
 	return (ok);
     }
@@ -185,8 +220,10 @@ static int auth_perform(const char *login, const char *plain,
 
     if (auth_ldap_authenticate(login, plain)) {
 	*auth_user = mystrdup(login);
+	auth_log_result(login, node, rip, 1, "ldap");
 	return (1);
     }
+    auth_log_result(login, node, rip, 0, "ldap and postgresql miss");
     return (0);
 }
 
@@ -253,6 +290,7 @@ static void auth_handle_auth(VSTREAM *stream, char *line, AUTH_SESSION **sess_li
     }
 
     auth_reply_fail(stream, id, "malformed authentication credentials");
+    msg_info("auth: fail request_id=%u (%s)", id, "malformed authentication credentials");
     auth_session_free(sess);
 }
 
@@ -273,12 +311,14 @@ static void auth_handle_cont(VSTREAM *stream, char *line, AUTH_SESSION **sess_li
     sess = auth_session_get(sess_list, id);
     if (sess == 0) {
 	auth_reply_fail(stream, id, "unexpected CONT");
+	msg_info("auth: fail request_id=%u (%s)", id, "unexpected CONT");
 	vstring_free(raw);
 	return;
     }
 
     if (base64_decode(raw, payload, (ssize_t) strlen(payload)) <= 0) {
 	auth_reply_fail(stream, id, "malformed base64");
+	msg_info("auth: fail request_id=%u (%s)", id, "malformed base64");
 	auth_session_unlink(sess_list, sess);
 	auth_session_free(sess);
 	vstring_free(raw);
@@ -342,16 +382,23 @@ static void auth_sig_hup(int unused_sig)
 
 static void post_jail_init(char *unused_name, char **unused_argv)
 {
+    size_t  ldap_count;
+
     (void) unused_name;
     (void) unused_argv;
 
     signal(SIGHUP, auth_sig_hup);
-    mail_dict_init();
     cryptmaps_init();
     if (*var_auth_authenticate_maps != 0
 	&& auth_pg_init() < 0)
 	msg_warn("auth: auth_authenticate_maps init failed");
     auth_ldap_chain_reload();
+    (void) auth_ldap_chain_snapshot(&ldap_count);
+    if (msg_verbose)
+	msg_info("auth: ready authenticate_maps=%s ldap_chain_maps=%s ldap_entries=%lu",
+		 *var_auth_authenticate_maps ? var_auth_authenticate_maps : "(unset)",
+		 *var_auth_ldap_chain_maps ? var_auth_ldap_chain_maps : "(unset)",
+		 (unsigned long) ldap_count);
     var_use_limit = 0;
 }
 

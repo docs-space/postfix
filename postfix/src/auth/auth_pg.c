@@ -47,8 +47,12 @@ int     auth_pg_lookup(const char *login, const char *unused_node,
     memset((void *) result, 0, sizeof(*result));
     if (auth_authenticate_maps == 0 && auth_pg_init() < 0)
 	return (-1);
-    if ((value = maps_find(auth_authenticate_maps, login, 0)) == 0)
-	return (0);
+    if ((value = maps_find(auth_authenticate_maps, login, 0)) == 0) {
+	if (auth_authenticate_maps->error)
+	    msg_warn("auth: authenticate map lookup error for login=%s",
+		     login);
+	return (auth_authenticate_maps->error ? -1 : 0);
+    }
 
     copy = mystrdup(value);
     allow_nets = strchr(copy, AUTH_PG_FIELD_SEP);

@@ -86,8 +86,7 @@ static int auth_ldap_try_entry(const AUTH_LDAP_ENTRY *entry,
     if (entry->auth_bind) {
 	rc = ldap_simple_bind_s(ld, entry->auth_bind_user_dn, bind_pwd);
 	if (rc != LDAP_SUCCESS) {
-	    if (msg_verbose)
-		msg_info("%s: service bind failed: %s", myname, ldap_err2string(rc));
+	    msg_warn("%s: service bind failed: %s", myname, ldap_err2string(rc));
 	    ldap_unbind_ext_s(ld, 0, 0);
 	    return (0);
 	}
