@@ -96,6 +96,7 @@ make makefiles \
             -DHAS_PGSQL -I/usr/include/postgresql \
             -DUSE_SASL_AUTH \
             -DUSE_CYRUS_SASL \
+            -I/usr/include/sasl \
             -DUSE_INTERNAL_SASL \
             -DDEF_SERVER_SASL_TYPE=\\\"internal\\\" \
             -DUSE_TLS \
