@@ -37,9 +37,9 @@ read_params_debconf()
     db_get r7mtaserver/filter-host || true
     MTA_FILTER_HOST="${RET:-127.0.0.1:2525}"
     db_get r7mtaserver/spam-host || true
-    MTA_SPAM_HOST="${RET:-}"
+    MTA_SPAM_HOST="${RET:-127.0.0.1:10027}"
     db_get r7mtaserver/sasl-host || true
-    MTA_SASL_HOST="${RET:-saSA123$}"
+    MTA_SASL_HOST="${RET:-unix:private/auth}"
     
 #    db_get r7mailserver/upgrade
 #    UPGRADE="$RET"
@@ -78,7 +78,7 @@ conf_general()
 conf_sasl()
 {
     echo "Configuring Postfix SASL Settings"
-    sed -i "s/^smtpd_sasl_path = .*/smtpd_sasl_path = inet:${MTA_SASL_HOST}/" $MTA_CONF_MAIN
+#    sed -i "s/^smtpd_sasl_path = .*/smtpd_sasl_path = inet:${MTA_SASL_HOST}/" $MTA_CONF_MAIN
 }
 
 conf_filter()

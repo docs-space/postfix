@@ -94,6 +94,7 @@ static void postconf_validate_setup(ARGV *pairs)
 	pcf_set_parameters(pairs->argv);
     pcf_register_builtin_parameters("postapi", getpid());
     pcf_register_postapi_parameters();
+    pcf_register_auth_parameters();
     pcf_read_master(PCF_WARN_ON_OPEN_ERROR);
     pcf_register_service_parameters();
     pcf_register_user_parameters(0);
@@ -330,6 +331,7 @@ postconf_list_json(VSTREAM *fp)
 	pcf_read_parameters();
 	pcf_register_builtin_parameters("postapi", getpid());
 	pcf_register_postapi_parameters();
+	pcf_register_auth_parameters();
 	pcf_read_master(PCF_WARN_ON_OPEN_ERROR);
 	pcf_register_service_parameters();
 	pcf_register_user_parameters(0);

@@ -48,12 +48,12 @@
 static MAPS *cryptmaps_salt_maps;
 static VSTRING *cryptmaps_result;
 
- /* cryptmaps_delim - entry separator */
+ /* cryptmaps_delim - entry / field separator (incl. auth map \x1e/\x1f) */
 
 static int cryptmaps_delim(int ch)
 {
     return (ch == ',' || ch == '\n' || ch == '\r' || ch == '\t'
-	    || ch == ' ');
+	    || ch == ' ' || ch == '\x1e' || ch == '\x1f');
 }
 
  /* cryptmaps_trim_trailing_space - match C# DecryptWithTrim */

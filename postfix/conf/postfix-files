@@ -91,6 +91,7 @@ $meta_directory/master.cf.proto:f:root:-:644
 $meta_directory/postfix-files.d:d:root:-:755
 $meta_directory/postfix-files:f:root:-:644
 $daemon_directory/anvil:f:root:-:755
+$daemon_directory/auth:f:root:-:755
 $daemon_directory/bounce:f:root:-:755
 $daemon_directory/cleanup:f:root:-:755
 $daemon_directory/discard:f:root:-:755
