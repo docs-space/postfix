@@ -21,10 +21,11 @@ apt-get install -y \
     xz-utils \
     ed
 
-# Общие зависимости Postfix
 apt-get install -y \
     libssl-dev \
     libsasl2-dev \
+    libsasl2-2 \
+    libsasl2-modules \
     libpcre3-dev \
     libdb-dev \
     libldap2-dev \
@@ -53,7 +54,7 @@ apt-get install -y \
 
 # Альтернативно для минимальной сборки
 apt-get install -y \
-    gcc make libssl-dev libsasl2-dev libpcre3-dev libdb-dev
+    gcc make libssl-dev libsasl2-dev libsasl2-2 libsasl2-modules libpcre3-dev libdb-dev
 
 rm -rf ${BUILD_DIRECTORY}
 mkdir -p ${BUILD_DIRECTORY}/usr/sbin \
@@ -94,6 +95,8 @@ make makefiles \
             -DDEF_SAMPLE_DIR=\\\"${BUILD_DIRECTORY}/etc/postfix/samples\\\" \
             -DHAS_PGSQL -I/usr/include/postgresql \
             -DUSE_SASL_AUTH \
+            -DUSE_CYRUS_SASL \
+            -I/usr/include/sasl \
             -DUSE_INTERNAL_SASL \
             -DDEF_SERVER_SASL_TYPE=\\\"internal\\\" \
             -DUSE_TLS \
